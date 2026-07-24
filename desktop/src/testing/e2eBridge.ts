@@ -49,6 +49,7 @@ import type {
 import type {
   RawAcpRuntimeCatalogEntry,
   RawInstallRuntimeResult,
+  RuntimeFileConfigSubset,
 } from "@/shared/api/tauri";
 import { normalizePubkey } from "@/shared/lib/pubkey";
 
@@ -355,6 +356,8 @@ type E2eConfig = {
       model: string | null;
       preferred_runtime?: string | null;
     };
+    /** File-layer config returned by runtime id. */
+    runtimeFileConfigs?: Record<string, RuntimeFileConfigSubset | null>;
     /** Baked build env returned by the display and key-name Tauri commands. */
     bakedBuildEnv?: Array<{
       key: string;
@@ -1046,6 +1049,26 @@ declare global {
       admitted?: boolean;
       models?: Array<{ id: string; name: string | null }>;
       denyReason?: string;
+      /** Seed the runtime slot's lifecycle state (default "off"). */
+      nodeState?: "off" | "running";
+      /**
+       * Seed the runtime slot's role. "client" models this machine CONSUMING a
+       * peer's compute — it shares the single slot and reports state:"running",
+       * so the Share toggle must stay off. Drives the toggle-on regression test.
+       */
+      nodeMode?: "serve" | "client" | null;
+      /** Seed host-side serving usage to exercise the "who's using my compute" indicator. */
+      servingUsage?: Partial<{
+        inflight: number;
+        peakInflight: number;
+        requestsServed: number;
+        tokensServed: number;
+        tokensPerSecond: number;
+        localAttempts: number;
+        remoteAttempts: number;
+        endpointAttempts: number;
+        peers: number;
+      }>;
     }) => void;
     __BUZZ_E2E_SEED_ACTIVE_TURNS__?: (input: {
       agentPubkey: string;
@@ -2759,12 +2782,37 @@ function resetMockSaveSubscriptions(config: E2eConfig | undefined) {
 // in a browser. They deliberately do NOT model real admission, real inference,
 // or real mesh routing — those are proven by the Rust layer-2 tests and the
 // on-hardware layer-1 example. Do not port any of this into production code.
+type MockServingUsage = {
+  inflight: number;
+  peakInflight: number;
+  requestsServed: number;
+  tokensServed: number;
+  tokensPerSecond: number;
+  localAttempts: number;
+  remoteAttempts: number;
+  endpointAttempts: number;
+  peers: number;
+};
+
+const ZERO_SERVING_USAGE: MockServingUsage = {
+  inflight: 0,
+  peakInflight: 0,
+  requestsServed: 0,
+  tokensServed: 0,
+  tokensPerSecond: 0,
+  localAttempts: 0,
+  remoteAttempts: 0,
+  endpointAttempts: 0,
+  peers: 0,
+};
+
 const mockMeshState: {
   admitted: boolean;
   models: Array<{ id: string; name: string | null }>;
   denyReason: string;
   nodeState: "off" | "running";
   nodeMode: "serve" | "client" | null;
+  servingUsage: MockServingUsage;
 } = {
   admitted: true,
   models: [
@@ -2773,6 +2821,7 @@ const mockMeshState: {
   denyReason: "not a relay member",
   nodeState: "off",
   nodeMode: null,
+  servingUsage: { ...ZERO_SERVING_USAGE },
 };
 
 function resetMockMesh() {
@@ -2783,6 +2832,7 @@ function resetMockMesh() {
   mockMeshState.denyReason = "not a relay member";
   mockMeshState.nodeState = "off";
   mockMeshState.nodeMode = null;
+  mockMeshState.servingUsage = { ...ZERO_SERVING_USAGE };
 }
 let mockPersonas: RawPersona[] = [];
 let mockTeams: RawTeam[] = [];
@@ -9107,6 +9157,13 @@ export function maybeInstallE2eTauriMocks() {
     if (mesh.models !== undefined) mockMeshState.models = mesh.models;
     if (mesh.denyReason !== undefined)
       mockMeshState.denyReason = mesh.denyReason;
+    if (mesh.nodeState !== undefined) mockMeshState.nodeState = mesh.nodeState;
+    if (mesh.nodeMode !== undefined) mockMeshState.nodeMode = mesh.nodeMode;
+    if (mesh.servingUsage !== undefined)
+      mockMeshState.servingUsage = {
+        ...mockMeshState.servingUsage,
+        ...mesh.servingUsage,
+      };
   };
   let seedTurnSeq = Date.now();
   window.__BUZZ_E2E_SEED_ACTIVE_TURNS__ = ({
@@ -9226,6 +9283,8 @@ export function maybeInstallE2eTauriMocks() {
         return mockMeshState.models;
       case "mesh_node_status":
         return meshNodeStatus(mockMeshState.nodeState, mockMeshState.nodeMode);
+      case "mesh_serving_usage":
+        return mockMeshState.servingUsage;
       case "mesh_start_node": {
         const req = (
           payload as { request?: { mode?: "serve" | "client" } } | null
@@ -9235,6 +9294,14 @@ export function maybeInstallE2eTauriMocks() {
         return meshNodeStatus(mockMeshState.nodeState, mockMeshState.nodeMode);
       }
       case "mesh_stop_node":
+        // Mirror the backend contract: "stop sharing" must never tear down a
+        // client (consume) node occupying the single slot. Leave it running.
+        if (mockMeshState.nodeMode === "client") {
+          return meshNodeStatus(
+            mockMeshState.nodeState,
+            mockMeshState.nodeMode,
+          );
+        }
         mockMeshState.nodeState = "off";
         mockMeshState.nodeMode = null;
         return meshNodeStatus("off", null);
@@ -10293,9 +10360,10 @@ export function maybeInstallE2eTauriMocks() {
         return buildMockConfigSurface(configArgs.pubkey);
       }
       case "get_runtime_file_config": {
-        // No harness config file in the E2E environment — return null so
-        // dialogs fall back to normal required-field evaluation.
-        return null;
+        const runtimeId = (payload as { runtimeId?: string } | null | undefined)
+          ?.runtimeId;
+        if (!runtimeId) return null;
+        return config.mock?.runtimeFileConfigs?.[runtimeId] ?? null;
       }
       case "get_global_agent_config": {
         // Return the mutable persisted mock value, seeded from the test config.

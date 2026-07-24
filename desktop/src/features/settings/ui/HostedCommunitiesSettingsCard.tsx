@@ -162,7 +162,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             response.error,
             response.correlation_id,
-        "Could not connect the Sion identity.",
+            "Could not connect the Sion identity.",
           ),
         );
       }
@@ -180,7 +180,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             response.error,
             response.correlation_id,
-        "Could not unpair the Sion identity.",
+            "Could not unpair the Sion identity.",
           ),
         );
       }
@@ -218,7 +218,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             released.error,
             released.correlation_id,
-        "Could not release the previously connected Sion identity.",
+            "Could not release the previously connected Sion identity.",
           ),
         );
       }
@@ -362,7 +362,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             availabilityResponse.error,
             availabilityResponse.correlation_id,
-        "That Sion address is already taken.",
+            "That Sion address is already taken.",
           ),
         );
       }
@@ -424,7 +424,7 @@ export function HostedCommunitiesSettingsCard() {
         <div className="rounded-xl border border-border/70 p-5">
           <h3 className="font-medium">Sign in to manage hosted communities</h3>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Authentication opens in your browser and returns securely to Sion.
+            Authentication opens in your browser and returns securely to Sion.
             You can use every other part of the app without signing in.
           </p>
           <Button
@@ -525,7 +525,7 @@ export function HostedCommunitiesSettingsCard() {
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Sion
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Sion
                 identity connected
                 {identity.npub ? (
                   <span className="font-mono text-xs">{identity.npub}</span>

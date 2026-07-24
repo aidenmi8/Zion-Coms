@@ -4810,7 +4810,7 @@ const MOCK_PROJECT_SEEDS = [
     dtag: "buzz",
     name: "buzz",
     description:
-    "Relay, desktop, and mobile clients for the Sion community platform.",
+      "Relay, desktop, and mobile clients for the Sion community platform.",
     owner: MOCK_IDENTITY_PUBKEY,
     contributors: [ALICE_PUBKEY, BOB_PUBKEY, CHARLIE_PUBKEY],
     activityLevel: 4,

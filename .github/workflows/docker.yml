@@ -76,7 +76,7 @@ env:
   # Keep the optional gateway image in the fork owner's namespace too. A
   # repository variable can override this when the gateway is deployed
   # independently from the relay.
-  PUSH_GATEWAY_IMAGE: ${{ vars.GHCR_PUSH_GATEWAY_IMAGE != '' && vars.GHCR_PUSH_GATEWAY_IMAGE || format('ghcr.io/{0}/zion-coms-push-gateway', github.repository_owner) }}
+  PUSH_GATEWAY_IMAGE: ${{ vars.GHCR_PUSH_GATEWAY_IMAGE != '' && vars.GHCR_PUSH_GATEWAY_IMAGE || format('ghcr.io/{0}/buzz-push-gateway', github.repository_owner) }}
 
 jobs:
   build:

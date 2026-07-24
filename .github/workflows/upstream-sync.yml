@@ -31,8 +31,9 @@ jobs:
           git remote add upstream https://github.com/block/buzz.git
           git fetch --no-tags upstream main
 
-          if git diff --quiet HEAD upstream/main; then
-            echo "Fork main already contains the upstream tree."
+          upstream_commits=$(git rev-list --count HEAD..upstream/main)
+          if [[ "$upstream_commits" == "0" ]]; then
+            echo "Fork main already contains all upstream commits."
             exit 0
           fi
 

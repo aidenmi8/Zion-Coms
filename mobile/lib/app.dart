@@ -64,7 +64,7 @@ class App extends HookConsumerWidget {
     });
 
     return MaterialApp(
-      title: 'Sion',
+      title: 'Zion',
       theme: AppTheme.light(colorScheme: lightScheme),
       darkTheme: AppTheme.dark(colorScheme: darkScheme),
       themeMode: effectiveMode,

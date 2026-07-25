@@ -207,7 +207,7 @@ export function AddCommunityDialog({
         <DialogHeader>
           <DialogTitle>Add Community</DialogTitle>
           <DialogDescription>
-            Connect to another Sion relay. Each community has its own channels,
+            Connect to another Zion relay. Each community has its own channels,
             messages, and identity.
           </DialogDescription>
         </DialogHeader>

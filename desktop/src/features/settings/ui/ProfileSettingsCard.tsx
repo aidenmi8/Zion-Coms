@@ -569,7 +569,7 @@ export function ProfileSettingsCard({
       <div>
         <SettingsSectionHeader
           title="Profile"
-          description="Update how your name, avatar, and bio appear across Sion."
+          description="Update how your name, avatar, and bio appear across Zion."
         />
 
         <div className="space-y-3">

@@ -255,10 +255,10 @@ fn normalize_relay_mesh(
 
     let model_ref = config.model_ref.trim();
     if model_ref.is_empty() {
-        return Err("Sion shared compute model is required".to_string());
+        return Err("Zion shared compute model is required".to_string());
     }
     if backend != &BackendKind::Local {
-        return Err("Sion shared compute agents must use the local backend".to_string());
+        return Err("Zion shared compute agents must use the local backend".to_string());
     }
 
     Ok(Some(RelayMeshConfig {

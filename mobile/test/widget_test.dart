@@ -22,7 +22,7 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.text('Welcome to Sion'), findsOneWidget);
+    expect(find.text('Welcome to Zion'), findsOneWidget);
   });
 }
 

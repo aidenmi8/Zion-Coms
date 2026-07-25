@@ -12,7 +12,7 @@ function runtime(
     id,
     label:
       id === "buzz-agent"
-        ? "Sion"
+        ? "Zion"
         : id === "claude"
           ? "Claude Code"
           : id === "codex"

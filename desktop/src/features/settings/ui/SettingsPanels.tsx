@@ -234,8 +234,8 @@ export const settingsSections: SettingsSectionDescriptor[] = [
 ];
 
 function formatThemeLabel(name: string): string {
-  if (name === "buzz") return "Sion";
-  if (name === "buzz-dark") return "Sion Dark";
+  if (name === "buzz") return "Zion";
+  if (name === "buzz-dark") return "Zion Dark";
   return name
     .split("-")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -401,8 +401,8 @@ type AppearanceMode = "system" | "light" | "dark";
 
 // Reveal/hide motion for the accent picker: a small translate + opacity fade.
 // The picker sits below the theme grid and reads as tucking up behind it, so
-// it enters from above (slides *down* into place when a non-Sion theme reveals
-// it) and exits upward (slides up behind the grid when Sion hides it). No
+// it enters from above (slides *down* into place when a non-Zion theme reveals
+// it) and exits upward (slides up behind the grid when Zion hides it). No
 // height/scale — height collapse clipped the swatches behind the grid's bottom
 // fade (the "white bar"). Snappier than the modal 0.2s since this is a small
 // settings control, sharing the modal/ProfileSettingsCard easing curve.
@@ -423,9 +423,9 @@ function ThemeSettingsCard() {
     setFollowSystem,
   } = useTheme();
 
-  // Sion themes pin a neutral accent (GitHub black in light, white in dark),
-  // so the accent picker is hidden while a Sion theme is active. `themeName` is
-  // the effective theme, so this also covers System mode resolving to Sion.
+  // Zion themes pin a neutral accent (GitHub black in light, white in dark),
+  // so the accent picker is hidden while a Zion theme is active. `themeName` is
+  // the effective theme, so this also covers System mode resolving to Zion.
   const accentPickerHidden = isBuzzTheme(themeName);
   const shouldReduceMotion = useReducedMotion();
 
@@ -520,7 +520,7 @@ function ThemeSettingsCard() {
     >
       <SettingsSectionHeader
         title="Appearance"
-        description="Choose a theme for Sion."
+        description="Choose a theme for Zion."
       />
 
       {/* Mode selector: System / Light / Dark */}
@@ -563,7 +563,7 @@ function ThemeSettingsCard() {
           }}
         />
         {/* Bottom fade — hidden while the accent picker is visible so its
-            near-white gradient (Sion light) can't mask the swatches below it
+            near-white gradient (Zion light) can't mask the swatches below it
             (the "white bar"). Kept only when the picker is hidden. */}
         {accentPickerHidden ? (
           <div
@@ -616,7 +616,7 @@ function ThemeSettingsCard() {
         </div>
       </div>
 
-      {/* Accent color picker — hidden for Sion themes (pinned neutral accent).
+      {/* Accent color picker — hidden for Zion themes (pinned neutral accent).
           Reveal/hide with the translate-up + opacity fade defined by
           ACCENT_PICKER_TRANSITION above. Reduced motion skips the transition
           and just renders/unrenders. */}

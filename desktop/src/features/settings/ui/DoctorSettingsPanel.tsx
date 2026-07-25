@@ -402,7 +402,7 @@ function RuntimeRow({
           <AlertDialogHeader>
             <AlertDialogTitle>Update {runtime.label} adapter?</AlertDialogTitle>
             <AlertDialogDescription>
-              This replaces the machine-wide codex-acp adapter. Older Sion
+              This replaces the machine-wide codex-acp adapter. Older Zion
               releases using the legacy adapter may lose community access until
               @zed-industries/codex-acp@0.16.0 is restored.
             </AlertDialogDescription>
@@ -553,7 +553,7 @@ export function DoctorSettingsPanel() {
       <SectionHeader
         className="items-center"
         title="Agent runtimes"
-        description="Choose which agent tools Sion can use on this device."
+        description="Choose which agent tools Zion can use on this device."
         action={
           <Button
             disabled={isRefreshing}

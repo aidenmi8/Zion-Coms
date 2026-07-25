@@ -115,7 +115,7 @@ function provenanceSentence(
 ): string {
   switch (origin) {
     case "buzzExplicit":
-      return "Set in Sion";
+      return "Set in Zion";
     case "personaDefault":
       return "Inherited from template";
     case "runtimeOverride":

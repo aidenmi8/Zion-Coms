@@ -331,7 +331,7 @@ function RuntimeDetails({ runtime }: { runtime: AcpRuntimeCatalogEntry }) {
           <code className="rounded bg-white/10 px-0.5 font-mono text-xs text-white">
             codex-acp
           </code>{" "}
-          adapter. Older Sion releases using the legacy adapter contract may
+          adapter. Older Zion releases using the legacy adapter contract may
           lose community access until{" "}
           <code className="rounded bg-white/10 px-0.5 font-mono text-xs text-white">
             @zed-industries/codex-acp@0.16.0
@@ -596,7 +596,7 @@ function RuntimeProvidersSection({
           Set up your agent harnesses
         </h1>
         <p className="mx-auto mt-3 max-w-[760px] text-sm leading-6 text-foreground/90">
-          Sion detected the harnesses available on this machine. Install or sign
+          Zion detected the harnesses available on this machine. Install or sign
           in to at least one to continue.
         </p>
       </div>

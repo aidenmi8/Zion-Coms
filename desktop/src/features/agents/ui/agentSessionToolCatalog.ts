@@ -148,8 +148,8 @@ export function getBuzzToolInfo(title: string): BuzzToolInfo | null {
     return {
       icon: Workflow,
       label: isRead
-        ? "Reads workflow state from Sion."
-        : "Updates workflow state in Sion.",
+        ? "Reads workflow state from Zion."
+        : "Updates workflow state in Zion.",
       tone: isWrite ? "write" : "read",
     };
   }
@@ -161,8 +161,8 @@ export function getBuzzToolInfo(title: string): BuzzToolInfo | null {
     return {
       icon: Hash,
       label: isRead
-        ? "Reads channel context from the Sion relay."
-        : "Changes channel state in the Sion relay.",
+        ? "Reads channel context from the Zion relay."
+        : "Changes channel state in the Zion relay.",
       tone: isWrite ? "write" : "read",
     };
   }
@@ -174,15 +174,15 @@ export function getBuzzToolInfo(title: string): BuzzToolInfo | null {
     return {
       icon: Users,
       label: isRead
-        ? "Reads Sion identity or presence data."
-        : "Updates Sion identity or membership data.",
+        ? "Reads Zion identity or presence data."
+        : "Updates Zion identity or membership data.",
       tone: isWrite ? "write" : "admin",
     };
   }
   if (name.includes("search") || name === "get_feed") {
     return {
       icon: Search,
-      label: "Searches relay-visible Sion history.",
+      label: "Searches relay-visible Zion history.",
       tone: "read",
     };
   }
@@ -193,14 +193,14 @@ export function getBuzzToolInfo(title: string): BuzzToolInfo | null {
   ) {
     return {
       icon: Send,
-      label: "Publishes relay-visible Sion activity.",
+      label: "Publishes relay-visible Zion activity.",
       tone: "write",
     };
   }
 
   return {
     icon: MessageSquare,
-    label: isRead ? "Reads from Sion." : "Writes to Sion.",
+    label: isRead ? "Reads from Zion." : "Writes to Zion.",
     tone: isWrite ? "write" : "read",
   };
 }

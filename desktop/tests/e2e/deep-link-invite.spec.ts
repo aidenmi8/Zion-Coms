@@ -317,7 +317,7 @@ test("Welcome failure retries once before allowing starter channel setup to be s
     );
   }
 
-  const enterButton = page.getByRole("button", { name: "Take me to Sion" });
+  const enterButton = page.getByRole("button", { name: "Take me to Zion" });
   await enterButton.click();
 
   await expect(page.getByText(`${welcomeError} Try again.`)).toBeVisible();

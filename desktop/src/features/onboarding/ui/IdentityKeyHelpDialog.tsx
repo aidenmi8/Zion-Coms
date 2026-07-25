@@ -81,17 +81,17 @@ export function IdentityKeyHelpDialog() {
           >
             <div>
               <p>
-                Sion uses an identity key instead of a traditional account. It’s
-                created on your device and represents you whenever you use Sion.
+                Zion uses an identity key instead of a traditional account. It’s
+                created on your device and represents you whenever you use Zion.
               </p>
               <p>
-                Your identity belongs to you, not Sion. There’s no password to
-                reset, and Sion can’t recover your key if you lose it. Keep a
+                Your identity belongs to you, not Zion. There’s no password to
+                reset, and Zion can’t recover your key if you lose it. Keep a
                 backup somewhere safe and never share it. Anyone with your key
                 can act as you.
               </p>
               <p>
-                If you’re new to Sion, create a new identity key. If you already
+                If you’re new to Zion, create a new identity key. If you already
                 have a Nostr identity, use your existing key.
               </p>
             </div>

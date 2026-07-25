@@ -5,7 +5,7 @@ export function ResetFailedScreen() {
     <RecoveryScreen
       testId="reset-failed"
       title="Sign out could not complete"
-      body="Sion was unable to fully clear your local data. Try relaunching — the reset will resume automatically. If this persists, contact support."
+      body="Zion was unable to fully clear your local data. Try relaunching — the reset will resume automatically. If this persists, contact support."
     />
   );
 }

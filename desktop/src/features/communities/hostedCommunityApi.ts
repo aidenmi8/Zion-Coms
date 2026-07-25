@@ -66,18 +66,18 @@ export function hostedCommunityErrorMessage(
   fallback: string,
 ) {
   const messages: Record<string, string> = {
-    missing_mapping: "Connect your Sion identity before creating a community.",
+    missing_mapping: "Connect your Zion identity before creating a community.",
     invalid_name: "Use lowercase letters, numbers, and hyphens.",
-    taken: "That Sion address is already taken.",
+    taken: "That Zion address is already taken.",
     limit_reached: `You've reached the limit of ${HOSTED_COMMUNITY_LIMIT} hosted communities.`,
     relay_unavailable: "Community provisioning is temporarily unavailable.",
     identity_already_bound:
-      "This Builderlab account is connected to another Sion identity.",
+      "This Builderlab account is connected to another Zion identity.",
     pubkey_already_bound:
-      "This Sion identity is connected to another Builderlab account.",
+      "This Zion identity is connected to another Builderlab account.",
     not_owner: "Only the community owner can do that.",
     transferee_not_registered:
-      "That person needs a connected Sion identity before you can transfer ownership to them.",
+      "That person needs a connected Zion identity before you can transfer ownership to them.",
   };
   const message = messages[error?.code ?? ""] ?? error?.message ?? fallback;
   return correlationId
@@ -120,7 +120,7 @@ export async function loadHostedCommunityAccount(): Promise<HostedCommunityAccou
       hostedCommunityErrorMessage(
         identityResponse.error,
         identityResponse.correlation_id,
-        "Could not load the connected Sion identity.",
+        "Could not load the connected Zion identity.",
       ),
     );
   }

@@ -222,7 +222,7 @@ export function CustomEmojiSettingsCard() {
                   </p>
                 ) : pendingUpload === null ? (
                   <p className="text-sm font-normal text-muted-foreground">
-                    Choose an image first; Sion will suggest a name from the
+                    Choose an image first; Zion will suggest a name from the
                     filename.
                   </p>
                 ) : ownDuplicate ? (

@@ -38,6 +38,8 @@ function isEmptySharedComputeError(message: string): boolean {
     normalized.includes("no live buzz shared compute models") ||
     normalized.includes("no sion shared compute serving members") ||
     normalized.includes("no live sion shared compute models") ||
+    normalized.includes("no zion shared compute serving members") ||
+    normalized.includes("no live zion shared compute models") ||
     normalized.includes("no live member is serving") ||
     normalized.includes("requires a live serving member")
   );
@@ -53,7 +55,7 @@ export function formatModelDiscoveryErrorStatus(
     if (message.includes("waiting for the current member roster")) {
       return {
         message:
-          "Sion is waiting for the relay's member roster. Try again shortly; if this persists, check the relay's membership configuration.",
+          "Zion is waiting for the relay's member roster. Try again shortly; if this persists, check the relay's membership configuration.",
         tone: "warning",
       };
     }
@@ -69,7 +71,7 @@ export function formatModelDiscoveryErrorStatus(
     if (message.includes("shared compute is not available in this build")) {
       return {
         message:
-          "This version of Sion cannot use shared compute. Update Sion or choose another provider.",
+          "This version of Zion cannot use shared compute. Update Zion or choose another provider.",
         tone: "warning",
       };
     }
@@ -77,14 +79,14 @@ export function formatModelDiscoveryErrorStatus(
     if (message.includes("shared compute status is malformed")) {
       return {
         message:
-          "Sion received an invalid shared compute status. Check the member machine, then try again.",
+          "Zion received an invalid shared compute status. Check the member machine, then try again.",
         tone: "warning",
       };
     }
 
     return {
       message:
-        "Sion couldn't check shared compute through the relay. Check your relay connection and try again.",
+        "Zion couldn't check shared compute through the relay. Check your relay connection and try again.",
       tone: "warning",
     };
   }

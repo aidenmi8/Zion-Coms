@@ -18,14 +18,14 @@ export type FuzzyLogoProps = {
 };
 
 /**
- * The fuzzy Sion mark. v8 ships a built-in animated texture (looping fractal-noise
+ * The fuzzy Zion mark. v8 ships a built-in animated texture (looping fractal-noise
  * turbulence + grain) applied via an SVG filter. Set `fuzz={false}` to render the
  * crisp geometry with a lightweight CSS pulse — recommended for long-lived mounts.
  */
 export function FuzzyLogo({
   fuzz = true,
   className,
-  ariaLabel = "Sion logo",
+  ariaLabel = "Zion logo",
   loop = false,
   loopRestSeconds = 0,
   pulse = true,

@@ -1,6 +1,6 @@
-# Sion Mobile
+# Zion Mobile
 
-Flutter mobile client for Sion.
+Flutter mobile client for Zion.
 
 ## Setup
 

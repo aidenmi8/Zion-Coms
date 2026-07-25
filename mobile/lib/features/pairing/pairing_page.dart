@@ -68,7 +68,7 @@ class PairingPage extends HookConsumerWidget {
                       Image.asset('assets/images/buzz-icon.png', height: 64),
                       const SizedBox(height: Grid.xs),
                       Text(
-                        'Welcome to Sion',
+                        'Welcome to Zion',
                         style: context.textTheme.headlineSmall,
                       ),
                       const SizedBox(height: Grid.xxs),
@@ -278,7 +278,7 @@ class _SasVerificationView extends StatelessWidget {
         const SizedBox(height: Grid.lg),
 
         Text(
-          'You are about to transfer your Sion identity\nto this device. Only confirm if you initiated\nthis pairing from your desktop.',
+          'You are about to transfer your Zion identity\nto this device. Only confirm if you initiated\nthis pairing from your desktop.',
           textAlign: TextAlign.center,
           style: context.textTheme.bodySmall?.copyWith(
             color: context.colors.onSurfaceVariant,

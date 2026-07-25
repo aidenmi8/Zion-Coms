@@ -233,6 +233,9 @@ jobs:
           set -euo pipefail
           BUNDLE_DIR="desktop/src-tauri/target/release/bundle"
           APP_DIR="${BUNDLE_DIR}/macos"
+          # Derive the bundle name from productName (single source of truth) so a
+          # rebrand never desyncs these paths from the built artifact.
+          APP_NAME="$(jq -r .productName desktop/src-tauri/tauri.conf.json).app"
 
           # Replace unsigned DMG with the signed/notarized one.
           cp "$SIGNED_DMG" "$UNSIGNED_DMG"
@@ -241,23 +244,23 @@ jobs:
           EXTRACT_DIR="${RUNNER_TEMP}/signed-app-extract"
           rm -rf "$EXTRACT_DIR" && mkdir -p "$EXTRACT_DIR"
           ditto -x -k "$SIGNED_APP_ZIP" "$EXTRACT_DIR"
-          rm -rf "${APP_DIR}/Buzz.app"
-          cp -R "${EXTRACT_DIR}/Buzz.app" "${APP_DIR}/Buzz.app"
+          rm -rf "${APP_DIR}/${APP_NAME}"
+          cp -R "${EXTRACT_DIR}/${APP_NAME}" "${APP_DIR}/${APP_NAME}"
 
           # Rebuild the updater archive from the signed .app and re-sign it with the Tauri updater key.
-          rm -f "${APP_DIR}/Buzz.app.tar.gz" "${APP_DIR}/Buzz.app.tar.gz.sig"
-          (cd "$APP_DIR" && tar -czf Buzz.app.tar.gz Buzz.app)
-          TARBALL_ABS="$(pwd)/${APP_DIR}/Buzz.app.tar.gz"
+          rm -f "${APP_DIR}/${APP_NAME}.tar.gz" "${APP_DIR}/${APP_NAME}.tar.gz.sig"
+          (cd "$APP_DIR" && tar -czf "${APP_NAME}.tar.gz" "${APP_NAME}")
+          TARBALL_ABS="$(pwd)/${APP_DIR}/${APP_NAME}.tar.gz"
           (cd desktop && pnpm tauri signer sign "$TARBALL_ABS")
 
       - name: Verify code signature
         run: |
-          codesign --verify --deep --strict --verbose=2 \
-            desktop/src-tauri/target/release/bundle/macos/Buzz.app
-          spctl --assess --type execute --verbose=4 \
-            desktop/src-tauri/target/release/bundle/macos/Buzz.app
-          desktop/scripts/verify-macos-entitlements.sh \
-            desktop/src-tauri/target/release/bundle/macos/Buzz.app
+          set -euo pipefail
+          APP_NAME="$(jq -r .productName desktop/src-tauri/tauri.conf.json).app"
+          APP_PATH="desktop/src-tauri/target/release/bundle/macos/${APP_NAME}"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          spctl --assess --type execute --verbose=4 "$APP_PATH"
+          desktop/scripts/verify-macos-entitlements.sh "$APP_PATH"
 
       - name: Locate build artifacts
         id: artifacts
@@ -408,6 +411,9 @@ jobs:
         run: |
           set -euo pipefail
           APP_DIR="desktop/src-tauri/target/${TARGET}/release/bundle/macos"
+          # Derive the bundle name from productName (single source of truth) so a
+          # rebrand never desyncs these paths from the built artifact.
+          APP_NAME="$(jq -r .productName desktop/src-tauri/tauri.conf.json).app"
 
           # Replace the unsigned DMG with the signed/notarized one.
           cp "$SIGNED_DMG" "$UNSIGNED_DMG"
@@ -416,21 +422,23 @@ jobs:
           EXTRACT_DIR="${RUNNER_TEMP}/signed-app-extract-x64"
           rm -rf "$EXTRACT_DIR" && mkdir -p "$EXTRACT_DIR"
           ditto -x -k "$SIGNED_APP_ZIP" "$EXTRACT_DIR"
-          rm -rf "${APP_DIR}/Buzz.app"
-          cp -R "${EXTRACT_DIR}/Buzz.app" "${APP_DIR}/Buzz.app"
+          rm -rf "${APP_DIR}/${APP_NAME}"
+          cp -R "${EXTRACT_DIR}/${APP_NAME}" "${APP_DIR}/${APP_NAME}"
 
           # Rebuild the updater archive from the signed .app and re-sign with the Tauri updater key.
-          rm -f "${APP_DIR}/Buzz.app.tar.gz" "${APP_DIR}/Buzz.app.tar.gz.sig"
-          (cd "$APP_DIR" && tar -czf Buzz.app.tar.gz Buzz.app)
-          TARBALL_ABS="$(pwd)/${APP_DIR}/Buzz.app.tar.gz"
+          rm -f "${APP_DIR}/${APP_NAME}.tar.gz" "${APP_DIR}/${APP_NAME}.tar.gz.sig"
+          (cd "$APP_DIR" && tar -czf "${APP_NAME}.tar.gz" "${APP_NAME}")
+          TARBALL_ABS="$(pwd)/${APP_DIR}/${APP_NAME}.tar.gz"
           (cd desktop && pnpm tauri signer sign "$TARBALL_ABS")
 
       - name: Verify code signature
         run: |
-          APP_DIR="desktop/src-tauri/target/${TARGET}/release/bundle/macos/Buzz.app"
-          codesign --verify --deep --strict --verbose=2 "$APP_DIR"
-          spctl --assess --type execute --verbose=4 "$APP_DIR"
-          desktop/scripts/verify-macos-entitlements.sh "$APP_DIR"
+          set -euo pipefail
+          APP_NAME="$(jq -r .productName desktop/src-tauri/tauri.conf.json).app"
+          APP_PATH="desktop/src-tauri/target/${TARGET}/release/bundle/macos/${APP_NAME}"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          spctl --assess --type execute --verbose=4 "$APP_PATH"
+          desktop/scripts/verify-macos-entitlements.sh "$APP_PATH"
 
       - name: Locate updater archive
         id: artifacts

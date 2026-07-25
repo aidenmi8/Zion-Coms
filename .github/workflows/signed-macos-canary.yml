@@ -165,9 +165,13 @@ jobs:
           EXTRACT_DIR="${RUNNER_TEMP}/signed-app-extract"
           rm -rf "$EXTRACT_DIR" && mkdir -p "$EXTRACT_DIR"
           ditto -x -k "$SIGNED_APP_ZIP" "$EXTRACT_DIR"
-          codesign --verify --deep --strict --verbose=2 "$EXTRACT_DIR/Buzz.app"
-          spctl --assess --type execute --verbose=4 "$EXTRACT_DIR/Buzz.app"
-          desktop/scripts/verify-macos-entitlements.sh "$EXTRACT_DIR/Buzz.app"
+          # Derive the bundle name from productName (single source of truth) so a
+          # rebrand never desyncs these paths from the built artifact.
+          APP_NAME="$(jq -r .productName desktop/src-tauri/tauri.conf.json).app"
+          APP_PATH="$EXTRACT_DIR/$APP_NAME"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          spctl --assess --type execute --verbose=4 "$APP_PATH"
+          desktop/scripts/verify-macos-entitlements.sh "$APP_PATH"
 
       - name: Stage signed DMG
         id: artifact

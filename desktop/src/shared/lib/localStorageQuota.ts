@@ -40,7 +40,7 @@ function notifyStorageFull(): void {
     .then(({ toast }) => {
       toast.error("Local storage is full", {
         description:
-          "Sion could not save some local data — read positions may not persist across restarts.",
+          "Zion could not save some local data — read positions may not persist across restarts.",
       });
     })
     .catch(() => {});

@@ -36,6 +36,36 @@ test("Buzz shared compute names the empty state and next action", () => {
   assert.match(status?.message ?? "", /Settings > Compute/);
 });
 
+test("legacy sion-branded relays still match the empty state", () => {
+  const status = formatModelDiscoveryErrorStatus(
+    new Error("no sion shared compute serving members are available"),
+    "relay-mesh",
+  );
+
+  assert.equal(status?.tone, "warning");
+  assert.match(status?.message ?? "", /No members are sharing compute/);
+});
+
+test("zion-branded relays match the empty state", () => {
+  const status = formatModelDiscoveryErrorStatus(
+    new Error("no zion shared compute serving members are available"),
+    "relay-mesh",
+  );
+
+  assert.equal(status?.tone, "warning");
+  assert.match(status?.message ?? "", /No members are sharing compute/);
+});
+
+test("zion-branded relays match the empty model list", () => {
+  const status = formatModelDiscoveryErrorStatus(
+    new Error("no live zion shared compute models are available"),
+    "relay-mesh",
+  );
+
+  assert.equal(status?.tone, "warning");
+  assert.match(status?.message ?? "", /No members are sharing compute/);
+});
+
 test("Buzz shared compute distinguishes relay lookup failures", () => {
   const status = formatModelDiscoveryErrorStatus(
     new Error("Buzz shared compute model discovery failed: relay offline"),

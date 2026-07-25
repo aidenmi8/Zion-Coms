@@ -1962,7 +1962,7 @@ pub fn spawn_agent_child(
         command.env("GIT_CONFIG_VALUE_1", "true");
     } else {
         eprintln!(
-            "buzz-desktop: git-credential-nostr not found — agent {} will not have automatic Sion git auth",
+            "buzz-desktop: git-credential-nostr not found — agent {} will not have automatic Zion git auth",
             record.name,
         );
     }

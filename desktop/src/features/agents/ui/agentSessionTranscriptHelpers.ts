@@ -49,7 +49,7 @@ export function parsePromptText(text: string): {
   return {
     sections,
     userText: eventContent,
-    userTitle: eventKind ? titleCase(eventKind) : "Sion event",
+    userTitle: eventKind ? titleCase(eventKind) : "Zion event",
     userPubkey: eventAuthorPubkey,
     userEventId: eventId,
   };

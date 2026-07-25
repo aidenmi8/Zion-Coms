@@ -168,7 +168,7 @@ export function SignOutSection() {
             <AlertDialogTitle>Sign out and wipe all data?</AlertDialogTitle>
             <AlertDialogDescription>
               This will delete your identity key, all agent settings, and cached
-              data from this device, then relaunch Sion into first-run setup.
+              data from this device, then relaunch Zion into first-run setup.
               This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

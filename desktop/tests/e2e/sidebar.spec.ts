@@ -93,7 +93,7 @@ test("automatically shows relay join requirements near the relay URL", async ({
 
   const ageConfirmation = page.getByLabel("I am 18 years of age or older.");
   const agreementConfirmation = page.getByLabel(
-    "I agree to the Sion Terms of Service and Privacy Policy.",
+    "I agree to the Zion Terms of Service and Privacy Policy.",
   );
   await expect(ageConfirmation).toBeVisible();
   await expect(agreementConfirmation).toBeVisible();

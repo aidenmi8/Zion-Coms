@@ -75,7 +75,7 @@ export function HostedCommunitiesSettingsCard() {
       identityResponse.error &&
       identityResponse.error.code !== "unauthorized" &&
       // `missing_mapping` (setup_needed) just means this account hasn't linked a
-      // Sion identity yet — that's the connect-card empty state, not an error to
+      // Zion identity yet — that's the connect-card empty state, not an error to
       // surface at the top of the page.
       !identityResponse.error.setup_needed
     ) {
@@ -83,7 +83,7 @@ export function HostedCommunitiesSettingsCard() {
         errorMessage(
           identityResponse.error,
           identityResponse.correlation_id,
-          "Could not load the connected Sion identity.",
+          "Could not load the connected Zion identity.",
         ),
       );
     }
@@ -153,7 +153,7 @@ export function HostedCommunitiesSettingsCard() {
     });
 
   const connectIdentity = () =>
-    run("Connecting Sion identity…", async () => {
+    run("Connecting Zion identity…", async () => {
       const response = await invoke<IdentityResponse>(
         "bind_builderlab_nostr_identity",
       );
@@ -162,7 +162,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             response.error,
             response.correlation_id,
-            "Could not connect the Sion identity.",
+            "Could not connect the Zion identity.",
           ),
         );
       }
@@ -180,7 +180,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             response.error,
             response.correlation_id,
-            "Could not unpair the Sion identity.",
+            "Could not unpair the Zion identity.",
           ),
         );
       }
@@ -218,7 +218,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             released.error,
             released.correlation_id,
-            "Could not release the previously connected Sion identity.",
+            "Could not release the previously connected Zion identity.",
           ),
         );
       }
@@ -231,11 +231,11 @@ export function HostedCommunitiesSettingsCard() {
         await loadAccount();
         throw new Error(
           bound.error.code === "pubkey_already_bound"
-            ? "This device's Sion identity is already reserved by another Builderlab account, so it can't be connected here. Sign in with that account, or transfer the identity there first."
+            ? "This device's Zion identity is already reserved by another Builderlab account, so it can't be connected here. Sign in with that account, or transfer the identity there first."
             : errorMessage(
                 bound.error,
                 bound.correlation_id,
-                "Could not connect this device's Sion identity.",
+                "Could not connect this device's Zion identity.",
               ),
         );
       }
@@ -362,7 +362,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             availabilityResponse.error,
             availabilityResponse.correlation_id,
-            "That Sion address is already taken.",
+            "That Zion address is already taken.",
           ),
         );
       }
@@ -406,7 +406,7 @@ export function HostedCommunitiesSettingsCard() {
     <section className="space-y-6" data-testid="hosted-communities-settings">
       <SettingsSectionHeader
         title="Hosted communities"
-        description="Sion works with any relay. This page is only for relay hosting provided by Block — sign in with a Builderlab account to create and manage Block-hosted communities. Builderlab sign-in is used on this page alone."
+        description="Zion works with any relay. This page is only for relay hosting provided by Block — sign in with a Builderlab account to create and manage Block-hosted communities. Builderlab sign-in is used on this page alone."
       />
 
       {error ? (
@@ -424,7 +424,7 @@ export function HostedCommunitiesSettingsCard() {
         <div className="rounded-xl border border-border/70 p-5">
           <h3 className="font-medium">Sign in to manage hosted communities</h3>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Authentication opens in your browser and returns securely to Sion.
+            Authentication opens in your browser and returns securely to Zion.
             You can use every other part of the app without signing in.
           </p>
           <Button
@@ -464,12 +464,12 @@ export function HostedCommunitiesSettingsCard() {
           {!identity ? (
             <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-5">
               <h3 className="font-medium">
-                Link this account to your Sion identity
+                Link this account to your Zion identity
               </h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                This Builderlab account isn&apos;t linked to a Sion identity
+                This Builderlab account isn&apos;t linked to a Zion identity
                 yet. Connect this device&apos;s key to create and own
-                communities under it — Sion signs a one-time challenge locally,
+                communities under it — Zion signs a one-time challenge locally,
                 so your private key never leaves Desktop.
               </p>
               <Button
@@ -480,7 +480,7 @@ export function HostedCommunitiesSettingsCard() {
                 {action ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : null}
-                {action ?? "Connect Sion identity"}
+                {action ?? "Connect Zion identity"}
               </Button>
             </div>
           ) : identityMismatch ? (
@@ -489,10 +489,10 @@ export function HostedCommunitiesSettingsCard() {
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                 <div>
                   <h3 className="font-medium">
-                    This account is connected to a different Sion identity
+                    This account is connected to a different Zion identity
                   </h3>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Your Builderlab account owns communities under another Sion
+                    Your Builderlab account owns communities under another Zion
                     key, so connecting them here would join a relay this device
                     isn&apos;t a member of. Creating and connecting are paused
                     until the identities match.
@@ -525,7 +525,7 @@ export function HostedCommunitiesSettingsCard() {
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Sion
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Zion
                 identity connected
                 {identity.npub ? (
                   <span className="font-mono text-xs">{identity.npub}</span>
@@ -690,9 +690,9 @@ function UnpairIdentityButton({
       </Button>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Unpair this Sion identity?</AlertDialogTitle>
+          <AlertDialogTitle>Unpair this Zion identity?</AlertDialogTitle>
           <AlertDialogDescription>
-            Your Builderlab account will no longer be connected to this Sion
+            Your Builderlab account will no longer be connected to this Zion
             key. You can reconnect any key later, but community actions stay
             unavailable until you do.
           </AlertDialogDescription>
@@ -879,7 +879,7 @@ function TransferOwnershipDialog({
           <DialogTitle>Transfer ownership</DialogTitle>
           <DialogDescription>
             Transfer {communityName} to another person. You become a regular
-            member. The recipient needs a connected Sion identity first, and
+            member. The recipient needs a connected Zion identity first, and
             this can&apos;t be undone.
           </DialogDescription>
         </DialogHeader>

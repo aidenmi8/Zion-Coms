@@ -141,7 +141,7 @@ test.describe("needs-restart screenshots", () => {
 
     // Auto-restart defaults ON — verify the enabled copy.
     await expect(
-      banner.getByText("Sion can restart it automatically"),
+      banner.getByText("Zion can restart it automatically"),
     ).toBeVisible();
 
     await waitForAnimations(page);

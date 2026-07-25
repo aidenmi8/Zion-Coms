@@ -187,7 +187,7 @@ pub fn validate_user_env_keys(env_vars: &BTreeMap<String, String>) -> Result<(),
     reserved.dedup();
     if !reserved.is_empty() {
         return Err(format!(
-            "the following env vars are reserved by Sion and cannot be overridden: {}",
+            "the following env vars are reserved by Zion and cannot be overridden: {}",
             reserved.join(", ")
         ));
     }

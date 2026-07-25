@@ -33,7 +33,7 @@ export function RecoveryScreen({
           }}
           type="button"
         >
-          Relaunch Sion
+          Relaunch Zion
         </Button>
       </div>
     </div>

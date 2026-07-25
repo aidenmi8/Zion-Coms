@@ -58,20 +58,20 @@ fn managed_node_unsupported_step() -> InstallStepResult {
         success: false,
         stdout: String::new(),
         stderr: format!(
-            "Sion does not provide a managed Node.js runtime for {}-{} yet",
+            "Zion does not provide a managed Node.js runtime for {}-{} yet",
             std::env::consts::OS,
             std::env::consts::ARCH
         ),
         exit_code: None,
         hint: Some(
-            "Install Node.js from https://nodejs.org, restart Sion, then click Install again."
+            "Install Node.js from https://nodejs.org, restart Zion, then click Install again."
                 .to_string(),
         ),
     }
 }
 
 fn managed_node_install_hint() -> String {
-    "Sion could not install its private Node.js runtime. Check your network and app-data directory permissions, then click Install again.".to_string()
+    "Zion could not install its private Node.js runtime. Check your network and app-data directory permissions, then click Install again.".to_string()
 }
 
 fn managed_node_failed_step(stderr: String) -> InstallStepResult {
@@ -126,7 +126,7 @@ pub(super) fn ensure_managed_node_runtime_blocking() -> Result<(), Box<InstallSt
     };
     let Some(root) = crate::managed_agents::buzz_managed_node_root() else {
         return Err(Box::new(managed_node_failed_step(
-            "failed to resolve Sion app-data directory for private Node.js runtime".to_string(),
+            "failed to resolve Zion app-data directory for private Node.js runtime".to_string(),
         )));
     };
 
@@ -340,7 +340,7 @@ fn verify_node_tree(dir: &std::path::Path) -> Result<(), String> {
 
 /// Guidance text shown when the Buzz-private npm prefix is not available.
 fn managed_npm_prefix_hint() -> String {
-    "Sion could not create its private Node tools directory. Check app-data directory permissions, restart Sion, then click Install again.".to_string()
+    "Zion could not create its private Node tools directory. Check app-data directory permissions, restart Zion, then click Install again.".to_string()
 }
 
 pub(super) fn managed_npm_command(command: &str) -> Result<Option<String>, Box<InstallStepResult>> {
@@ -354,7 +354,7 @@ pub(super) fn managed_npm_command(command: &str) -> Result<Option<String>, Box<I
             command: command.to_string(),
             success: false,
             stdout: String::new(),
-            stderr: "failed to resolve Sion app-data directory for private npm prefix".to_string(),
+            stderr: "failed to resolve Zion app-data directory for private npm prefix".to_string(),
             exit_code: None,
             hint: Some(managed_npm_prefix_hint()),
         }));
@@ -366,7 +366,7 @@ pub(super) fn managed_npm_command(command: &str) -> Result<Option<String>, Box<I
             success: false,
             stdout: String::new(),
             stderr: format!(
-                "failed to create Sion private npm prefix '{}': {error}",
+                "failed to create Zion private npm prefix '{}': {error}",
                 prefix.display()
             ),
             exit_code: None,
@@ -401,7 +401,7 @@ fn shell_quote(path: &std::path::Path) -> String {
 pub(super) fn npm_eacces_hint(stderr: &str, _command: &str) -> Option<String> {
     if stderr.contains("EACCES: permission denied") || stderr.contains("npm error EACCES") {
         Some(
-            "npm could not write to Sion's private Node tools directory. Check app-data directory permissions, restart Sion, then click Install again."
+            "npm could not write to Zion's private Node tools directory. Check app-data directory permissions, restart Zion, then click Install again."
                 .to_string(),
         )
     } else {
@@ -419,7 +419,7 @@ mod tests {
     fn test_npm_eacces_hint_guidance_mentions_sion_private_dir() {
         let hint = npm_eacces_hint("EACCES: permission denied", "npm install -g foo").unwrap();
         assert!(
-            hint.contains("Sion's private Node tools directory"),
+            hint.contains("Zion's private Node tools directory"),
             "hint: {hint}"
         );
     }

@@ -66,7 +66,9 @@ jobs:
               - '.github/workflows/mobile-release-candidate.yml'
               - '.github/workflows/ci.yml'
       - name: Release workflow source contract
-        run: scripts/test-release-ref-contract.sh
+        run: |
+          scripts/test-release-ref-contract.sh
+          scripts/test-sidecar-build-contract.sh
       - name: Mobile release contract
         run: |
           scripts/test-mobile-release-contract.sh

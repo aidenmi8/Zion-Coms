@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:nostr/nostr.dart' as nostr;
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../shared/branding/sentra_branding.dart';
 import '../../shared/auth/auth.dart';
 import '../../shared/clipboard_utils.dart';
 import '../../shared/relay/relay.dart';
@@ -175,10 +175,13 @@ class SettingsPage extends HookConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SvgPicture.asset(
-                      'assets/images/sentra-lockup.svg',
-                      height: 28,
-                      semanticsLabel: 'Sentra',
+                    Semantics(
+                      label: 'Sentra',
+                      image: true,
+                      child: Image.asset(
+                        sentraWordmarkAssetFor(context.colors.brightness),
+                        height: 36,
+                      ),
                     ),
                     const SizedBox(height: Grid.xxs),
                     Text(

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../shared/branding/sentra_branding.dart';
 import '../../shared/theme/theme.dart';
 import 'pairing_provider.dart';
 
@@ -66,10 +66,13 @@ class PairingPage extends HookConsumerWidget {
                     children: [
                       const Spacer(flex: 2),
 
-                      SvgPicture.asset(
-                        'assets/images/sentra-lockup.svg',
-                        height: 72,
-                        semanticsLabel: 'Sentra',
+                      Semantics(
+                        label: 'Sentra',
+                        image: true,
+                        child: Image.asset(
+                          sentraWordmarkAssetFor(context.colors.brightness),
+                          height: 88,
+                        ),
                       ),
                       const SizedBox(height: Grid.xs),
                       Text(

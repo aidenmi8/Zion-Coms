@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:buzz/features/pairing/pairing_page.dart';
 import 'package:buzz/features/pairing/pairing_provider.dart';
+import 'package:buzz/shared/branding/sentra_branding.dart';
 
 import '../../helpers/widget_helpers.dart';
 
@@ -17,6 +18,13 @@ void main() {
 
       expect(find.text('Welcome to Zion'), findsOneWidget);
       expect(find.bySemanticsLabel('Sentra'), findsOneWidget);
+      final wordmark = tester.widget<Image>(
+        find.descendant(
+          of: find.bySemanticsLabel('Sentra'),
+          matching: find.byType(Image),
+        ),
+      );
+      expect(wordmark.image, const AssetImage(sentraBlackWordmarkAsset));
       expect(find.text('Scan QR Code'), findsOneWidget);
       expect(find.text('or paste pairing code'), findsOneWidget);
       expect(find.text('Paste a pairing link or code'), findsOneWidget);

@@ -156,7 +156,7 @@ test("Zion shared compute explains automatic model selection", async ({
   await expect(page.locator("#persona-model")).toContainText("Automatic");
   await expect(
     page.getByText(
-      "Buzz will choose an available shared model when the agent starts.",
+      "Zion will choose an available shared model when the agent starts.",
     ),
   ).toBeVisible();
   await expect(page.locator("#persona-custom-model")).toHaveCount(0);

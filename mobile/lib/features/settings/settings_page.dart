@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:nostr/nostr.dart' as nostr;
@@ -171,15 +172,24 @@ class SettingsPage extends HookConsumerWidget {
               top: false,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: Grid.xs, top: Grid.xxs),
-                child: Center(
-                  child: Text(
-                    'v${packageInfo.data!.version}',
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colors.onSurfaceVariant.withValues(
-                        alpha: 0.6,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SvgPicture.asset(
+                      'assets/images/sentra-lockup.svg',
+                      height: 28,
+                      semanticsLabel: 'Sentra',
+                    ),
+                    const SizedBox(height: Grid.xxs),
+                    Text(
+                      'Zion · v${packageInfo.data!.version}',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colors.onSurfaceVariant.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),

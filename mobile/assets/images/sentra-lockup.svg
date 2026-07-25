@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 240" role="img" aria-labelledby="title">
+  <title id="title">Sentra</title>
+  <g fill="#D9D0FF">
+    <path d="M135 20h90l-43 43H92z"/>
+    <path d="M135 76h90l-43 43H92z"/>
+  </g>
+  <g fill="none" stroke="#D9D0FF" stroke-linecap="square" stroke-linejoin="miter" stroke-width="8">
+    <path d="M68 151c-8-7-24-7-31 0-11 11 3 18 16 21 13 3 27 10 16 21-8 8-24 8-33 0"/>
+    <path d="M91 151v43m0-43h29m-29 21h24m-24 22h29"/>
+    <path d="M140 194v-43l35 43v-43"/>
+    <path d="M194 151h38m-19 0v43"/>
+    <path d="M251 194v-43h18c18 0 18 22 0 22h-18m18 0 17 21"/>
+    <path d="M303 194l18-43 18 43m-27-16h18"/>
+  </g>
+</svg>

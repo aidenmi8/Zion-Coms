@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -65,7 +66,11 @@ class PairingPage extends HookConsumerWidget {
                     children: [
                       const Spacer(flex: 2),
 
-                      Image.asset('assets/images/buzz-icon.png', height: 64),
+                      SvgPicture.asset(
+                        'assets/images/sentra-lockup.svg',
+                        height: 72,
+                        semanticsLabel: 'Sentra',
+                      ),
                       const SizedBox(height: Grid.xs),
                       Text(
                         'Welcome to Zion',
@@ -73,7 +78,7 @@ class PairingPage extends HookConsumerWidget {
                       ),
                       const SizedBox(height: Grid.xxs),
                       Text(
-                        'Scan the QR code from your desktop app\nor paste a pairing code to connect.',
+                        'Scan the QR code from your other device\nor paste a pairing code to connect.',
                         textAlign: TextAlign.center,
                         style: context.textTheme.bodyMedium?.copyWith(
                           color: context.colors.onSurfaceVariant,
@@ -117,7 +122,7 @@ class PairingPage extends HookConsumerWidget {
                       TextField(
                         controller: codeController,
                         decoration: const InputDecoration(
-                          hintText: 'nostrpair://... or buzz://...',
+                          hintText: 'Paste a pairing link or code',
                           prefixIcon: Icon(LucideIcons.link),
                           isDense: true,
                         ),

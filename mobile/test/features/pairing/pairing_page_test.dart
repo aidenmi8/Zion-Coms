@@ -15,13 +15,12 @@ void main() {
         WidgetHelpers.testable(child: const PairingPage()),
       );
 
-      expect(
-        find.image(const AssetImage('assets/images/buzz-icon.png')),
-        findsOneWidget,
-      );
       expect(find.text('Welcome to Zion'), findsOneWidget);
+      expect(find.bySemanticsLabel('Sentra'), findsOneWidget);
       expect(find.text('Scan QR Code'), findsOneWidget);
       expect(find.text('or paste pairing code'), findsOneWidget);
+      expect(find.text('Paste a pairing link or code'), findsOneWidget);
+      expect(find.textContaining('buzz://'), findsNothing);
       expect(find.text('Connect'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
     });

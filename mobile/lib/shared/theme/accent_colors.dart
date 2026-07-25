@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Accent colors matching the desktop Buzz app.
+/// Accent colors available across the Zion mobile client.
 class AccentColor {
   final String name;
   final Color light;
@@ -42,6 +42,11 @@ const accentColors = [
     dark: Color(0xFFFFFFFF),
     useThemeForegroundInDark: true,
   ),
+  AccentColor(
+    name: 'Zion Violet',
+    light: Color(0xFF7C3AED),
+    dark: Color(0xFFA78BFA),
+  ),
 ];
 
 Color accentColorForScheme(ColorScheme scheme, int accentIndex) {
@@ -55,11 +60,14 @@ Color accentColorForScheme(ColorScheme scheme, int accentIndex) {
   return scheme.brightness == Brightness.light ? accent.light : accent.dark;
 }
 
-/// New default: Black.
+/// Default: Zion Violet.
 ///
 /// Keep this at the end of [accentColors] so existing saved accent indexes keep
 /// pointing at the same colors.
-const defaultAccentIndex = 8;
+const defaultAccentIndex = 9;
 
 /// Legacy default: Catppuccin Mauve/the base theme primary.
 const legacyDefaultAccentIndex = -1;
+
+/// The automatic black default used by the prior public Zion theme.
+const legacyAutomaticBlackAccentIndex = 8;

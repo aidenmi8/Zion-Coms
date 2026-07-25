@@ -32,6 +32,18 @@ keypair.
   and S3 secrets stable across restarts.
 - `RELAY_OWNER_PUBKEY` is intentionally not prefixed with `BUZZ_`; it must be a
   64-character hex Nostr pubkey when closed relay mode is enabled.
+- **Device pairing needs a `/pair` route in your reverse proxy.** The stack runs a
+  `pair-relay` sidecar on `127.0.0.1:5000` (override the port with
+  `BUZZ_PAIR_RELAY_PORT`). A membership-gated relay advertises NIP-43, and the
+  desktop client then resolves its pairing endpoint to `<relay>/pair`; if nothing
+  serves that path, QR pairing fails with
+  `WebSocket connection failed: HTTP error: 404 Not Found` before the QR renders.
+  Route it in Caddy, or with Tailscale:
+  `sudo tailscale serve --bg --set-path /pair http://127.0.0.1:5000`.
+  Alternatively, set `BUZZ_PAIRING_RELAY_URL` to a full `wss://…` URL and the relay
+  advertises it in its NIP-11 document, so clients skip the `/pair` convention
+  entirely. The pairing handshake is end-to-end encrypted (NIP-44 v2 + SAS), so the
+  sidecar only relays ciphertext and stores nothing.
 - `BUZZ_AUTO_MIGRATE` is opt-in. Set `BUZZ_AUTO_MIGRATE=true` or run
   `buzz-admin migrate` before starting the relay when bootstrapping a fresh
   database. Auto-migration requires an image that includes embedded SQLx

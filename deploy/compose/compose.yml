@@ -46,6 +46,34 @@ services:
     networks:
       - buzz-net
 
+  # NIP-AB device-pairing sidecar.
+  #
+  # A membership-gated relay (BUZZ_REQUIRE_RELAY_MEMBERSHIP=true) advertises
+  # NIP-43, and the desktop client then resolves its pairing endpoint to
+  # <relay>/pair. Without this service that path 404s and QR pairing fails with
+  # "WebSocket connection failed: HTTP error: 404 Not Found" before the QR can
+  # even render. The binary already ships in the relay image; it just needs to
+  # run. (Upstream's Helm chart has deploy/charts/buzz/templates/pairing-relay.yaml;
+  # the compose deployment had no equivalent.)
+  #
+  # The image ENTRYPOINT is buzz-relay, so it MUST be overridden here — using
+  # `command:` would run `buzz-relay buzz-pair-relay`.
+  #
+  # Bound to loopback: terminate TLS and route /pair to it in your reverse proxy
+  # (Caddy, or `tailscale serve --set-path /pair http://127.0.0.1:5000`).
+  # The handshake is end-to-end encrypted (NIP-44 v2 + SAS), so this service
+  # only ever relays ciphertext; it holds no state and needs no database.
+  pair-relay:
+    image: ${BUZZ_IMAGE:-ghcr.io/block/buzz:main}
+    entrypoint: ["/usr/local/bin/buzz-pair-relay"]
+    environment:
+      BUZZ_PAIR_RELAY_BIND_ADDR: 0.0.0.0:5000
+    ports:
+      - "127.0.0.1:${BUZZ_PAIR_RELAY_PORT:-5000}:5000"
+    restart: unless-stopped
+    networks:
+      - buzz-net
+
   postgres:
     image: postgres:17-alpine
     environment:

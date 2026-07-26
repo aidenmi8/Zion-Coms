@@ -12,6 +12,8 @@ import '../../shared/theme/theme.dart';
 import '../../shared/widgets/app_list.dart';
 import '../../shared/widgets/frosted_app_bar.dart';
 import '../../shared/widgets/frosted_scaffold.dart';
+import '../../app/push_companion_provider.dart';
+import '../../shared/watch/push_lease_coordinator.dart';
 import '../profile/set_status_sheet.dart';
 import '../profile/user_status_provider.dart';
 import '../custom_emoji/custom_emoji_provider.dart';
@@ -163,6 +165,11 @@ class SettingsPage extends HookConsumerWidget {
                     ),
                   ],
                 ),
+
+                AppListSection(
+                  label: 'Notifications & Watch',
+                  children: [_PushCompanionRow()],
+                ),
               ],
             ),
           ),
@@ -203,18 +210,77 @@ class SettingsPage extends HookConsumerWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(ctx).pop(); // close dialog
+              try {
+                await ref
+                    .read(pushCompanionControllerProvider.notifier)
+                    .disableForSignOut();
+              } on Object {
+                // Expiring leases remain the protocol backstop when a relay or
+                // gateway is unavailable during removal.
+              }
               // Pop all pushed routes back to root so MaterialApp.home
               // rebuilds to PairingPage when auth state changes.
+              if (!context.mounted) return;
               Navigator.of(context).popUntil((route) => route.isFirst);
-              ref.read(authProvider.notifier).signOut();
+              await ref.read(authProvider.notifier).signOut();
             },
             style: FilledButton.styleFrom(backgroundColor: ctx.colors.error),
             child: const Text('Remove'),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PushCompanionRow extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(pushCompanionControllerProvider);
+    final status = switch (state.status) {
+      PushCompanionStatus.off => 'Off',
+      PushCompanionStatus.enabling => 'Enabling',
+      PushCompanionStatus.active => 'Active',
+      PushCompanionStatus.needsAttention => 'Needs Attention',
+      PushCompanionStatus.unsupported => 'Unsupported',
+    };
+    final subtitle = switch (state.status) {
+      PushCompanionStatus.off =>
+        'Receive agent messages and approval requests on Apple Watch.',
+      PushCompanionStatus.enabling =>
+        'Requesting notification access and securing this iPhone.',
+      PushCompanionStatus.active =>
+        'Alerts are active. Apple Watch uses this iPhone’s focused queue.',
+      PushCompanionStatus.needsAttention =>
+        state.message ?? 'Allow notifications in iOS Settings → Zion.',
+      PushCompanionStatus.unsupported =>
+        'Requires a supported iPhone with App Attest.',
+    };
+    final canEnable =
+        state.status == PushCompanionStatus.off ||
+        state.status == PushCompanionStatus.needsAttention;
+
+    return AppListRow(
+      icon: LucideIcons.watch,
+      title: 'Apple Watch companion',
+      subtitle: subtitle,
+      subtitleMaxLines: 3,
+      trailing: Text(
+        status,
+        style: context.textTheme.bodySmall?.copyWith(
+          color: state.status == PushCompanionStatus.needsAttention
+              ? context.colors.error
+              : context.colors.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      onTap: canEnable
+          ? () async {
+              await ref.read(pushCompanionControllerProvider.notifier).enable();
+            }
+          : null,
     );
   }
 }

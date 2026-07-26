@@ -1,0 +1,5 @@
+// Shared identity for the dependent watch app. Custom and internal builds use
+// the same gitignored override as Runner so both bundle identifiers stay paired.
+#include "Generated.xcconfig"
+BUNDLE_IDENTIFIER = com.buzz.buzzMobile
+#include? "AppOverrides.xcconfig"

@@ -90,6 +90,7 @@ final class WatchSessionBridgeTests: XCTestCase {
 
     XCTAssertEqual(malformed?["accepted"] as? Bool, false)
     XCTAssertEqual(oversized?["accepted"] as? Bool, false)
+    withExtendedLifetime(bridge) {}
   }
 
   func testCommunityClearPublishesAnEmptySnapshot() throws {

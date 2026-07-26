@@ -229,6 +229,8 @@ fn build_approval_request_event(
             .map_err(|e| ActionSinkError::EventBuild(format!("run tag: {e}")))?,
         Tag::parse(["step", &request.step_id])
             .map_err(|e| ActionSinkError::EventBuild(format!("step tag: {e}")))?,
+        Tag::parse(["step_index", &request.step_index.to_string()])
+            .map_err(|e| ActionSinkError::EventBuild(format!("step_index tag: {e}")))?,
         Tag::parse(["expiration", &request.expires_at.timestamp().to_string()])
             .map_err(|e| ActionSinkError::EventBuild(format!("expiration tag: {e}")))?,
     ];
@@ -734,6 +736,7 @@ mod tests {
             vec![Uuid::from_u128(3).to_string()]
         );
         assert_eq!(tag_values(&event, "step"), vec!["gate".to_owned()]);
+        assert_eq!(tag_values(&event, "step_index"), vec!["4".to_owned()]);
         assert_eq!(
             tag_values(&event, "expiration"),
             vec!["2000000000".to_owned()]

@@ -832,15 +832,24 @@ pub fn build_workflow_trigger(workflow_id: &str) -> Result<EventBuilder, String>
     Ok(EventBuilder::new(Kind::Custom(46020), "").tags(tags))
 }
 
-/// Kind 46030 — grant an approval token (with optional note).
-pub fn build_approval_grant(token: &str, note: Option<&str>) -> Result<EventBuilder, String> {
-    let tags = vec![tag(vec!["t", token])?];
+fn validate_approval_digest(digest: &str) -> Result<(), String> {
+    if digest.len() != 64 || !digest.chars().all(|character| character.is_ascii_hexdigit()) {
+        return Err("approval digest must be 64 hexadecimal characters".into());
+    }
+    Ok(())
+}
+
+/// Kind 46030 — grant an approval digest (with optional note).
+pub fn build_approval_grant(digest: &str, note: Option<&str>) -> Result<EventBuilder, String> {
+    validate_approval_digest(digest)?;
+    let tags = vec![tag(vec!["d", digest])?];
     Ok(EventBuilder::new(Kind::Custom(46030), note.unwrap_or("")).tags(tags))
 }
 
-/// Kind 46031 — deny an approval token (with optional note).
-pub fn build_approval_deny(token: &str, note: Option<&str>) -> Result<EventBuilder, String> {
-    let tags = vec![tag(vec!["t", token])?];
+/// Kind 46031 — deny an approval digest (with optional note).
+pub fn build_approval_deny(digest: &str, note: Option<&str>) -> Result<EventBuilder, String> {
+    validate_approval_digest(digest)?;
+    let tags = vec![tag(vec!["d", digest])?];
     Ok(EventBuilder::new(Kind::Custom(46031), note.unwrap_or("")).tags(tags))
 }
 
@@ -995,5 +1004,26 @@ mod tests {
         );
         assert_eq!(p_tags[0], &vec!["p".to_string(), ALICE_HEX.to_string()]);
         assert_eq!(p_tags[1], &vec!["p".to_string(), BOB_HEX.to_string()]);
+    }
+
+    #[test]
+    fn approval_commands_bind_the_stored_digest_with_a_d_tag() {
+        let digest = "ab".repeat(32);
+        for builder in [
+            build_approval_grant(&digest, Some("yes")).expect("grant"),
+            build_approval_deny(&digest, Some("no")).expect("deny"),
+        ] {
+            let event = builder.sign_with_keys(&Keys::generate()).expect("sign");
+            assert!(event.tags.iter().any(|tag| {
+                let values = tag.as_slice();
+                values.first().map(String::as_str) == Some("d")
+                    && values.get(1) == Some(&digest)
+            }));
+            assert!(!event.tags.iter().any(|tag| {
+                tag.as_slice().first().map(String::as_str) == Some("t")
+            }));
+        }
+        assert!(build_approval_grant("short", None).is_err());
+        assert!(build_approval_deny("not-hex", None).is_err());
     }
 }

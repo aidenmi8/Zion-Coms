@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::Serialize;
 use serde_json::Value;
 use tauri::State;
@@ -45,6 +47,22 @@ pub struct WorkflowSaveWire {
     pub workflow: WorkflowWire,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub webhook_secret: Option<String>,
+}
+
+/// Approval event stream folded into the desktop frontend contract.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct WorkflowApprovalWire {
+    pub token: String,
+    pub workflow_id: String,
+    pub run_id: String,
+    pub step_id: String,
+    pub step_index: i32,
+    pub approver_spec: String,
+    pub status: String,
+    pub approver_pubkey: Option<String>,
+    pub note: Option<String>,
+    pub expires_at: String,
+    pub created_at: i64,
 }
 
 // ── Reads ────────────────────────────────────────────────────────────────────
@@ -254,15 +272,18 @@ pub async fn trigger_workflow(
 pub async fn get_run_approvals(
     workflow_id: String,
     run_id: String,
-    _state: State<'_, AppState>,
-) -> Result<Vec<Value>, String> {
-    // TODO(workflow-runs): Like runs (see `get_workflow_runs`), reconstructing
-    // approvals into the frontend's `WorkflowApproval` shape from lifecycle
-    // events (46010/46011/46012) is a clearly-scoped follow-up tracked under
-    // TODO(workflow-runs). Return a bare empty array so the frontend's
-    // `getRunApprovals` (`raw.map(fromRawApproval)`) is safe.
-    let _ = (workflow_id, run_id);
-    Ok(Vec::new())
+    state: State<'_, AppState>,
+) -> Result<Vec<WorkflowApprovalWire>, String> {
+    let events = query_relay(
+        &state,
+        &[serde_json::json!({
+            "kinds": [46010, 46011, 46012, 46013],
+            "#workflow": [workflow_id.clone()],
+            "#run": [run_id.clone()],
+        })],
+    )
+    .await?;
+    Ok(approvals_from_events(&events, &workflow_id, &run_id))
 }
 
 #[tauri::command]
@@ -307,6 +328,72 @@ fn tag_value(ev: &nostr::Event, name: &str) -> Option<String> {
         let s = t.as_slice();
         (s.len() >= 2 && s[0] == name).then(|| s[1].clone())
     })
+}
+
+fn approvals_from_events(
+    events: &[nostr::Event],
+    workflow_id: &str,
+    run_id: &str,
+) -> Vec<WorkflowApprovalWire> {
+    let mut terminal_by_digest: HashMap<String, &nostr::Event> = HashMap::new();
+    for event in events.iter().filter(|event| {
+        matches!(event.kind.as_u16(), 46_011..=46_013)
+            && tag_value(event, "workflow").as_deref() == Some(workflow_id)
+            && tag_value(event, "run").as_deref() == Some(run_id)
+    }) {
+        let Some(digest) = tag_value(event, "d") else {
+            continue;
+        };
+        let replace = terminal_by_digest
+            .get(&digest)
+            .is_none_or(|current| {
+                (event.created_at, event.id) > (current.created_at, current.id)
+            });
+        if replace {
+            terminal_by_digest.insert(digest, event);
+        }
+    }
+
+    let mut approvals = events
+        .iter()
+        .filter(|event| {
+            event.kind.as_u16() == 46_010
+                && tag_value(event, "workflow").as_deref() == Some(workflow_id)
+                && tag_value(event, "run").as_deref() == Some(run_id)
+        })
+        .filter_map(|request| {
+            let digest = tag_value(request, "d")?;
+            let terminal = terminal_by_digest.get(&digest).copied();
+            let status = match terminal.map(|event| event.kind.as_u16()) {
+                Some(46_011) => "granted",
+                Some(46_012) => "denied",
+                Some(46_013) => "delegated",
+                _ => "pending",
+            };
+            let expires_at = tag_value(request, "expiration")
+                .and_then(|value| value.parse::<i64>().ok())
+                .and_then(|timestamp| chrono::DateTime::<chrono::Utc>::from_timestamp(timestamp, 0))
+                .map(|timestamp| timestamp.to_rfc3339())
+                .unwrap_or_default();
+            Some(WorkflowApprovalWire {
+                token: digest,
+                workflow_id: workflow_id.to_owned(),
+                run_id: run_id.to_owned(),
+                step_id: tag_value(request, "step").unwrap_or_default(),
+                step_index: tag_value(request, "step_index")
+                    .and_then(|value| value.parse::<i32>().ok())
+                    .unwrap_or_default(),
+                approver_spec: tag_value(request, "p").unwrap_or_default(),
+                status: status.to_owned(),
+                approver_pubkey: terminal.and_then(|event| tag_value(event, "actor")),
+                note: None,
+                expires_at,
+                created_at: request.created_at.as_secs() as i64,
+            })
+        })
+        .collect::<Vec<_>>();
+    approvals.sort_by(|left, right| right.created_at.cmp(&left.created_at));
+    approvals
 }
 
 /// Parse a workflow's YAML body into a free-form JSON object. The frontend

@@ -20,8 +20,32 @@ fn wf_event(d: &str, h: &str, yaml: &str) -> nostr::Event {
         .expect("sign")
 }
 
+fn approval_event(kind: u16, digest: &str, created_at: u64) -> nostr::Event {
+    let keys = Keys::generate();
+    let mut tags = vec![
+        Tag::parse(["d", digest]).expect("d tag"),
+        Tag::parse(["workflow", WF]).expect("workflow tag"),
+        Tag::parse(["run", "33333333-3333-3333-3333-333333333333"]).expect("run tag"),
+    ];
+    if kind == 46_010 {
+        tags.extend([
+            Tag::parse(["p", &"11".repeat(32)]).expect("p tag"),
+            Tag::parse(["step", "gate"]).expect("step tag"),
+            Tag::parse(["expiration", "2000000000"]).expect("expiration tag"),
+        ]);
+    } else {
+        tags.push(Tag::parse(["actor", &"22".repeat(32)]).expect("actor tag"));
+    }
+    EventBuilder::new(Kind::Custom(kind), "")
+        .tags(tags)
+        .custom_created_at(nostr::Timestamp::from(created_at))
+        .sign_with_keys(&keys)
+        .expect("sign approval event")
+}
+
 const CHAN: &str = "11111111-1111-1111-1111-111111111111";
 const WF: &str = "22222222-2222-2222-2222-222222222222";
+const RUN: &str = "33333333-3333-3333-3333-333333333333";
 
 const YAML: &str = "\
 name: Greet on join
@@ -167,6 +191,40 @@ fn save_wire_serializes_flat_with_optional_secret() {
     let v = serde_json::to_value(&without).expect("serialize");
     assert!(v.get("webhook_secret").is_none());
     assert_eq!(v.get("id").and_then(Value::as_str), Some(WF));
+}
+
+#[test]
+fn approval_lifecycle_events_fold_to_pending_and_terminal_states() {
+    let pending = "aa".repeat(32);
+    let granted = "bb".repeat(32);
+    let denied = "cc".repeat(32);
+    let delegated = "dd".repeat(32);
+    let events = vec![
+        approval_event(46_010, &pending, 10),
+        approval_event(46_010, &granted, 20),
+        approval_event(46_011, &granted, 21),
+        approval_event(46_010, &denied, 30),
+        approval_event(46_012, &denied, 31),
+        approval_event(46_010, &delegated, 40),
+        approval_event(46_013, &delegated, 41),
+    ];
+
+    let approvals = approvals_from_events(&events, WF, RUN);
+
+    assert_eq!(
+        approvals
+            .iter()
+            .map(|approval| approval.status.as_str())
+            .collect::<Vec<_>>(),
+        vec!["delegated", "denied", "granted", "pending"]
+    );
+    assert!(approvals
+        .iter()
+        .filter(|approval| approval.status != "pending")
+        .all(|approval| approval.approver_pubkey.as_deref() == Some(&"22".repeat(32))));
+    assert!(approvals
+        .iter()
+        .all(|approval| approval.token.len() == 64));
 }
 
 #[test]

@@ -49,6 +49,7 @@ export type WorkflowApprovalStatus =
   | "pending"
   | "granted"
   | "denied"
+  | "delegated"
   | "expired";
 
 export type WorkflowApproval = {

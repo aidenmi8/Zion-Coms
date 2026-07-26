@@ -2780,6 +2780,31 @@ impl Db {
         Ok(result)
     }
 
+    /// Atomically apply an approval decision and persist its related events.
+    pub async fn apply_approval_decision(
+        &self,
+        params: workflow::ApprovalDecisionParams<'_>,
+    ) -> Result<workflow::ApprovalDecisionOutcome> {
+        let community_id = params.community_id;
+        let channel_id = params.channel_id;
+        let lifecycle_event = params.lifecycle_event.clone();
+        let delegated_task_event = params.delegated_task_event.cloned();
+        let outcome = workflow::apply_approval_decision(&self.pool, params).await?;
+        if matches!(&outcome, workflow::ApprovalDecisionOutcome::Applied(_)) {
+            for event in delegated_task_event.iter().chain([&lifecycle_event]) {
+                if let Err(error) =
+                    insert_mentions(&self.pool, community_id, event, channel_id).await
+                {
+                    tracing::warn!(
+                        event_id = %event.id,
+                        "Failed to index approval decision mention: {error}"
+                    );
+                }
+            }
+        }
+        Ok(outcome)
+    }
+
     /// Update an approval's status.
     pub async fn update_approval(
         &self,

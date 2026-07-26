@@ -4,7 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../../shared/branding/sentra_branding.dart';
+import '../../shared/branding/sentra_liquid_orbit.dart';
 import '../../shared/theme/theme.dart';
 import 'pairing_provider.dart';
 
@@ -66,14 +66,7 @@ class PairingPage extends HookConsumerWidget {
                     children: [
                       const Spacer(flex: 2),
 
-                      Semantics(
-                        label: 'Sentra',
-                        image: true,
-                        child: Image.asset(
-                          sentraWordmarkAssetFor(context.colors.brightness),
-                          height: 88,
-                        ),
-                      ),
+                      const SentraLiquidOrbit(wordmarkHeight: 88),
                       const SizedBox(height: Grid.xs),
                       Text(
                         'Welcome to Zion',

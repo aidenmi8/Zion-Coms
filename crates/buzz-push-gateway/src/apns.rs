@@ -15,7 +15,7 @@ use reqwest::{
 use serde::Deserialize;
 use thiserror::Error;
 
-use crate::model::{AppProfile, APNS_RECONNECT_PAYLOAD};
+use crate::model::{AppProfile, WakeClass, APNS_DEFAULT_PAYLOAD, APNS_TIME_SENSITIVE_PAYLOAD};
 
 /// Sanitized delivery outcome. Raw provider bodies never cross this boundary.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -74,11 +74,12 @@ pub fn classify(code: u16, reason: Option<&str>, timestamp: Option<i64>) -> Deli
 }
 
 /// Closed APNs transport controls. No field can be serialized into application
-/// content; the concrete transport always uses `APNS_RECONNECT_PAYLOAD`.
+/// content; the concrete transport selects one compiled-in generic payload.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DeliveryAttempt {
     pub request_id: uuid::Uuid,
     pub expires_at: i64,
+    pub wake_class: WakeClass,
 }
 
 /// APNs sender abstraction for live-validation tests.
@@ -208,7 +209,10 @@ impl PushTransport for ApnsTransport {
         // This is the only APNs application body in the program. It is a
         // byte constant, not a serialization of the relay request, grant,
         // endpoint, headers, route, provider response, or any generic JSON map.
-        let body = APNS_RECONNECT_PAYLOAD;
+        let body = match attempt.wake_class {
+            WakeClass::Default => APNS_DEFAULT_PAYLOAD,
+            WakeClass::TimeSensitive => APNS_TIME_SENSITIVE_PAYLOAD,
+        };
         let now = chrono::Utc::now().timestamp();
         let token = match self.jwt(now) {
             Ok(token) => token,
@@ -306,18 +310,20 @@ mod tests {
             base_url,
         )
         .unwrap();
-        for (request_id, expires_at, profile, endpoint) in [
+        for (request_id, expires_at, profile, endpoint, wake_class) in [
             (
                 uuid::Uuid::nil(),
                 1,
                 AppProfile::BuzzIosProduction,
                 "00".repeat(32),
+                WakeClass::Default,
             ),
             (
                 uuid::Uuid::max(),
                 i64::MAX,
                 AppProfile::BuzzIosSandbox,
                 "ff".repeat(32),
+                WakeClass::TimeSensitive,
             ),
         ] {
             assert_eq!(
@@ -326,6 +332,7 @@ mod tests {
                         DeliveryAttempt {
                             request_id,
                             expires_at,
+                            wake_class,
                         },
                         profile,
                         &endpoint,
@@ -336,9 +343,8 @@ mod tests {
         }
         let captured = bodies.lock().unwrap();
         assert_eq!(captured.len(), 2);
-        assert!(captured
-            .iter()
-            .all(|body| body.as_slice() == APNS_RECONNECT_PAYLOAD));
+        assert_eq!(captured[0].as_slice(), APNS_DEFAULT_PAYLOAD);
+        assert_eq!(captured[1].as_slice(), APNS_TIME_SENSITIVE_PAYLOAD);
     }
 
     #[test]

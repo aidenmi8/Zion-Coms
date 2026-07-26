@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Number, Value};
 use sha2::Digest as _;
 
-pub(crate) const PUSH_KINDS: &[u64] = &[7, 9, 1059, 40007, 46010];
-pub(crate) const URGENT_KINDS: &[u64] = &[];
+pub(crate) const PUSH_KINDS: &[u64] = &[7, 9, 1059, 40002, 40007, 46010];
+pub(crate) const TIME_SENSITIVE_KINDS: &[u64] = &[46010];
 
 /// NIP-PL addressable push-lease event kind.
 pub const KIND_PUSH_LEASE: u32 = 30_350;
@@ -68,7 +68,7 @@ pub struct LeaseLimits<'a> {
     pub app_profiles: &'a [AppProfile<'a>],
     pub supported_classes: &'a [&'a str],
     pub push_kinds: &'a [u64],
-    pub urgent_kinds: &'a [u64],
+    pub time_sensitive_kinds: &'a [u64],
     pub max_subscriptions: usize,
     pub max_kinds: usize,
     pub max_authors: usize,
@@ -251,7 +251,7 @@ fn validate_subscription(sub: &Subscription, limits: &LeaseLimits<'_>) -> Result
     }
     for filter in &sub.ignore {
         // Ignore filters can only subtract from an already-positive match, so
-        // urgent-kind confinement belongs solely to the positive filter.
+        // Time-sensitive confinement belongs solely to the positive filter.
         validate_filter(filter, limits, false, "")?;
     }
     if sub.suppress.as_ref().is_some_and(|s| s.p_tags_max == 0) {
@@ -282,7 +282,11 @@ fn validate_filter(
     if kinds.iter().any(|kind| !limits.push_kinds.contains(kind)) {
         return Err("kind not push-eligible".into());
     }
-    if class == "urgent" && kinds.iter().any(|kind| !limits.urgent_kinds.contains(kind)) {
+    if matches!(class, "time_sensitive" | "urgent")
+        && kinds
+            .iter()
+            .any(|kind| !limits.time_sensitive_kinds.contains(kind))
+    {
         return Err("class not permitted for kind".into());
     }
 
@@ -490,7 +494,7 @@ pub async fn accept(
         &event.content,
     )
     .map_err(|_| "invalid encrypted content".to_string())?;
-    let body = parse_plaintext(&plaintext, MAX_PLAINTEXT)?;
+    let mut body = parse_plaintext(&plaintext, MAX_PLAINTEXT)?;
     let origin = canonical_origin(&state.config.relay_url, tenant.host())?;
     let author_hex = event.pubkey.to_hex();
     let limits = LeaseLimits {
@@ -506,9 +510,9 @@ pub async fn accept(
                 transport: "apns",
             },
         ],
-        supported_classes: &["silent", "default", "time_sensitive"],
+        supported_classes: &["silent", "default", "time_sensitive", "urgent"],
         push_kinds: PUSH_KINDS,
-        urgent_kinds: URGENT_KINDS,
+        time_sensitive_kinds: TIME_SENSITIVE_KINDS,
         max_subscriptions: 16,
         max_kinds: 16,
         max_authors: 20,
@@ -519,6 +523,15 @@ pub async fn accept(
         max_string_len: 512,
     };
     validate_plaintext(&body, &limits)?;
+    if let Some(subscriptions) = body.subscriptions.as_mut() {
+        for subscription in subscriptions {
+            match subscription.class.as_str() {
+                "silent" => subscription.class = "default".to_owned(),
+                "urgent" => subscription.class = "time_sensitive".to_owned(),
+                _ => {}
+            }
+        }
+    }
     let generation =
         i64::try_from(body.generation).map_err(|_| "invalid generation".to_string())?;
     let version = buzz_db::push::LeaseVersion {
@@ -533,21 +546,18 @@ pub async fn accept(
     let active = if body.active {
         let endpoint = body.endpoint.as_deref().expect("validated active endpoint");
         endpoint_hash = sha2::Sha256::digest(endpoint.as_bytes()).to_vec();
-        let max_class = body
+        let normalized_subscriptions = body
             .subscriptions
             .as_ref()
-            .expect("validated subscriptions")
+            .expect("validated subscriptions");
+        let max_class = normalized_subscriptions
             .iter()
             .map(|sub| sub.class.as_str())
             .max_by_key(|class| class_rank(class))
             .expect("non-empty subscriptions");
         capability = endpoint.to_owned();
-        subscriptions = serde_json::to_value(
-            body.subscriptions
-                .as_ref()
-                .expect("validated subscriptions"),
-        )
-        .map_err(|_| "invalid subscriptions".to_string())?;
+        subscriptions = serde_json::to_value(&normalized_subscriptions)
+            .map_err(|_| "invalid subscriptions".to_string())?;
         Some(buzz_db::push::ActiveLease {
             app_profile: body.app_profile.as_deref().expect("validated profile"),
             endpoint_hash: &endpoint_hash,
@@ -576,8 +586,7 @@ fn class_rank(class: &str) -> u8 {
     match class {
         "silent" => 0,
         "default" => 1,
-        "time_sensitive" => 2,
-        "urgent" => 3,
+        "time_sensitive" | "urgent" => 2,
         _ => 0,
     }
 }
@@ -680,9 +689,9 @@ mod tests {
                 id: "p",
                 transport: "apns",
             }],
-            supported_classes: &["default", "urgent"],
-            push_kinds: &[9, 46010],
-            urgent_kinds: &[46010],
+            supported_classes: &["default", "time_sensitive", "urgent"],
+            push_kinds: PUSH_KINDS,
+            time_sensitive_kinds: TIME_SENSITIVE_KINDS,
             max_subscriptions: 4,
             max_kinds: 4,
             max_authors: 4,
@@ -702,7 +711,7 @@ mod tests {
             .collect::<Vec<_>>()
             .join(", ");
         let predicate = format!("NEW.kind IN ({kinds})");
-        let migration = include_str!("../../../../migrations/0018_push_match_queue.sql");
+        let migration = include_str!("../../../../migrations/0025_zion_watch_approvals_push.sql");
         assert!(
             migration.contains(&predicate),
             "migration trigger must use PUSH_KINDS exactly: {predicate}"
@@ -761,11 +770,23 @@ mod tests {
     }
 
     #[test]
-    fn urgent_is_limited_by_event_kind() {
-        let body = parse_plaintext(r##"{"v":1,"origin":"o","generation":1,"active":true,"app_profile":"p","transport":"apns","endpoint":"token","subscriptions":[{"filter":{"kinds":[9],"#p":["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]},"class":"urgent"}]}"##, 4096).unwrap();
+    fn time_sensitive_is_limited_by_event_kind() {
+        let body = parse_plaintext(r##"{"v":1,"origin":"o","generation":1,"active":true,"app_profile":"p","transport":"apns","endpoint":"token","subscriptions":[{"filter":{"kinds":[9],"#p":["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]},"class":"time_sensitive"}]}"##, 4096).unwrap();
         assert_eq!(
             validate_plaintext(&body, &limits()).unwrap_err(),
             "class not permitted for kind"
         );
+    }
+
+    #[test]
+    fn watch_push_kind_and_wake_class_allowlists_are_closed() {
+        assert_eq!(PUSH_KINDS, &[7, 9, 1059, 40002, 40007, 46010]);
+        assert_eq!(TIME_SENSITIVE_KINDS, &[46010]);
+    }
+
+    #[test]
+    fn default_watch_subscriptions_accept_message_mention_and_gift_wrap() {
+        let body = parse_plaintext(r##"{"v":1,"origin":"o","generation":1,"active":true,"app_profile":"p","transport":"apns","endpoint":"token","subscriptions":[{"filter":{"kinds":[9,40002,1059],"#p":["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]},"class":"default"}]}"##, 4096).unwrap();
+        assert!(validate_plaintext(&body, &limits()).is_ok());
     }
 }

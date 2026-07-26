@@ -12,6 +12,7 @@ const sentraLiquidOrbitDuration = Duration(milliseconds: 7600);
 class SentraLiquidOrbit extends HookWidget {
   const SentraLiquidOrbit({super.key, this.wordmarkHeight = 88});
 
+  /// The rendered height of the Sentra wordmark.
   final double wordmarkHeight;
 
   @override

@@ -52,7 +52,9 @@ struct FocusedQueueView: View {
   }
 
   private var emptyState: some View {
-    VStack(spacing: 10) {
+    VStack(spacing: 8) {
+      ZionBrandMark()
+        .padding(.bottom, 2)
       Image(systemName: store.isShowingCachedData ? "iphone.slash" : "checkmark.circle")
         .font(.title2)
         .foregroundStyle(

@@ -8,6 +8,7 @@ IOS_DIRECTORY = File.expand_path("..", __dir__)
 PROJECT_PATH = File.join(IOS_DIRECTORY, "Runner.xcodeproj")
 WATCH_SOURCE_NAMES = %w[
   ZionWatchApp.swift
+  ZionBranding.swift
   WatchInboxStore.swift
   WatchInboxCache.swift
   WatchConnectivityClient.swift
@@ -19,6 +20,7 @@ WATCH_SOURCE_NAMES = %w[
   ActionConfirmationView.swift
 ].freeze
 WATCH_TEST_NAMES = %w[
+  ZionBrandingTests.swift
   WatchInboxStoreTests.swift
   WatchInboxCacheTests.swift
 ].freeze
@@ -59,6 +61,7 @@ def configure_watch_target(target, base_configuration)
   target.build_configurations.each do |configuration|
     configuration.base_configuration_reference = base_configuration
     configuration.build_settings.merge!(
+      "ASSETCATALOG_COMPILER_APPICON_NAME" => "AppIcon",
       "CODE_SIGN_STYLE" => "Automatic",
       "CURRENT_PROJECT_VERSION" => "$(FLUTTER_BUILD_NUMBER)",
       "ENABLE_PREVIEWS" => "YES",

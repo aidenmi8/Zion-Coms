@@ -2,7 +2,7 @@ import Flutter
 import UIKit
 import XCTest
 
-@testable import Zion
+@testable import Buzz
 
 class RunnerTests: XCTestCase {
 

@@ -5,9 +5,9 @@
 
 use buzz_core::{
     kind::{
-        KIND_AGENT_OBSERVER_FRAME, KIND_APPROVAL_DENY, KIND_APPROVAL_GRANT, KIND_DELETION,
-        KIND_DM_ADD_MEMBER, KIND_DM_OPEN, KIND_EMOJI_SET, KIND_GIT_ISSUE, KIND_GIT_PATCH,
-        KIND_GIT_PR_UPDATE, KIND_GIT_PULL_REQUEST, KIND_GIT_REPO_ANNOUNCEMENT,
+        KIND_AGENT_OBSERVER_FRAME, KIND_APPROVAL_DENY, KIND_APPROVAL_GRANT, KIND_APPROVAL_PASS,
+        KIND_DELETION, KIND_DM_ADD_MEMBER, KIND_DM_OPEN, KIND_EMOJI_SET, KIND_GIT_ISSUE,
+        KIND_GIT_PATCH, KIND_GIT_PR_UPDATE, KIND_GIT_PULL_REQUEST, KIND_GIT_REPO_ANNOUNCEMENT,
         KIND_GIT_STATUS_CLOSED, KIND_GIT_STATUS_DRAFT, KIND_GIT_STATUS_MERGED,
         KIND_GIT_STATUS_OPEN, KIND_IA_ARCHIVE_REQUEST, KIND_IA_UNARCHIVE_REQUEST,
         KIND_MODERATION_BAN, KIND_MODERATION_RESOLVE_REPORT, KIND_MODERATION_TIMEOUT,
@@ -1529,6 +1529,23 @@ pub fn build_workflow_approval(
     };
     let tags = vec![tag(&["d", token_hash])?];
     Ok(EventBuilder::new(Kind::Custom(kind as u16), note).tags(tags))
+}
+
+/// Build a command that delegates a pending workflow approval to an agent.
+///
+/// `token_hash` is the hex-encoded SHA-256 approval-token digest used as the
+/// command's `d` tag. `target_pubkey` is the exact agent pubkey used as its
+/// single `p` tag. The relay performs membership, invocation-policy, presence,
+/// and requester/actor validation before applying the command.
+pub fn build_workflow_approval_pass(
+    token_hash: &str,
+    target_pubkey: &str,
+    note: &str,
+) -> Result<EventBuilder, SdkError> {
+    let token_hash = check_hex_exact(token_hash, 64, "token_hash")?;
+    let target_pubkey = check_pubkey_hex(target_pubkey, "target_pubkey")?;
+    let tags = vec![tag(&["d", &token_hash])?, tag(&["p", &target_pubkey])?];
+    Ok(EventBuilder::new(Kind::Custom(KIND_APPROVAL_PASS as u16), note).tags(tags))
 }
 
 /// Build a DM open event (kind 41010).
@@ -3312,6 +3329,33 @@ mod tests {
         let short = "a".repeat(32);
         let err = build_workflow_approval(&short, true, "").unwrap_err();
         assert!(matches!(err, SdkError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn workflow_approval_pass_targets_one_agent() {
+        let hash = "c".repeat(64);
+        let target = "d".repeat(64);
+        let ev = sign(build_workflow_approval_pass(&hash, &target, "Please take this").unwrap());
+
+        assert_eq!(ev.kind.as_u16(), 46032);
+        assert_eq!(tag_values(&ev, "d"), vec![hash]);
+        assert_eq!(tag_values(&ev, "p"), vec![target]);
+        assert_eq!(ev.content, "Please take this");
+    }
+
+    #[test]
+    fn workflow_approval_pass_rejects_malformed_coordinates() {
+        let hash = "e".repeat(64);
+        let target = "f".repeat(64);
+
+        assert!(matches!(
+            build_workflow_approval_pass("short", &target, ""),
+            Err(SdkError::InvalidInput(_))
+        ));
+        assert!(matches!(
+            build_workflow_approval_pass(&hash, "not-a-pubkey", ""),
+            Err(SdkError::InvalidInput(_))
+        ));
     }
 
     #[test]

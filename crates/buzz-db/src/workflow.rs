@@ -128,6 +128,8 @@ pub enum ApprovalStatus {
     Granted,
     /// Approval was denied; the run should fail.
     Denied,
+    /// Approval was delegated to another eligible agent.
+    Delegated,
     /// The approval window elapsed without a decision.
     Expired,
 }
@@ -138,6 +140,7 @@ impl fmt::Display for ApprovalStatus {
             ApprovalStatus::Pending => write!(f, "pending"),
             ApprovalStatus::Granted => write!(f, "granted"),
             ApprovalStatus::Denied => write!(f, "denied"),
+            ApprovalStatus::Delegated => write!(f, "delegated"),
             ApprovalStatus::Expired => write!(f, "expired"),
         }
     }
@@ -150,6 +153,7 @@ impl FromStr for ApprovalStatus {
             "pending" => Ok(ApprovalStatus::Pending),
             "granted" => Ok(ApprovalStatus::Granted),
             "denied" => Ok(ApprovalStatus::Denied),
+            "delegated" => Ok(ApprovalStatus::Delegated),
             "expired" => Ok(ApprovalStatus::Expired),
             other => Err(DbError::InvalidData(format!(
                 "unknown approval status: {other}"
@@ -258,6 +262,12 @@ pub struct ApprovalRecord {
     pub status: ApprovalStatus,
     /// Compressed public key bytes of the user who acted on this approval.
     pub approver_pubkey: Option<Vec<u8>>,
+    /// Compressed public key bytes of the agent receiving a delegated approval.
+    pub delegated_to_pubkey: Option<Vec<u8>>,
+    /// When the approval was delegated.
+    pub delegated_at: Option<DateTime<Utc>>,
+    /// Relay event ID bytes for the actionable approval request.
+    pub request_event_id: Option<Vec<u8>>,
     /// Optional note left by the approver.
     pub note: Option<String>,
     /// When this approval request expires.
@@ -978,7 +988,8 @@ pub async fn get_approval_by_stored_hash(
     let row = sqlx::query(
         r#"
         SELECT token, workflow_id, run_id, step_id, step_index, approver_spec,
-               status::text AS status, approver_pubkey, note, expires_at, created_at
+               status::text AS status, approver_pubkey, delegated_to_pubkey,
+               delegated_at, request_event_id, note, expires_at, created_at
         FROM workflow_approvals
         WHERE community_id = $1 AND token = $2
         "#,
@@ -1002,7 +1013,8 @@ pub async fn get_run_approvals(
     let rows = sqlx::query(
         r#"
         SELECT token, workflow_id, run_id, step_id, step_index, approver_spec,
-               status::text AS status, approver_pubkey, note, expires_at, created_at
+               status::text AS status, approver_pubkey, delegated_to_pubkey,
+               delegated_at, request_event_id, note, expires_at, created_at
         FROM workflow_approvals
         WHERE community_id = $1 AND run_id = $2 AND workflow_id = $3
         ORDER BY step_index, created_at
@@ -1158,6 +1170,9 @@ fn row_to_approval_record(row: sqlx::postgres::PgRow) -> Result<ApprovalRecord> 
         approver_spec: row.try_get("approver_spec")?,
         status,
         approver_pubkey: row.try_get("approver_pubkey")?,
+        delegated_to_pubkey: row.try_get("delegated_to_pubkey")?,
+        delegated_at: row.try_get("delegated_at")?,
+        request_event_id: row.try_get("request_event_id")?,
         note: row.try_get("note")?,
         expires_at: row.try_get("expires_at")?,
         created_at: row.try_get("created_at")?,
@@ -1269,12 +1284,13 @@ mod tests {
         assert_eq!(ApprovalStatus::Pending.to_string(), "pending");
         assert_eq!(ApprovalStatus::Granted.to_string(), "granted");
         assert_eq!(ApprovalStatus::Denied.to_string(), "denied");
+        assert_eq!(ApprovalStatus::Delegated.to_string(), "delegated");
         assert_eq!(ApprovalStatus::Expired.to_string(), "expired");
     }
 
     #[test]
     fn approval_status_from_str_round_trips() {
-        for s in &["pending", "granted", "denied", "expired"] {
+        for s in &["pending", "granted", "denied", "delegated", "expired"] {
             let status: ApprovalStatus = s.parse().expect("parse");
             assert_eq!(status.to_string(), *s);
         }
@@ -1574,6 +1590,9 @@ mod tests {
             approver_spec: "@engineering-lead".to_owned(),
             status: ApprovalStatus::Pending,
             approver_pubkey: None,
+            delegated_to_pubkey: None,
+            delegated_at: None,
+            request_event_id: None,
             note: None,
             expires_at,
             created_at: now,
@@ -1604,6 +1623,9 @@ mod tests {
             approver_spec: "@manager".to_owned(),
             status: ApprovalStatus::Granted,
             approver_pubkey: Some(approver_pubkey.clone()),
+            delegated_to_pubkey: None,
+            delegated_at: None,
+            request_event_id: None,
             note: Some("Looks good, approved.".to_owned()),
             expires_at: now,
             created_at: now,
@@ -1627,6 +1649,9 @@ mod tests {
             approver_spec: "@manager".to_owned(),
             status: ApprovalStatus::Denied,
             approver_pubkey: Some(vec![0xbb; 32]),
+            delegated_to_pubkey: None,
+            delegated_at: None,
+            request_event_id: None,
             note: Some("Not ready for production.".to_owned()),
             expires_at: now,
             created_at: now,
@@ -1648,6 +1673,9 @@ mod tests {
             approver_spec: "@lead".to_owned(),
             status: ApprovalStatus::Pending,
             approver_pubkey: None,
+            delegated_to_pubkey: None,
+            delegated_at: None,
+            request_event_id: None,
             note: None,
             expires_at: now,
             created_at: now,

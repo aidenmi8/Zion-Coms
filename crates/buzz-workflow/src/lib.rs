@@ -263,7 +263,7 @@ impl WorkflowEngine {
     /// Called from the event handler post-store hook for every stored event.
     ///
     /// Checks whether any workflow in the event's channel has a matching trigger.
-    /// Workflow execution events (kinds 46001–46012) are excluded to prevent loops.
+    /// Workflow execution events (kinds 46001–46013) are excluded to prevent loops.
     ///
     /// `community_id` is the server-resolved community the event was stored
     /// under — `StoredEvent` does not carry it, and the same channel UUID can
@@ -1365,7 +1365,7 @@ steps:
 
     #[test]
     fn workflow_execution_kinds_do_not_match_any_trigger() {
-        // Workflow execution events (46001–46012) must never match triggers
+        // Workflow execution events (46001–46013) must never match triggers
         // to prevent infinite loops. The on_event() method filters these out
         // before calling trigger_matches_event, but verify the function itself
         // also returns false for these kinds.
@@ -1373,7 +1373,7 @@ steps:
         let react_trigger = TriggerDef::ReactionAdded { emoji: None };
 
         for kind in buzz_core::kind::KIND_WORKFLOW_TRIGGERED
-            ..=buzz_core::kind::KIND_WORKFLOW_APPROVAL_DENIED
+            ..=buzz_core::kind::KIND_WORKFLOW_APPROVAL_DELEGATED
         {
             assert!(
                 !trigger_matches_event(&msg_trigger, kind),

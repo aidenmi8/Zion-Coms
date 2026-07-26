@@ -45,7 +45,7 @@ pub(crate) fn bounded_kind_label(kind: u32) -> String {
         44100..=44101 => kind.to_string(),
         44200 => kind.to_string(),
         45001..=45003 => kind.to_string(),
-        46001..=46012 | 46020 | 46030..=46031 => kind.to_string(),
+        46001..=46013 | 46020 | 46030..=46032 => kind.to_string(),
         48001 | 48100..=48103 | 48106 => kind.to_string(),
         49001 => kind.to_string(),
         _ => "other".to_string(),
@@ -1149,6 +1149,18 @@ mod tests {
     use tokio::sync::{mpsc, Mutex, RwLock};
     use tokio_util::sync::CancellationToken;
     use uuid::Uuid;
+
+    #[test]
+    fn approval_pass_and_delegated_lifecycle_have_bounded_metric_labels() {
+        assert_eq!(
+            super::bounded_kind_label(buzz_core::kind::KIND_APPROVAL_PASS),
+            "46032"
+        );
+        assert_eq!(
+            super::bounded_kind_label(buzz_core::kind::KIND_WORKFLOW_APPROVAL_DELEGATED),
+            "46013"
+        );
+    }
 
     #[test]
     fn fanout_event_frame_matches_legacy_format_byte_for_byte() {

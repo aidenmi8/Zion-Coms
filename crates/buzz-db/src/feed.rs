@@ -229,7 +229,7 @@ fn build_activity_query(
 /// Find recent activity across accessible channels (for watched topics / agent activity).
 ///
 /// Returns stream messages, forum posts, and agent job events.
-/// Workflow execution kinds (46001-46012) are intentionally excluded to avoid noise.
+/// Workflow execution kinds (46001-46013) are intentionally excluded to avoid noise.
 /// **Performance**: uses indexed `kind` + `channel_id` columns -- no JSON scan.
 /// `limit` is capped at [`FEED_MAX_LIMIT`] regardless of the value passed by the caller.
 pub async fn query_activity(
@@ -654,8 +654,8 @@ mod tests {
             KIND_JOB_RESULT,
         ];
 
-        use buzz_core::kind::{KIND_WORKFLOW_APPROVAL_DENIED, KIND_WORKFLOW_TRIGGERED};
-        for kind in KIND_WORKFLOW_TRIGGERED..=KIND_WORKFLOW_APPROVAL_DENIED {
+        use buzz_core::kind::{KIND_WORKFLOW_APPROVAL_DELEGATED, KIND_WORKFLOW_TRIGGERED};
+        for kind in KIND_WORKFLOW_TRIGGERED..=KIND_WORKFLOW_APPROVAL_DELEGATED {
             assert!(
                 !activity_kinds.contains(&kind),
                 "workflow execution kind {kind} must NOT be in activity"

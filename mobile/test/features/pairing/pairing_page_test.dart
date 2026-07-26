@@ -43,9 +43,27 @@ void main() {
 
       expect(find.byType(SentraLiquidOrbit), findsOneWidget);
       expect(find.text('Welcome to Zion'), findsOneWidget);
-      expect(find.text('Scan QR Code'), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
-      expect(find.widgetWithText(FilledButton, 'Connect'), findsOneWidget);
+      final pageBounds = tester.getRect(
+        find.descendant(
+          of: find.byType(PairingPage),
+          matching: find.byType(Scaffold),
+        ),
+      );
+      final scanButton = find.widgetWithText(FilledButton, 'Scan QR Code');
+      final textField = find.byType(TextField);
+      final connectButton = find.widgetWithText(FilledButton, 'Connect');
+
+      for (final control in [scanButton, textField, connectButton]) {
+        expect(control, findsOneWidget);
+        expect(control.hitTestable(), findsOneWidget);
+        final bounds = tester.getRect(control);
+        expect(bounds.top, greaterThanOrEqualTo(pageBounds.top));
+        expect(bounds.bottom, lessThanOrEqualTo(pageBounds.bottom));
+      }
+
+      expect(tester.widget<TextField>(textField).enabled, isTrue);
+      expect(tester.widget<FilledButton>(scanButton).onPressed, isNotNull);
+      expect(tester.widget<FilledButton>(connectButton).onPressed, isNotNull);
       expect(tester.takeException(), isNull);
     });
 

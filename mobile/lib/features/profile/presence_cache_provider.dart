@@ -12,9 +12,15 @@ import '../../shared/relay/relay.dart';
 /// publish presence purely over WS are fine, and TTL expiry will be handled
 /// by the relay-side `presence:true` filter extension when that lands.
 class PresenceCacheNotifier extends Notifier<Map<String, String>> {
+  static const presenceTtl = Duration(seconds: 90);
+
   final Set<String> _tracked = {};
+  final Map<String, DateTime> _expiresAtByPubkey = {};
   void Function()? _presenceUnsub;
   int _subscriptionVersion = 0;
+
+  Map<String, DateTime> get expiresAtByPubkey =>
+      Map.unmodifiable(_expiresAtByPubkey);
 
   @override
   Map<String, String> build() {
@@ -23,6 +29,7 @@ class PresenceCacheNotifier extends Notifier<Map<String, String>> {
     ref.onDispose(() {
       _presenceUnsub?.call();
       _presenceUnsub = null;
+      _expiresAtByPubkey.clear();
     });
 
     if (sessionState.status == SessionStatus.connected) {
@@ -77,7 +84,15 @@ class PresenceCacheNotifier extends Notifier<Map<String, String>> {
     if (!_tracked.contains(pubkey)) return;
     final status = event.content;
     if (status != 'online' && status != 'away' && status != 'offline') return;
-    if (state[pubkey] == status) return;
+    final observedAt = DateTime.fromMillisecondsSinceEpoch(
+      event.createdAt * 1000,
+      isUtc: true,
+    );
+    final expiresAt = observedAt.add(presenceTtl);
+    if (state[pubkey] == status && _expiresAtByPubkey[pubkey] == expiresAt) {
+      return;
+    }
+    _expiresAtByPubkey[pubkey] = expiresAt;
     final updated = Map<String, String>.from(state);
     updated[pubkey] = status;
     state = updated;

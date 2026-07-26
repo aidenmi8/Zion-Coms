@@ -4,6 +4,7 @@ import '../../shared/relay/relay.dart';
 import '../channels/channel_management_provider.dart';
 import '../profile/user_cache_provider.dart';
 import '../profile/user_profile.dart';
+import 'channels_provider.dart';
 
 /// Sends messages by signing an event with the user's nsec and publishing it
 /// over the relay's NIP-42-authenticated WebSocket session.
@@ -11,15 +12,18 @@ class SendMessage {
   final SignedEventRelay _signedEventRelay;
   final Future<List<ChannelMember>> Function(String channelId) _fetchMembers;
   final Map<String, UserProfile> Function() _readUserCache;
+  final bool Function(String channelId) _isDirectMessage;
 
   SendMessage({
     required SignedEventRelay signedEventRelay,
     required Future<List<ChannelMember>> Function(String channelId)
     fetchMembers,
     required Map<String, UserProfile> Function() readUserCache,
+    required bool Function(String channelId) isDirectMessage,
   }) : _signedEventRelay = signedEventRelay,
        _fetchMembers = fetchMembers,
-       _readUserCache = readUserCache;
+       _readUserCache = readUserCache,
+       _isDirectMessage = isDirectMessage;
 
   /// Send a text message to a channel.
   ///
@@ -38,8 +42,17 @@ class SendMessage {
   }) async {
     // Use explicitly passed pubkeys, or resolve @mentions against
     // channel members to avoid matching the wrong user.
+    final isDirectMessage = _isDirectMessage(channelId);
+    final directMessageMembers = isDirectMessage
+        ? await _fetchMembers(channelId)
+        : const <ChannelMember>[];
     final resolvedMentions =
-        mentionPubkeys ?? await _resolveMentions(content, channelId);
+        mentionPubkeys ??
+        await _resolveMentions(
+          content,
+          channelId,
+          prefetchedMembers: directMessageMembers,
+        );
     final authorPubkey = _signedEventRelay.pubkey;
 
     // Normalize mentions: lowercase, deduplicate, exclude self (matching
@@ -47,8 +60,11 @@ class SendMessage {
     final selfLower = authorPubkey?.toLowerCase();
     final seenMentions = <String>{?selfLower};
     final normalizedMentions = <String>[
-      for (final pk in resolvedMentions)
-        if (seenMentions.add(pk.toLowerCase())) pk,
+      for (final pk in [
+        ...resolvedMentions,
+        for (final member in directMessageMembers) member.pubkey,
+      ])
+        if (seenMentions.add(pk.toLowerCase())) pk.toLowerCase(),
     ];
 
     final tags = <List<String>>[
@@ -72,8 +88,9 @@ class SendMessage {
   /// if the member fetch fails.
   Future<List<String>> _resolveMentions(
     String content,
-    String channelId,
-  ) async {
+    String channelId, {
+    List<ChannelMember>? prefetchedMembers,
+  }) async {
     final mentionPattern = RegExp(r'@(\w+)');
     final matches = mentionPattern.allMatches(content);
     if (matches.isEmpty) return const [];
@@ -81,7 +98,7 @@ class SendMessage {
     // Try to get channel member pubkeys for scoped resolution.
     Set<String>? memberPubkeys;
     try {
-      final members = await _fetchMembers(channelId);
+      final members = prefetchedMembers ?? await _fetchMembers(channelId);
       memberPubkeys = {for (final m in members) m.pubkey.toLowerCase()};
     } catch (_) {
       // Non-fatal — fall through to unscoped cache lookup.
@@ -146,5 +163,12 @@ final sendMessageProvider = Provider<SendMessage>((ref) {
     fetchMembers: (channelId) =>
         ref.read(channelMembersProvider(channelId).future),
     readUserCache: () => ref.read(userCacheProvider),
+    isDirectMessage: (channelId) {
+      final channels = ref.read(channelsProvider).asData?.value;
+      return channels?.any(
+            (channel) => channel.id == channelId && channel.isDm,
+          ) ??
+          false;
+    },
   );
 });

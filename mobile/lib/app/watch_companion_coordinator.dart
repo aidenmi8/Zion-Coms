@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'push_companion_provider.dart';
 import '../features/activity/activity_provider.dart';
 import '../features/activity/feed_item.dart';
 import '../features/channels/channel.dart';
@@ -9,10 +13,58 @@ import '../features/channels/mentions/mention_candidates_provider.dart';
 import '../features/profile/user_cache_provider.dart';
 import '../shared/community/community.dart';
 import '../shared/community/community_provider.dart';
+import '../shared/apple/apple_companion_channel.dart';
+import '../shared/deeplink/pending_deep_link_provider.dart';
 import '../shared/relay/nostr_models.dart';
+import '../shared/relay/relay_session.dart';
+import '../shared/relay/signed_event_relay.dart';
+import '../shared/watch/watch_action_ledger.dart';
+import '../shared/watch/watch_action_service.dart';
 import '../shared/watch/watch_agent_candidates.dart';
 import '../shared/watch/watch_inbox_mapper.dart';
 import '../shared/watch/watch_models.dart';
+
+typedef WatchActionExecutor =
+    Future<WatchActionResult> Function(WatchActionRequest request);
+
+/// Owns the one native action stream and keeps transport concerns separate
+/// from the phone-owned relay action service.
+class WatchPhoneBridgeCoordinator {
+  final AppleWatchBridgeClient _bridge;
+  final WatchActionExecutor _execute;
+  StreamSubscription<WatchActionRequest>? _actionSubscription;
+
+  WatchPhoneBridgeCoordinator({
+    required AppleWatchBridgeClient bridge,
+    required WatchActionExecutor execute,
+  }) : _bridge = bridge,
+       _execute = execute;
+
+  void start() {
+    _actionSubscription ??= _bridge.watchActions().listen(
+      (request) => unawaited(_handle(request)),
+      onError: (_) {},
+    );
+  }
+
+  Future<void> publish(WatchInboxSnapshot? snapshot) async {
+    if (snapshot == null) {
+      await _bridge.clearWatchSnapshot();
+    } else {
+      await _bridge.publishWatchSnapshot(snapshot);
+    }
+  }
+
+  Future<void> dispose() async {
+    await _actionSubscription?.cancel();
+    _actionSubscription = null;
+  }
+
+  Future<void> _handle(WatchActionRequest request) async {
+    final result = await _execute(request);
+    await _bridge.completeWatchAction(result);
+  }
+}
 
 class WatchCompanionCoordinator {
   final WatchInboxMapper _mapper;
@@ -151,4 +203,74 @@ final watchInboxSnapshotProvider = Provider<WatchInboxSnapshot?>((ref) {
         agents: ref.watch(watchAgentDirectoryInputsProvider),
         presenceByPubkey: ref.watch(watchAgentPresenceInputsProvider),
       );
+});
+
+final watchActionLedgerProvider = FutureProvider<WatchActionLedger>((ref) {
+  return createApplicationSupportWatchActionLedger();
+});
+
+final watchPhoneBridgeCoordinatorProvider =
+    Provider<WatchPhoneBridgeCoordinator?>((ref) {
+      if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return null;
+      final coordinator = WatchPhoneBridgeCoordinator(
+        bridge: ref.watch(appleWatchBridgeClientProvider),
+        execute: (request) async {
+          final community = await ref.read(activeCommunityProvider.future);
+          final snapshot = ref.read(watchInboxSnapshotProvider);
+          final ledger = await ref.read(watchActionLedgerProvider.future);
+          final service = WatchActionService(
+            signedEventRelay: SignedEventRelay(
+              session: ref.read(relaySessionProvider.notifier),
+              nsec: community?.nsec,
+            ),
+            ledger: ledger,
+            activeCommunityId: () => community?.id,
+            findItem: (communityId, itemId) {
+              if (snapshot?.communityId != communityId) return null;
+              return snapshot?.items
+                  .where((item) => item.itemId == itemId)
+                  .firstOrNull;
+            },
+            onResolved: (itemId) {
+              ref.read(watchCompanionCoordinatorProvider).markResolved(itemId);
+              ref.invalidate(watchInboxSnapshotProvider);
+            },
+            onOpenOnPhone: (item) async {
+              ref
+                  .read(pendingDeepLinkProvider.notifier)
+                  .handleUri(
+                    Uri(
+                      scheme: 'buzz',
+                      host: 'message',
+                      queryParameters: {
+                        'channel': item.channelId!,
+                        'id': item.sourceEventId,
+                      },
+                    ),
+                  );
+            },
+          );
+          return service.execute(request);
+        },
+      );
+      coordinator.start();
+      ref.onDispose(() {
+        unawaited(coordinator.dispose());
+      });
+      return coordinator;
+    });
+
+/// Publishes only the active community snapshot, and clears the watch cache on
+/// sign-out or while the active community is unavailable.
+final watchPhoneBridgeBindingProvider = Provider<void>((ref) {
+  final coordinator = ref.watch(watchPhoneBridgeCoordinatorProvider);
+  final snapshot = ref.watch(watchInboxSnapshotProvider);
+  if (coordinator == null) return;
+  Future.microtask(() async {
+    try {
+      await coordinator.publish(snapshot);
+    } on AppleCompanionException {
+      // The app remains fully usable when WatchConnectivity is unavailable.
+    }
+  });
 });

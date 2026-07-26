@@ -31,8 +31,8 @@ class PendingDeepLinkNotifier extends Notifier<BuzzDeepLink?> {
     return null;
   }
 
-  /// Parse and park an incoming URI. Unsupported links are ignored loudly.
-  @visibleForTesting
+  /// Parse and park an incoming URI. Used by platform links and companion
+  /// surfaces such as Open on iPhone.
   void handleUri(Uri uri) {
     final link = parseBuzzDeepLink(uri);
     if (link == null) {

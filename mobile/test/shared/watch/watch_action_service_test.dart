@@ -118,6 +118,7 @@ WatchActionService _service({
   required WatchActionLedger ledger,
   WatchInboxItem? item,
   void Function(String itemId)? onResolved,
+  Future<void> Function(WatchInboxItem item)? onOpenOnPhone,
 }) {
   final approval = item ?? _approval();
   return WatchActionService(
@@ -130,6 +131,7 @@ WatchActionService _service({
         : null,
     now: () => DateTime.utc(2026, 7, 26, 12),
     onResolved: onResolved,
+    onOpenOnPhone: onOpenOnPhone,
   );
 }
 
@@ -229,4 +231,25 @@ void main() {
       expect(await removed.future, 'approval-event');
     },
   );
+
+  test('Open on iPhone routes locally without signing or resolving', () async {
+    final relay = _FakeRelay();
+    final opened = <WatchInboxItem>[];
+    final resolved = <String>[];
+    final service = _service(
+      relay: relay,
+      ledger: WatchActionLedger(storage: _MemoryLedgerStorage()),
+      onOpenOnPhone: (item) async => opened.add(item),
+      onResolved: resolved.add,
+    );
+
+    final result = await service.execute(
+      _request('open-1', WatchActionKind.openOnPhone),
+    );
+
+    expect(result.outcome, WatchActionOutcome.accepted);
+    expect(opened.single.itemId, 'approval-event');
+    expect(relay.submissions, isEmpty);
+    expect(resolved, isEmpty);
+  });
 }

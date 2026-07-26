@@ -5,6 +5,7 @@ import Foundation
 final class AppleCompanionPlugin: NSObject, @preconcurrency FlutterStreamHandler {
   private let registrar: ApplicationRemoteNotificationRegistrar
   private let service: PushEnrollmentService
+  private let watchBridge: WatchSessionBridge?
   private var eventSink: FlutterEventSink?
 
   init(binaryMessenger: FlutterBinaryMessenger) {
@@ -17,6 +18,7 @@ final class AppleCompanionPlugin: NSObject, @preconcurrency FlutterStreamHandler
       gateway: URLSessionPushGateway(),
       keychain: KeychainStore()
     )
+    watchBridge = WatchSessionBridge()
     super.init()
 
     let methodChannel = FlutterMethodChannel(
@@ -55,10 +57,14 @@ final class AppleCompanionPlugin: NSObject, @preconcurrency FlutterStreamHandler
     eventSink events: @escaping FlutterEventSink
   ) -> FlutterError? {
     eventSink = events
+    watchBridge?.setActionHandler { [weak self] request in
+      self?.emitWatchAction(request)
+    }
     return nil
   }
 
   func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    watchBridge?.setActionHandler(nil)
     eventSink = nil
     return nil
   }
@@ -77,6 +83,17 @@ final class AppleCompanionPlugin: NSObject, @preconcurrency FlutterStreamHandler
       case "revokeEndpoint":
         let context = try Self.context(call.arguments)
         try await service.revokeEndpoint(context)
+        result(nil)
+      case "publishWatchSnapshot":
+        let snapshot = try Self.watchSnapshot(call.arguments)
+        try watchBridge?.publish(snapshot)
+        result(nil)
+      case "clearWatchSnapshot":
+        try watchBridge?.clearSnapshot()
+        result(nil)
+      case "completeWatchAction":
+        let actionResult = try Self.watchActionResult(call.arguments)
+        try watchBridge?.complete(actionResult)
         result(nil)
       default:
         result(FlutterMethodNotImplemented)
@@ -123,6 +140,38 @@ final class AppleCompanionPlugin: NSObject, @preconcurrency FlutterStreamHandler
       appProfileID: appProfileID,
       expiresAt: Date(timeIntervalSince1970: TimeInterval(expiresAt))
     )
+  }
+
+  private static func watchSnapshot(_ arguments: Any?) throws
+    -> WatchSnapshotEnvelope
+  {
+    try WatchSnapshotEnvelope.decode(try jsonData(arguments))
+  }
+
+  private static func watchActionResult(_ arguments: Any?) throws
+    -> WatchActionResultEnvelope
+  {
+    try WatchActionResultEnvelope.decode(try jsonData(arguments))
+  }
+
+  private static func jsonData(_ value: Any?) throws -> Data {
+    guard let value, JSONSerialization.isValidJSONObject(value) else {
+      throw WatchWireError.invalidField("payload")
+    }
+    return try JSONSerialization.data(withJSONObject: value)
+  }
+
+  private func emitWatchAction(_ request: WatchActionRequestEnvelope) {
+    do {
+      let object = try JSONSerialization.jsonObject(with: request.encoded())
+      guard let action = object as? [String: Any] else {
+        throw WatchWireError.invalidField("action")
+      }
+      eventSink?(["watchAction": action])
+    } catch {
+      // The bridge validates before persistence, so reaching this branch means
+      // the in-memory payload could not be represented by Flutter's JSON codec.
+    }
   }
 
   private static func wire(_ grant: PushEndpointGrant) -> [String: Any] {

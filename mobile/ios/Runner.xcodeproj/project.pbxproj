@@ -10,6 +10,10 @@
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		BB0000050000000000000001 /* PushEnrollmentServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000050000000000000001 /* PushEnrollmentServiceTests.swift */; };
+		D70000110000000000000001 /* WatchWireModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70000110000000000000001 /* WatchWireModelsTests.swift */; };
+		D70000120000000000000001 /* WatchSessionBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70000120000000000000001 /* WatchSessionBridgeTests.swift */; };
+		D70000010000000000000001 /* WatchWireModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70000010000000000000001 /* WatchWireModels.swift */; };
+		D70000020000000000000001 /* WatchSessionBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70000020000000000000001 /* WatchSessionBridge.swift */; };
 		331C809B294A63AB00263BE5 /* MediaSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C809A294A618700263BE5 /* MediaSanitizer.swift */; };
 		331C809D294A63AB00263BE5 /* UIKitEncoded.png in Resources */ = {isa = PBXBuildFile; fileRef = 331C809C294A618700263BE5 /* UIKitEncoded.png */; };
 		331C809F294A63AB00263BE5 /* UIKitEncoded.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 331C809E294A618700263BE5 /* UIKitEncoded.jpg */; };
@@ -55,6 +59,10 @@
 		30CE81D3D1E0B195EF2A6390 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		AA0000050000000000000001 /* PushEnrollmentServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushEnrollmentServiceTests.swift; sourceTree = "<group>"; };
+		C70000110000000000000001 /* WatchWireModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWireModelsTests.swift; sourceTree = "<group>"; };
+		C70000120000000000000001 /* WatchSessionBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSessionBridgeTests.swift; sourceTree = "<group>"; };
+		C70000010000000000000001 /* WatchWireModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWireModels.swift; sourceTree = "<group>"; };
+		C70000020000000000000001 /* WatchSessionBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSessionBridge.swift; sourceTree = "<group>"; };
 		331C809A294A618700263BE5 /* MediaSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSanitizer.swift; sourceTree = "<group>"; };
 		331C809C294A618700263BE5 /* UIKitEncoded.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = UIKitEncoded.png; sourceTree = "<group>"; };
 		331C809E294A618700263BE5 /* UIKitEncoded.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = UIKitEncoded.jpg; sourceTree = "<group>"; };
@@ -109,6 +117,8 @@
 			children = (
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
 				AA0000050000000000000001 /* PushEnrollmentServiceTests.swift */,
+				C70000110000000000000001 /* WatchWireModelsTests.swift */,
+				C70000120000000000000001 /* WatchSessionBridgeTests.swift */,
 				331C80A0294A618700263BE5 /* Fixtures */,
 			);
 			path = RunnerTests;
@@ -152,6 +162,7 @@
 			isa = PBXGroup;
 			children = (
 				9740EEB11CF90186004384FC /* Flutter */,
+				C70000030000000000000001 /* Shared */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
@@ -185,9 +196,18 @@
 				AA0000020000000000000001 /* PushEnrollmentService.swift */,
 				AA0000030000000000000001 /* AppleCompanionPlugin.swift */,
 				AA0000040000000000000001 /* Runner.entitlements */,
+				C70000020000000000000001 /* WatchSessionBridge.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		C70000030000000000000001 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				C70000010000000000000001 /* WatchWireModels.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		D12A84F9A6072498822784CC /* Frameworks */ = {
@@ -407,6 +427,8 @@
 			files = (
 				331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */,
 				BB0000050000000000000001 /* PushEnrollmentServiceTests.swift in Sources */,
+				D70000110000000000000001 /* WatchWireModelsTests.swift in Sources */,
+				D70000120000000000000001 /* WatchSessionBridgeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -419,6 +441,8 @@
 				BB0000010000000000000001 /* KeychainStore.swift in Sources */,
 				331C809B294A63AB00263BE5 /* MediaSanitizer.swift in Sources */,
 				BB0000020000000000000001 /* PushEnrollmentService.swift in Sources */,
+				D70000010000000000000001 /* WatchWireModels.swift in Sources */,
+				D70000020000000000000001 /* WatchSessionBridge.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
 			);

@@ -176,6 +176,45 @@ class WatchActionRequest {
     'action': action.wireName,
     if (targetAgentPubkey != null) 'targetAgentPubkey': targetAgentPubkey,
   };
+
+  factory WatchActionRequest.fromWireJson(Map<Object?, Object?> json) {
+    final version = json['version'];
+    final actionId = json['actionID'];
+    final communityId = json['communityID'];
+    final itemId = json['itemID'];
+    final actionName = json['action'];
+    final targetAgentPubkey = json['targetAgentPubkey'];
+    final action = switch (actionName) {
+      'approve' => WatchActionKind.approve,
+      'deny' => WatchActionKind.deny,
+      'pass' => WatchActionKind.passToAgent,
+      'openOnPhone' => WatchActionKind.openOnPhone,
+      _ => null,
+    };
+    if (version is! int ||
+        version != watchWireSchemaVersion ||
+        actionId is! String ||
+        actionId.isEmpty ||
+        communityId is! String ||
+        communityId.isEmpty ||
+        itemId is! String ||
+        itemId.isEmpty ||
+        action == null ||
+        (targetAgentPubkey != null && targetAgentPubkey is! String) ||
+        (action == WatchActionKind.passToAgent &&
+            (targetAgentPubkey is! String || targetAgentPubkey.isEmpty)) ||
+        (action != WatchActionKind.passToAgent && targetAgentPubkey != null)) {
+      throw const FormatException('Invalid watch action request');
+    }
+    return WatchActionRequest(
+      schemaVersion: version,
+      actionId: actionId,
+      communityId: communityId,
+      itemId: itemId,
+      action: action,
+      targetAgentPubkey: targetAgentPubkey as String?,
+    );
+  }
 }
 
 @immutable
@@ -198,7 +237,7 @@ class WatchActionResult {
     required this.resolvedAt,
   });
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toWireJson() => {
     'version': schemaVersion,
     'actionID': actionId,
     'communityID': communityId,
@@ -207,6 +246,8 @@ class WatchActionResult {
     'message': message,
     'resolvedAt': resolvedAt.toUtc().toIso8601String(),
   };
+
+  Map<String, dynamic> toJson() => toWireJson();
 
   factory WatchActionResult.fromJson(Map<String, dynamic> json) {
     return WatchActionResult(

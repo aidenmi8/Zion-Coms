@@ -11,6 +11,7 @@ import 'features/channels/agent_activity/observer_subscription.dart';
 import 'features/channels/deep_link_dispatcher.dart';
 import 'features/profile/user_status_cache_provider.dart';
 import 'app/push_companion_provider.dart';
+import 'app/watch_companion_coordinator.dart';
 import 'shared/auth/auth.dart';
 import 'shared/deeplink/pending_deep_link_provider.dart';
 import 'shared/relay/relay.dart';
@@ -46,6 +47,7 @@ class App extends HookConsumerWidget {
     // cold-start link survives until the authenticated UI can dispatch it.
     ref.watch(pendingDeepLinkProvider);
     ref.watch(pushCompanionBindingProvider);
+    ref.watch(watchPhoneBridgeBindingProvider);
 
     void applyBadge(UnreadBadgeState state) {
       if (state.highPriorityCount > 0) {

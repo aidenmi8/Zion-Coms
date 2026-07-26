@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 
+import '../watch/watch_models.dart';
+
 enum AppleNotificationStatus {
   unsupported,
   notDetermined,
@@ -108,7 +110,18 @@ abstract interface class AppleCompanionClient {
   Stream<int> get endpointEpochChanges;
 }
 
-class AppleCompanionChannel implements AppleCompanionClient {
+abstract interface class AppleWatchBridgeClient {
+  Future<void> publishWatchSnapshot(WatchInboxSnapshot snapshot);
+
+  Future<void> clearWatchSnapshot();
+
+  Stream<WatchActionRequest> watchActions();
+
+  Future<void> completeWatchAction(WatchActionResult result);
+}
+
+class AppleCompanionChannel
+    implements AppleCompanionClient, AppleWatchBridgeClient {
   AppleCompanionChannel({
     MethodChannel methodChannel = const MethodChannel('zion/apple_companion'),
     EventChannel eventChannel = const EventChannel(
@@ -119,6 +132,11 @@ class AppleCompanionChannel implements AppleCompanionClient {
 
   final MethodChannel _methodChannel;
   final EventChannel _eventChannel;
+  late final Stream<Map<Object?, Object?>> _events = _eventChannel
+      .receiveBroadcastStream()
+      .where((event) => event is Map)
+      .map((event) => Map<Object?, Object?>.from(event as Map))
+      .asBroadcastStream();
 
   @override
   Future<AppleNotificationStatus> notificationStatus() async {
@@ -169,12 +187,35 @@ class AppleCompanionChannel implements AppleCompanionClient {
   }
 
   @override
-  Stream<int> get endpointEpochChanges => _eventChannel
-      .receiveBroadcastStream()
-      .where((event) => event is Map)
-      .map((event) => (event as Map<Object?, Object?>)['endpointEpoch'])
+  Stream<int> get endpointEpochChanges => _events
+      .map((event) => event['endpointEpoch'])
       .where((epoch) => epoch is int)
       .cast<int>();
+
+  @override
+  Future<void> publishWatchSnapshot(WatchInboxSnapshot snapshot) {
+    return _invokeWatchMethod('publishWatchSnapshot', snapshot.toWireJson());
+  }
+
+  @override
+  Future<void> clearWatchSnapshot() {
+    return _invokeWatchMethod('clearWatchSnapshot');
+  }
+
+  @override
+  Stream<WatchActionRequest> watchActions() => _events
+      .map((event) => event['watchAction'])
+      .where((action) => action is Map)
+      .map(
+        (action) => WatchActionRequest.fromWireJson(
+          Map<Object?, Object?>.from(action as Map),
+        ),
+      );
+
+  @override
+  Future<void> completeWatchAction(WatchActionResult result) {
+    return _invokeWatchMethod('completeWatchAction', result.toWireJson());
+  }
 
   Future<EndpointGrant?> _invokeGrant(
     String method,
@@ -186,6 +227,19 @@ class AppleCompanionChannel implements AppleCompanionClient {
         arguments,
       );
       return value == null ? null : EndpointGrant.fromWireJson(value);
+    } on PlatformException catch (error) {
+      throw AppleCompanionException(error.code, error.message);
+    } on MissingPluginException {
+      throw const AppleCompanionException('unsupported');
+    }
+  }
+
+  Future<void> _invokeWatchMethod(
+    String method, [
+    Map<String, dynamic>? arguments,
+  ]) async {
+    try {
+      await _methodChannel.invokeMethod<void>(method, arguments);
     } on PlatformException catch (error) {
       throw AppleCompanionException(error.code, error.message);
     } on MissingPluginException {

@@ -13,6 +13,7 @@ class WatchActionService {
   final WatchItemLookup _findItem;
   final DateTime Function() _now;
   final void Function(String itemId)? _onResolved;
+  final Future<void> Function(WatchInboxItem item)? _onOpenOnPhone;
 
   WatchActionService({
     required SignedEventRelay signedEventRelay,
@@ -21,12 +22,14 @@ class WatchActionService {
     required WatchItemLookup findItem,
     DateTime Function()? now,
     void Function(String itemId)? onResolved,
+    Future<void> Function(WatchInboxItem item)? onOpenOnPhone,
   }) : _signedEventRelay = signedEventRelay,
        _ledger = ledger,
        _activeCommunityId = activeCommunityId,
        _findItem = findItem,
        _now = now ?? DateTime.now,
-       _onResolved = onResolved;
+       _onResolved = onResolved,
+       _onOpenOnPhone = onOpenOnPhone;
 
   Future<WatchActionResult> execute(WatchActionRequest request) async {
     try {
@@ -48,6 +51,16 @@ class WatchActionService {
     final item = _findItem(request.communityId, request.itemId)!;
 
     try {
+      if (request.action == WatchActionKind.openOnPhone) {
+        await _onOpenOnPhone!(item);
+        final result = _result(
+          request,
+          WatchActionOutcome.accepted,
+          'Opened on iPhone',
+        );
+        await _recordTerminal(request, result);
+        return result;
+      }
       await _signedEventRelay.submit(
         kind: _commandKind(request.action),
         content: '',
@@ -95,9 +108,28 @@ class WatchActionService {
       );
     }
     final item = _findItem(request.communityId, request.itemId);
-    if (item == null ||
-        item.communityId != request.communityId ||
-        item.kind != WatchItemKind.approval) {
+    if (item == null || item.communityId != request.communityId) {
+      return _result(
+        request,
+        WatchActionOutcome.alreadyResolved,
+        'Already handled',
+      );
+    }
+    if (request.action == WatchActionKind.openOnPhone) {
+      if (!item.allowedActions.contains(request.action) ||
+          request.targetAgentPubkey != null ||
+          _onOpenOnPhone == null ||
+          item.channelId?.isNotEmpty != true ||
+          item.sourceEventId.isEmpty) {
+        return _result(
+          request,
+          WatchActionOutcome.rejected,
+          'This action is not available.',
+        );
+      }
+      return null;
+    }
+    if (item.kind != WatchItemKind.approval) {
       return _result(
         request,
         WatchActionOutcome.alreadyResolved,
@@ -112,7 +144,6 @@ class WatchActionService {
       );
     }
     if (!item.allowedActions.contains(request.action) ||
-        request.action == WatchActionKind.openOnPhone ||
         !_isHex(item.approvalDigest, 64)) {
       return _result(
         request,

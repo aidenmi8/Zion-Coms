@@ -10,8 +10,16 @@ import '../shared/crypto/nip44.dart';
 import '../shared/watch/push_descriptor.dart';
 import '../shared/watch/push_lease_coordinator.dart';
 
-final appleCompanionClientProvider = Provider<AppleCompanionClient>((ref) {
+final appleCompanionChannelProvider = Provider<AppleCompanionChannel>((ref) {
   return AppleCompanionChannel();
+});
+
+final appleCompanionClientProvider = Provider<AppleCompanionClient>((ref) {
+  return ref.watch(appleCompanionChannelProvider);
+});
+
+final appleWatchBridgeClientProvider = Provider<AppleWatchBridgeClient>((ref) {
+  return ref.watch(appleCompanionChannelProvider);
 });
 
 final pushLeaseCoordinatorProvider = Provider<PushLeaseCoordinator>((ref) {

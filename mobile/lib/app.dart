@@ -11,6 +11,7 @@ import 'features/channels/agent_activity/observer_subscription.dart';
 import 'features/channels/deep_link_dispatcher.dart';
 import 'features/profile/user_status_cache_provider.dart';
 import 'shared/auth/auth.dart';
+import 'shared/branding/sentra_liquid_orbit.dart';
 import 'shared/deeplink/pending_deep_link_provider.dart';
 import 'shared/relay/relay.dart';
 import 'shared/theme/theme.dart';
@@ -90,6 +91,8 @@ class _SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    return const Scaffold(
+      body: Center(child: SentraLiquidOrbit(wordmarkHeight: 96)),
+    );
   }
 }

@@ -155,18 +155,18 @@ git commit -m "feat: define Zion Watch approval protocol"
 Add a documented workflow type:
 
 ```rust
-pub struct ApprovalRequest<'a> {
+pub struct ApprovalRequest {
     pub community_id: CommunityId,
     pub workflow_id: Uuid,
     pub run_id: Uuid,
-    pub step_id: &'a str,
-    pub step_index: usize,
-    pub approver_spec: &'a str,
-    pub message: &'a str,
-    pub timeout_seconds: u64,
+    pub step_id: String,
+    pub step_index: i32,
+    pub approver_spec: String,
+    pub message: String,
+    pub expires_at: DateTime<Utc>,
     pub channel_id: Option<Uuid>,
-    pub owner_pubkey: &'a str,
-    pub trace_id: &'a str,
+    pub owner_pubkey: String,
+    pub execution_trace: JsonValue,
 }
 ```
 
@@ -175,15 +175,15 @@ Extend `ActionSink` with:
 ```rust
 fn request_approval(
     &self,
-    request: ApprovalRequest<'_>,
-) -> Pin<Box<dyn Future<Output = Result<String, ActionSinkError>> + Send + '_>>;
+    request: ApprovalRequest,
+) -> Pin<Box<dyn Future<Output = Result<ApprovalReceipt, ActionSinkError>> + Send + '_>>;
 ```
 
-The result is the raw random approval token retained only by the workflow engine long enough to compute its hash and resume later.
+The sink generates and immediately hashes the random token, persists only the digest, and returns the public request event ID in `ApprovalReceipt`. The raw token never leaves the relay sink.
 
 - [ ] **Step 2: Add failing executor and fake-sink tests**
 
-Test that `RequestApproval` invokes the sink exactly once, passes the workflow/run/step/community context, and returns `StepResult::Suspended` with the sink token. Test that a sink error fails the run instead of leaving an untracked suspension.
+Test that `RequestApproval` invokes the sink exactly once, passes the workflow/run/step/community context, and returns `StepResult::Suspended` with the durable request event ID. Test that a sink error fails the run instead of leaving an untracked suspension.
 
 Run:
 
@@ -204,7 +204,7 @@ Add tests for exact approver resolution:
 
 - A 64-character member pubkey resolves directly.
 - `@display-name` resolves only when exactly one channel member matches.
-- Missing, ambiguous, non-member, or non-agent approvers fail closed.
+- Missing, ambiguous, or non-member human approvers fail closed.
 - The approval request event has kind `46010`, exact `h` and approver `p` tags, workflow/run/step tags, a `d` tag with the SHA-256 token digest, and no raw token.
 - The workflow owner appears as an `agent` tag only when the user record has an agent owner pubkey.
 - Event insertion, approval insertion, and run-state update occur in one SQL transaction.
@@ -243,7 +243,7 @@ In `RelayActionSink::request_approval`:
 5. Call `create_actionable_approval_tx`.
 6. Commit.
 7. Dispatch the already-persisted event to live subscribers.
-8. Return the raw token to the workflow engine.
+8. Discard the raw token and return the public request event ID to the workflow engine.
 
 If signing, persistence, or dispatch preparation fails before commit, leave no approval or event. A post-commit live-dispatch failure is logged and recovered by normal relay replay.
 

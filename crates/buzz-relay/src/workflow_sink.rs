@@ -8,11 +8,12 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::{Arc, Weak};
 
-use buzz_core::kind::KIND_STREAM_MESSAGE;
+use buzz_core::kind::{KIND_STREAM_MESSAGE, KIND_WORKFLOW_APPROVAL_REQUESTED};
 use buzz_core::tenant::CommunityId;
-use buzz_workflow::action_sink::{ActionSink, ActionSinkError};
+use buzz_workflow::action_sink::{ActionSink, ActionSinkError, ApprovalReceipt, ApprovalRequest};
 use chrono::Utc;
 use nostr::{EventBuilder, Kind, Tag};
+use sha2::{Digest as _, Sha256};
 use tracing::info;
 use uuid::Uuid;
 
@@ -146,6 +147,111 @@ fn resolve_mention_pubkeys(text: &str, members: &[(String, String)]) -> Vec<Stri
         }
     }
     out
+}
+
+fn resolve_approver_pubkey(
+    approver_spec: &str,
+    candidates: &[(Option<String>, String)],
+) -> Result<String, ActionSinkError> {
+    let approver_spec = approver_spec.trim();
+    if approver_spec.is_empty() {
+        return Err(ActionSinkError::InvalidInput(
+            "approval requires an exact human approver".into(),
+        ));
+    }
+
+    if approver_spec.len() == 64 && approver_spec.chars().all(|c| c.is_ascii_hexdigit()) {
+        let normalized = nostr::PublicKey::from_hex(approver_spec)
+            .map_err(|e| ActionSinkError::InvalidInput(format!("invalid approver pubkey: {e}")))?
+            .to_hex();
+        return candidates
+            .iter()
+            .any(|(_, pubkey)| pubkey == &normalized)
+            .then_some(normalized)
+            .ok_or_else(|| {
+                ActionSinkError::InvalidInput(
+                    "approval target is not an active member of the workflow scope".into(),
+                )
+            });
+    }
+
+    let name = approver_spec
+        .strip_prefix('@')
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| {
+            ActionSinkError::InvalidInput(
+                "approver must be a 64-character pubkey or @display-name".into(),
+            )
+        })?;
+    let mut matches = candidates
+        .iter()
+        .filter(|(display_name, _)| {
+            display_name
+                .as_deref()
+                .is_some_and(|candidate| candidate.eq_ignore_ascii_case(name))
+        })
+        .map(|(_, pubkey)| pubkey.clone())
+        .collect::<Vec<_>>();
+    matches.sort();
+    matches.dedup();
+
+    match matches.as_slice() {
+        [pubkey] => Ok(pubkey.clone()),
+        [] => Err(ActionSinkError::InvalidInput(format!(
+            "approver @{name} is not an active member of the workflow scope"
+        ))),
+        _ => Err(ActionSinkError::InvalidInput(format!(
+            "approver @{name} is ambiguous in the workflow scope"
+        ))),
+    }
+}
+
+fn build_approval_request_event(
+    relay_keys: &nostr::Keys,
+    request: &ApprovalRequest,
+    approver_pubkey: &str,
+    token_digest: &str,
+    requesting_agent: Option<&str>,
+) -> Result<nostr::Event, ActionSinkError> {
+    if request.message.trim().is_empty() {
+        return Err(ActionSinkError::EmptyContent);
+    }
+
+    let mut tags = vec![
+        Tag::parse(["d", token_digest])
+            .map_err(|e| ActionSinkError::EventBuild(format!("d tag: {e}")))?,
+        Tag::parse(["p", approver_pubkey])
+            .map_err(|e| ActionSinkError::EventBuild(format!("p tag: {e}")))?,
+        Tag::parse(["workflow", &request.workflow_id.to_string()])
+            .map_err(|e| ActionSinkError::EventBuild(format!("workflow tag: {e}")))?,
+        Tag::parse(["run", &request.run_id.to_string()])
+            .map_err(|e| ActionSinkError::EventBuild(format!("run tag: {e}")))?,
+        Tag::parse(["step", &request.step_id])
+            .map_err(|e| ActionSinkError::EventBuild(format!("step tag: {e}")))?,
+        Tag::parse(["expiration", &request.expires_at.timestamp().to_string()])
+            .map_err(|e| ActionSinkError::EventBuild(format!("expiration tag: {e}")))?,
+    ];
+    if let Some(channel_id) = request.channel_id {
+        tags.push(
+            Tag::parse(["h", &channel_id.to_string()])
+                .map_err(|e| ActionSinkError::EventBuild(format!("h tag: {e}")))?,
+        );
+    }
+    if let Some(agent_pubkey) = requesting_agent {
+        tags.push(
+            Tag::parse(["agent", agent_pubkey])
+                .map_err(|e| ActionSinkError::EventBuild(format!("agent tag: {e}")))?,
+        );
+    }
+
+    EventBuilder::new(
+        Kind::Custom(KIND_WORKFLOW_APPROVAL_REQUESTED as u16),
+        &request.message,
+    )
+    .tags(tags)
+    .sign_with_keys(relay_keys)
+    .map_err(|e| ActionSinkError::EventBuild(format!("signing: {e}")))
 }
 
 /// Relay-side action sink — executes workflow side-effects directly.
@@ -362,11 +468,169 @@ impl ActionSink for RelayActionSink {
             Ok(event_id_hex)
         })
     }
+
+    fn request_approval(
+        &self,
+        request: ApprovalRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<ApprovalReceipt, ActionSinkError>> + Send + '_>> {
+        Box::pin(async move {
+            let state = self
+                .state
+                .upgrade()
+                .ok_or_else(|| ActionSinkError::Database("relay is shutting down".into()))?;
+
+            let host = state
+                .db
+                .lookup_community_host(request.community_id)
+                .await
+                .map_err(|e| ActionSinkError::Database(e.to_string()))?
+                .ok_or_else(|| {
+                    ActionSinkError::Database(format!(
+                        "workflow run community {} is not mapped to a host",
+                        request.community_id
+                    ))
+                })?;
+            let tenant = buzz_core::tenant::TenantContext::resolved(request.community_id, host);
+
+            let owner_pubkey = nostr::PublicKey::from_hex(&request.owner_pubkey).map_err(|e| {
+                ActionSinkError::InvalidInput(format!("invalid workflow owner pubkey: {e}"))
+            })?;
+            let owner_bytes = owner_pubkey.to_bytes().to_vec();
+            let owner_hex = owner_pubkey.to_hex();
+
+            let candidates = if let Some(channel_id) = request.channel_id {
+                let channel = state
+                    .db
+                    .get_channel(request.community_id, channel_id)
+                    .await
+                    .map_err(|e| match e {
+                        buzz_db::DbError::ChannelNotFound(_) | buzz_db::DbError::NotFound(_) => {
+                            ActionSinkError::ChannelNotFound(channel_id.to_string())
+                        }
+                        other => ActionSinkError::Database(other.to_string()),
+                    })?;
+                if channel.archived_at.is_some() {
+                    return Err(ActionSinkError::ChannelArchived(channel_id.to_string()));
+                }
+                let members = state
+                    .db
+                    .get_members(request.community_id, channel_id)
+                    .await
+                    .map_err(|e| ActionSinkError::Database(e.to_string()))?;
+                let member_pubkeys = members
+                    .iter()
+                    .map(|member| member.pubkey.clone())
+                    .collect::<Vec<_>>();
+                let users = state
+                    .db
+                    .get_users_bulk(request.community_id, &member_pubkeys)
+                    .await
+                    .map_err(|e| ActionSinkError::Database(e.to_string()))?;
+                let names = users
+                    .into_iter()
+                    .map(|user| (user.pubkey, user.display_name))
+                    .collect::<std::collections::HashMap<_, _>>();
+                members
+                    .into_iter()
+                    .filter_map(|member| {
+                        let pubkey = nostr::PublicKey::from_slice(&member.pubkey).ok()?.to_hex();
+                        let display_name = names.get(&member.pubkey).cloned().flatten();
+                        Some((display_name, pubkey))
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                let members = state
+                    .db
+                    .list_relay_members(request.community_id)
+                    .await
+                    .map_err(|e| ActionSinkError::Database(e.to_string()))?;
+                let parsed = members
+                    .into_iter()
+                    .filter_map(|member| {
+                        let pubkey = nostr::PublicKey::from_hex(&member.pubkey).ok()?;
+                        Some((pubkey.to_bytes().to_vec(), pubkey.to_hex()))
+                    })
+                    .collect::<Vec<_>>();
+                let pubkeys = parsed
+                    .iter()
+                    .map(|(bytes, _)| bytes.clone())
+                    .collect::<Vec<_>>();
+                let users = state
+                    .db
+                    .get_users_bulk(request.community_id, &pubkeys)
+                    .await
+                    .map_err(|e| ActionSinkError::Database(e.to_string()))?;
+                let names = users
+                    .into_iter()
+                    .map(|user| (user.pubkey, user.display_name))
+                    .collect::<std::collections::HashMap<_, _>>();
+                parsed
+                    .into_iter()
+                    .map(|(bytes, pubkey)| {
+                        let display_name = names.get(&bytes).cloned().flatten();
+                        (display_name, pubkey)
+                    })
+                    .collect::<Vec<_>>()
+            };
+            let approver_pubkey = resolve_approver_pubkey(&request.approver_spec, &candidates)?;
+
+            let requesting_agent = state
+                .db
+                .get_agent_channel_policy(request.community_id, &owner_bytes)
+                .await
+                .map_err(|e| ActionSinkError::Database(e.to_string()))?
+                .and_then(|(_, agent_owner)| agent_owner.map(|_| owner_hex.as_str()));
+
+            let raw_token = Uuid::new_v4().to_string();
+            let token_digest = hex::encode(Sha256::digest(raw_token.as_bytes()));
+            let event = build_approval_request_event(
+                &state.relay_keypair,
+                &request,
+                &approver_pubkey,
+                &token_digest,
+                requesting_agent,
+            )?;
+            let request_event_id = event.id.to_hex();
+
+            let (stored_event, inserted) = state
+                .db
+                .create_actionable_approval(buzz_db::workflow::ActionableApprovalParams {
+                    community_id: request.community_id,
+                    raw_token: &raw_token,
+                    workflow_id: request.workflow_id,
+                    run_id: request.run_id,
+                    step_id: &request.step_id,
+                    step_index: request.step_index,
+                    approver_spec: &approver_pubkey,
+                    expires_at: request.expires_at,
+                    request_event: &event,
+                    channel_id: request.channel_id,
+                    execution_trace: &request.execution_trace,
+                })
+                .await
+                .map_err(|e| ActionSinkError::Database(e.to_string()))?;
+
+            if inserted {
+                let _ = dispatch_persistent_event(
+                    &tenant,
+                    &state,
+                    &stored_event,
+                    KIND_WORKFLOW_APPROVAL_REQUESTED,
+                    &owner_hex,
+                    None,
+                )
+                .await;
+            }
+
+            Ok(ApprovalReceipt { request_event_id })
+        })
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use buzz_workflow::ApprovalRequest;
 
     fn m(name: &str, pubkey: &str) -> (String, String) {
         (name.to_string(), pubkey.to_string())
@@ -375,6 +639,106 @@ mod tests {
     // A 64-char hex pubkey built from a single repeated nibble, for readable tests.
     fn pk(nibble: char) -> String {
         std::iter::repeat_n(nibble, 64).collect()
+    }
+
+    fn approver(name: Option<&str>, nibble: char) -> (Option<String>, String) {
+        (name.map(str::to_owned), pk(nibble))
+    }
+
+    fn approval_request() -> ApprovalRequest {
+        ApprovalRequest {
+            community_id: CommunityId::from_uuid(Uuid::from_u128(1)),
+            workflow_id: Uuid::from_u128(2),
+            run_id: Uuid::from_u128(3),
+            step_id: "gate".to_owned(),
+            step_index: 4,
+            approver_spec: "@Aiden".to_owned(),
+            message: "Ship the release?".to_owned(),
+            expires_at: chrono::DateTime::from_timestamp(2_000_000_000, 0)
+                .expect("valid timestamp"),
+            channel_id: Some(Uuid::from_u128(5)),
+            owner_pubkey: pk('c'),
+            execution_trace: serde_json::json!([]),
+        }
+    }
+
+    fn tag_values(event: &nostr::Event, name: &str) -> Vec<String> {
+        event
+            .tags
+            .iter()
+            .filter_map(|tag| {
+                let values = tag.as_slice();
+                (values.first().map(String::as_str) == Some(name))
+                    .then(|| values.get(1).cloned())
+                    .flatten()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn resolves_exact_human_approver_by_pubkey_or_unique_display_name() {
+        let humans = vec![approver(Some("Aiden"), 'a'), approver(Some("Eva"), 'b')];
+
+        assert_eq!(
+            resolve_approver_pubkey(&pk('a'), &humans).expect("member pubkey"),
+            pk('a')
+        );
+        assert_eq!(
+            resolve_approver_pubkey("@aIdEn", &humans).expect("unique display name"),
+            pk('a')
+        );
+    }
+
+    #[test]
+    fn approver_resolution_fails_closed_for_nonmember_or_ambiguous_name() {
+        let humans = vec![approver(Some("Aiden"), 'a'), approver(Some("Aiden"), 'b')];
+
+        assert!(matches!(
+            resolve_approver_pubkey(&pk('c'), &humans),
+            Err(ActionSinkError::InvalidInput(_))
+        ));
+        assert!(matches!(
+            resolve_approver_pubkey("@Aiden", &humans),
+            Err(ActionSinkError::InvalidInput(_))
+        ));
+    }
+
+    #[test]
+    fn approval_request_event_contains_only_public_action_coordinates() {
+        let request = approval_request();
+        let digest = pk('d');
+        let requesting_agent = pk('e');
+        let event = build_approval_request_event(
+            &nostr::Keys::generate(),
+            &request,
+            &pk('a'),
+            &digest,
+            Some(&requesting_agent),
+        )
+        .expect("build request event");
+
+        assert_eq!(event.kind.as_u16(), 46010);
+        assert_eq!(event.content, "Ship the release?");
+        assert_eq!(tag_values(&event, "d"), vec![digest]);
+        assert_eq!(tag_values(&event, "p"), vec![pk('a')]);
+        assert_eq!(
+            tag_values(&event, "h"),
+            vec![Uuid::from_u128(5).to_string()]
+        );
+        assert_eq!(
+            tag_values(&event, "workflow"),
+            vec![Uuid::from_u128(2).to_string()]
+        );
+        assert_eq!(
+            tag_values(&event, "run"),
+            vec![Uuid::from_u128(3).to_string()]
+        );
+        assert_eq!(tag_values(&event, "step"), vec!["gate".to_owned()]);
+        assert_eq!(
+            tag_values(&event, "expiration"),
+            vec!["2000000000".to_owned()]
+        );
+        assert_eq!(tag_values(&event, "agent"), vec![requesting_agent]);
     }
 
     #[test]
@@ -568,6 +932,7 @@ mod integration_tests {
     //!   `cargo test -p buzz-relay --lib workflow_sink -- --ignored`
     use super::*;
     use buzz_core::channel::{ChannelType, ChannelVisibility, MemberRole};
+    use buzz_db::workflow::RunStatus;
     use buzz_db::CreateCommunityWithOwnerResult;
     use std::sync::Arc;
 
@@ -706,6 +1071,147 @@ mod integration_tests {
         assert!(
             p_tag_targets.contains(&agent_hex.as_str()),
             "mentioned member {agent_hex} must be p-tagged so it wakes; got {p_tag_targets:?}"
+        );
+    }
+
+    #[tokio::test]
+    #[ignore = "requires Postgres"]
+    async fn workflow_request_approval_persists_actionable_event_and_waiting_run() {
+        let state = test_state().await;
+        let owner = nostr::Keys::generate();
+        let owner_hex = owner.public_key().to_hex();
+        let approver = nostr::Keys::generate();
+        let approver_bytes = approver.public_key().to_bytes().to_vec();
+
+        let host = format!("wf-approval-{}.example", uuid::Uuid::new_v4().simple());
+        let community = match state
+            .db
+            .create_community_with_owner(&host, &owner_hex)
+            .await
+            .expect("create community")
+        {
+            CreateCommunityWithOwnerResult::Created(record) => record.id,
+            other => panic!("expected fresh community, got {other:?}"),
+        };
+        let channel = state
+            .db
+            .create_channel(
+                community,
+                "approvals",
+                ChannelType::Stream,
+                ChannelVisibility::Private,
+                None,
+                &owner.public_key().to_bytes(),
+                None,
+            )
+            .await
+            .expect("create channel");
+        state
+            .db
+            .ensure_user(community, &approver_bytes)
+            .await
+            .expect("ensure approver");
+        state
+            .db
+            .update_user_profile(community, &approver_bytes, Some("Aiden"), None, None, None)
+            .await
+            .expect("name approver");
+        state
+            .db
+            .add_member(
+                community,
+                channel.id,
+                &approver_bytes,
+                MemberRole::Member,
+                Some(&owner.public_key().to_bytes()),
+            )
+            .await
+            .expect("add approver");
+
+        let workflow_id = state
+            .db
+            .create_workflow(
+                community,
+                Some(channel.id),
+                &owner.public_key().to_bytes(),
+                "release approval",
+                r#"{"trigger":{"on":"schedule"},"steps":[]}"#,
+                &[7; 32],
+            )
+            .await
+            .expect("create workflow");
+        let run_id = state
+            .db
+            .create_workflow_run(community, workflow_id, None, None)
+            .await
+            .expect("create run");
+        state
+            .db
+            .update_workflow_run(
+                community,
+                run_id,
+                RunStatus::Running,
+                0,
+                &serde_json::json!([]),
+                None,
+            )
+            .await
+            .expect("start run");
+
+        let sink = RelayActionSink::new(&state);
+        let receipt = sink
+            .request_approval(ApprovalRequest {
+                community_id: community,
+                workflow_id,
+                run_id,
+                step_id: "gate".to_owned(),
+                step_index: 0,
+                approver_spec: "@Aiden".to_owned(),
+                message: "Ship the release?".to_owned(),
+                expires_at: Utc::now() + chrono::Duration::hours(1),
+                channel_id: Some(channel.id),
+                owner_pubkey: owner_hex,
+                execution_trace: serde_json::json!([]),
+            })
+            .await
+            .expect("request approval");
+
+        let event_id = nostr::EventId::from_hex(&receipt.request_event_id).expect("event id");
+        let stored = state
+            .db
+            .get_event_by_id(community, event_id.as_bytes())
+            .await
+            .expect("query request")
+            .expect("request persisted");
+        let digest = stored
+            .event
+            .tags
+            .iter()
+            .find_map(|tag| {
+                let values = tag.as_slice();
+                (values.first().map(String::as_str) == Some("d"))
+                    .then(|| values.get(1).cloned())
+                    .flatten()
+            })
+            .expect("approval digest");
+        let approval = state
+            .db
+            .get_approval_by_stored_hash(community, &hex::decode(digest).expect("digest hex"))
+            .await
+            .expect("approval row");
+        assert_eq!(approval.approver_spec, approver.public_key().to_hex());
+        assert_eq!(
+            approval.request_event_id.as_deref(),
+            Some(event_id.as_bytes().as_slice())
+        );
+        assert_eq!(
+            state
+                .db
+                .get_workflow_run(community, run_id)
+                .await
+                .expect("waiting run")
+                .status,
+            RunStatus::WaitingApproval
         );
     }
 }

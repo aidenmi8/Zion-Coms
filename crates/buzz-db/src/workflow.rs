@@ -921,6 +921,32 @@ pub struct CreateApprovalParams<'a> {
     pub expires_at: DateTime<Utc>,
 }
 
+/// Parameters for atomically creating an actionable approval request.
+pub struct ActionableApprovalParams<'a> {
+    /// Server-resolved community that owns every row in the transaction.
+    pub community_id: CommunityId,
+    /// Raw random token, hashed before its first database statement.
+    pub raw_token: &'a str,
+    /// Workflow definition identifier.
+    pub workflow_id: Uuid,
+    /// Running workflow instance that will become waiting.
+    pub run_id: Uuid,
+    /// Approval-gate step identifier.
+    pub step_id: &'a str,
+    /// Zero-based approval-gate step index.
+    pub step_index: i32,
+    /// Exact human approver coordinate.
+    pub approver_spec: &'a str,
+    /// Absolute approval expiry.
+    pub expires_at: DateTime<Utc>,
+    /// Relay-signed kind-46010 request event.
+    pub request_event: &'a nostr::Event,
+    /// Workflow channel for channel-scoped approvals.
+    pub channel_id: Option<Uuid>,
+    /// Trace completed before the approval gate.
+    pub execution_trace: &'a serde_json::Value,
+}
+
 /// Insert a new approval request.
 ///
 /// The `token` parameter is the raw (plaintext) token. It is hashed with
@@ -957,6 +983,107 @@ pub async fn create_approval(pool: &PgPool, params: CreateApprovalParams<'_>) ->
     .await?;
 
     Ok(())
+}
+
+/// Atomically persist an approval request event, hashed approval record, and
+/// waiting workflow-run state.
+///
+/// The raw token is hashed in memory and never bound to SQL. A failure in any
+/// statement rolls back all three durable effects.
+pub async fn create_actionable_approval(
+    pool: &PgPool,
+    params: ActionableApprovalParams<'_>,
+) -> Result<(buzz_core::StoredEvent, bool)> {
+    let ActionableApprovalParams {
+        community_id,
+        raw_token,
+        workflow_id,
+        run_id,
+        step_id,
+        step_index,
+        approver_spec,
+        expires_at,
+        request_event,
+        channel_id,
+        execution_trace,
+    } = params;
+
+    let token_hash = hash_approval_token(raw_token);
+    let request_event_id = request_event.id.as_bytes().as_slice();
+    let mut trace = execution_trace
+        .as_array()
+        .cloned()
+        .ok_or_else(|| DbError::InvalidData("workflow execution trace must be an array".into()))?;
+    trace.push(serde_json::json!({
+        "step_id": step_id,
+        "status": "waiting_approval",
+        "request_event_id": request_event.id.to_hex(),
+    }));
+    let trace = serde_json::Value::Array(trace);
+
+    let mut tx = pool.begin().await?;
+    let (stored_event, inserted) = crate::event::insert_event_with_thread_metadata_tx(
+        &mut tx,
+        community_id,
+        request_event,
+        channel_id,
+        None,
+    )
+    .await?;
+    if !inserted {
+        return Err(DbError::InvalidData(format!(
+            "approval request event {} already exists",
+            request_event.id
+        )));
+    }
+
+    sqlx::query(
+        r#"
+        INSERT INTO workflow_approvals
+            (community_id, token, workflow_id, run_id, step_id, step_index,
+             approver_spec, status, request_event_id, expires_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8, $9)
+        "#,
+    )
+    .bind(community_id.as_uuid())
+    .bind(token_hash)
+    .bind(workflow_id)
+    .bind(run_id)
+    .bind(step_id)
+    .bind(step_index)
+    .bind(approver_spec)
+    .bind(request_event_id)
+    .bind(expires_at)
+    .execute(&mut *tx)
+    .await?;
+
+    let updated = sqlx::query(
+        r#"
+        UPDATE workflow_runs
+        SET status = 'waiting_approval',
+            current_step = $1,
+            execution_trace = $2,
+            error_message = NULL
+        WHERE community_id = $3 AND id = $4 AND workflow_id = $5
+          AND status = 'running'
+        "#,
+    )
+    .bind(step_index)
+    .bind(&trace)
+    .bind(community_id.as_uuid())
+    .bind(run_id)
+    .bind(workflow_id)
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    if updated != 1 {
+        return Err(DbError::InvalidData(format!(
+            "workflow run {run_id} is not running in community {community_id}"
+        )));
+    }
+
+    tx.commit().await?;
+    Ok((stored_event, true))
 }
 
 /// Fetch an approval record by raw token.
@@ -2298,6 +2425,134 @@ mod tests {
             after_b.status,
             ApprovalStatus::Pending,
             "B's approval must remain pending after A is granted"
+        );
+    }
+
+    #[tokio::test]
+    #[ignore = "requires Postgres"]
+    async fn actionable_approval_commits_event_record_and_waiting_run_together() {
+        let pool = setup_pool().await;
+        let community = make_community(&pool).await;
+        let (workflow_id, _) = make_workflow_in(&pool, community).await;
+        let workflow = get_workflow(&pool, community, workflow_id)
+            .await
+            .expect("workflow");
+        let channel_id = workflow.channel_id.expect("channel scoped");
+        let run_id = create_workflow_run(&pool, community, workflow_id, None, None)
+            .await
+            .expect("create run");
+        update_workflow_run(
+            &pool,
+            community,
+            run_id,
+            RunStatus::Running,
+            0,
+            &serde_json::json!([]),
+            None,
+        )
+        .await
+        .expect("start run");
+
+        let token = Uuid::new_v4().to_string();
+        let approver = nostr::Keys::generate();
+        let event = nostr::EventBuilder::new(nostr::Kind::Custom(46_010), "Ship the release?")
+            .tags([
+                nostr::Tag::parse(["d", &hex::encode(hash_approval_token(&token))]).expect("d tag"),
+                nostr::Tag::parse(["p", &approver.public_key().to_hex()]).expect("p tag"),
+                nostr::Tag::parse(["h", &channel_id.to_string()]).expect("h tag"),
+            ])
+            .sign_with_keys(&nostr::Keys::generate())
+            .expect("sign request");
+        let trace = serde_json::json!([{"step_id":"prepare","status":"completed"}]);
+
+        let (stored, inserted) = create_actionable_approval(
+            &pool,
+            ActionableApprovalParams {
+                community_id: community,
+                raw_token: &token,
+                workflow_id,
+                run_id,
+                step_id: "gate",
+                step_index: 1,
+                approver_spec: &approver.public_key().to_hex(),
+                expires_at: Utc::now() + chrono::Duration::hours(1),
+                request_event: &event,
+                channel_id: Some(channel_id),
+                execution_trace: &trace,
+            },
+        )
+        .await
+        .expect("create actionable approval");
+
+        assert!(inserted);
+        assert_eq!(stored.event.id, event.id);
+        let approval = get_approval(&pool, community, &token)
+            .await
+            .expect("approval");
+        assert_eq!(
+            approval.request_event_id.as_deref(),
+            Some(event.id.as_bytes().as_slice())
+        );
+        let run = get_workflow_run(&pool, community, run_id)
+            .await
+            .expect("run");
+        assert_eq!(run.status, RunStatus::WaitingApproval);
+        assert_eq!(run.current_step, 1);
+        assert_eq!(
+            run.execution_trace,
+            serde_json::json!([
+                {"step_id":"prepare","status":"completed"},
+                {
+                    "step_id":"gate",
+                    "status":"waiting_approval",
+                    "request_event_id":event.id.to_hex()
+                }
+            ])
+        );
+    }
+
+    #[tokio::test]
+    #[ignore = "requires Postgres"]
+    async fn actionable_approval_rolls_back_event_when_run_update_fails() {
+        let pool = setup_pool().await;
+        let community = make_community(&pool).await;
+        let (workflow_id, _) = make_workflow_in(&pool, community).await;
+        let workflow = get_workflow(&pool, community, workflow_id)
+            .await
+            .expect("workflow");
+        let channel_id = workflow.channel_id.expect("channel scoped");
+        let event = nostr::EventBuilder::new(
+            nostr::Kind::Custom(46_010),
+            "This transaction must roll back",
+        )
+        .sign_with_keys(&nostr::Keys::generate())
+        .expect("sign request");
+
+        let result = create_actionable_approval(
+            &pool,
+            ActionableApprovalParams {
+                community_id: community,
+                raw_token: &Uuid::new_v4().to_string(),
+                workflow_id,
+                run_id: Uuid::new_v4(),
+                step_id: "gate",
+                step_index: 0,
+                approver_spec: "@Aiden",
+                expires_at: Utc::now() + chrono::Duration::hours(1),
+                request_event: &event,
+                channel_id: Some(channel_id),
+                execution_trace: &serde_json::json!([]),
+            },
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert!(
+            crate::event::get_event_by_id(&pool, community, event.id.as_bytes())
+                .await
+                .expect("event lookup")
+                .is_none(),
+            "event insertion must roll back with the failed run update"
         );
     }
 }

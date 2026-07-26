@@ -7,6 +7,47 @@ use std::future::Future;
 use std::pin::Pin;
 
 use buzz_core::tenant::CommunityId;
+use chrono::{DateTime, Utc};
+use serde_json::Value as JsonValue;
+use uuid::Uuid;
+
+/// Fully resolved approval request handed from the workflow executor to its
+/// side-effect sink.
+///
+/// The sink owns token generation and durable persistence so the executor
+/// cannot suspend a run without a corresponding actionable request.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApprovalRequest {
+    /// Community that owns the workflow and approval.
+    pub community_id: CommunityId,
+    /// Workflow definition identifier.
+    pub workflow_id: Uuid,
+    /// Workflow run identifier.
+    pub run_id: Uuid,
+    /// Step identifier from the workflow definition.
+    pub step_id: String,
+    /// Zero-based step index.
+    pub step_index: i32,
+    /// Exact pubkey or `@display-name` of the intended human approver.
+    pub approver_spec: String,
+    /// Human-readable approval prompt.
+    pub message: String,
+    /// Absolute expiry for the pending approval.
+    pub expires_at: DateTime<Utc>,
+    /// Workflow channel when the workflow is channel-scoped.
+    pub channel_id: Option<Uuid>,
+    /// Hex pubkey of the workflow owner.
+    pub owner_pubkey: String,
+    /// Execution trace completed before this approval gate.
+    pub execution_trace: JsonValue,
+}
+
+/// Durable identity returned after an approval request commits.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ApprovalReceipt {
+    /// Relay-signed kind-46010 request event ID.
+    pub request_event_id: String,
+}
 
 /// Errors from action sink operations.
 #[derive(Debug, thiserror::Error)]
@@ -66,4 +107,13 @@ pub trait ActionSink: Send + Sync {
         text: &str,
         author_pubkey: &str,
     ) -> Pin<Box<dyn Future<Output = Result<String, ActionSinkError>> + Send + '_>>;
+
+    /// Atomically persist an actionable approval request and suspend its run.
+    ///
+    /// Implementations generate and hash the secret approval token internally,
+    /// persist only its digest, and return the public request event ID.
+    fn request_approval(
+        &self,
+        request: ApprovalRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<ApprovalReceipt, ActionSinkError>> + Send + '_>>;
 }

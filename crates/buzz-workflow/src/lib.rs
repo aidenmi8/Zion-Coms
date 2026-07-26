@@ -35,7 +35,7 @@ pub mod error;
 pub mod executor;
 pub mod schema;
 
-pub use action_sink::{ActionSink, ActionSinkError};
+pub use action_sink::{ActionSink, ActionSinkError, ApprovalReceipt, ApprovalRequest};
 pub use error::{PartialProgress, WorkflowError};
 pub use executor::ExecutionResult;
 pub use schema::{ActionDef, Step, TriggerDef, WorkflowDef};
@@ -68,6 +68,14 @@ impl Default for WorkflowConfig {
             max_concurrent: 100,
             default_timeout_secs: 300,
         }
+    }
+}
+
+fn successful_run_status(result: &ExecutionResult) -> RunStatus {
+    if result.approval_request_event_id.is_some() {
+        RunStatus::WaitingApproval
+    } else {
+        RunStatus::Completed
     }
 }
 
@@ -183,34 +191,33 @@ impl WorkflowEngine {
 
         match result {
             Ok(result) => {
+                let run_status = successful_run_status(&result);
                 let mut full_trace = prefix;
                 full_trace.extend(result.trace);
                 let trace_json = serde_json::Value::Array(full_trace);
                 let step_count = result.step_index as i32;
 
-                if result.approval_token.is_some() {
-                    // Approval gates are not yet implemented (WF-08).
-                    // Fail explicitly rather than creating unreachable WaitingApproval rows.
-                    tracing::warn!(
+                if run_status == RunStatus::WaitingApproval {
+                    tracing::info!(
                         run_id = %run_id,
                         step_index = result.step_index,
-                        "Workflow hit approval gate — not yet implemented, marking as failed"
+                        "Workflow run is waiting for approval"
                     );
                     if let Err(e) = self
                         .db
                         .update_workflow_run(
                             community_id,
                             run_id,
-                            RunStatus::Failed,
+                            RunStatus::WaitingApproval,
                             step_count,
                             &trace_json,
-                            Some("approval gates not yet implemented — see WF-08"),
+                            None,
                         )
                         .await
                     {
                         tracing::error!(
                             run_id = %run_id,
-                            "Failed to update run to Failed (approval gate): {e}"
+                            "Failed to refresh WaitingApproval run state: {e}"
                         );
                     }
                 } else {
@@ -1240,6 +1247,33 @@ mod tests {
         let cfg = WorkflowConfig::default();
         assert_eq!(cfg.max_concurrent, 100);
         assert_eq!(cfg.default_timeout_secs, 300);
+    }
+
+    #[test]
+    fn successful_approval_execution_maps_to_waiting_run_status() {
+        let result = ExecutionResult {
+            approval_request_event_id: Some("ab".repeat(32)),
+            step_index: 2,
+            step_outputs: HashMap::new(),
+            trace: vec![serde_json::json!({
+                "step_id":"gate",
+                "status":"waiting_approval"
+            })],
+        };
+
+        assert_eq!(successful_run_status(&result), RunStatus::WaitingApproval);
+    }
+
+    #[test]
+    fn successful_normal_execution_maps_to_completed_run_status() {
+        let result = ExecutionResult {
+            approval_request_event_id: None,
+            step_index: 2,
+            step_outputs: HashMap::new(),
+            trace: vec![],
+        };
+
+        assert_eq!(successful_run_status(&result), RunStatus::Completed);
     }
 
     #[test]

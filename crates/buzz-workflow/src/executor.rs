@@ -18,6 +18,7 @@ use serde_json::Value as JsonValue;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
+use crate::action_sink::{ActionSink, ApprovalRequest};
 use crate::error::WorkflowError;
 use crate::schema::{ActionDef, Step, WorkflowDef};
 use crate::WorkflowEngine;
@@ -458,8 +459,8 @@ pub enum StepResult {
     Completed(JsonValue),
     /// Step requests suspension (approval gate). Execution must pause.
     Suspended {
-        /// Token used to resume or reject this approval gate.
-        approval_token: String,
+        /// Relay-signed actionable request event.
+        request_event_id: String,
     },
     /// Step was skipped due to `if:` condition being false.
     Skipped,
@@ -518,11 +519,13 @@ fn resolve_send_message_channel(
 /// persist state and stop the execution loop.
 pub async fn dispatch_action(
     step_id: &str,
+    step_index: usize,
     action: &ActionDef,
     engine: &WorkflowEngine,
     community_id: CommunityId,
     run_id: Uuid,
     trigger_ctx: &TriggerContext,
+    execution_trace: &[JsonValue],
 ) -> Result<StepResult, WorkflowError> {
     use ActionDef::*;
 
@@ -653,19 +656,66 @@ pub async fn dispatch_action(
             timeout,
         } => {
             let timeout_str = timeout.as_deref().unwrap_or("24h");
+            let timeout_seconds = parse_duration_secs(timeout_str)?;
+            let timeout_seconds = i64::try_from(timeout_seconds).map_err(|_| {
+                WorkflowError::InvalidDefinition(format!(
+                    "RequestApproval timeout is too large: {timeout_str}"
+                ))
+            })?;
+            let expires_at = chrono::Utc::now()
+                .checked_add_signed(chrono::TimeDelta::seconds(timeout_seconds))
+                .ok_or_else(|| {
+                    WorkflowError::InvalidDefinition(format!(
+                        "RequestApproval timeout overflows: {timeout_str}"
+                    ))
+                })?;
+
+            let wf_run = engine
+                .db
+                .get_workflow_run(community_id, run_id)
+                .await
+                .map_err(|e| {
+                    WorkflowError::WebhookError(format!(
+                        "RequestApproval: failed to load workflow run {run_id}: {e}"
+                    ))
+                })?;
+            let workflow = engine
+                .db
+                .get_workflow(community_id, wf_run.workflow_id)
+                .await
+                .map_err(|e| {
+                    WorkflowError::WebhookError(format!(
+                        "RequestApproval: failed to load workflow {}: {e}",
+                        wf_run.workflow_id
+                    ))
+                })?;
+
             info!(
                 run_id = %run_id, step = step_id,
                 "RequestApproval from={from} timeout={timeout_str}: {message}"
             );
 
-            let token = generate_approval_token(run_id, step_id);
-
-            // TODO (WF-08): create approval record in DB, emit kind:46010.
-            // For now, return Suspended with the token so the caller can persist state.
-
-            Ok(StepResult::Suspended {
-                approval_token: token,
-            })
+            dispatch_approval_request(
+                engine.action_sink()?,
+                ApprovalRequest {
+                    community_id,
+                    workflow_id: workflow.id,
+                    run_id,
+                    step_id: step_id.to_owned(),
+                    step_index: i32::try_from(step_index).map_err(|_| {
+                        WorkflowError::InvalidDefinition(
+                            "RequestApproval step index exceeds i32".into(),
+                        )
+                    })?,
+                    approver_spec: from.clone(),
+                    message: message.clone(),
+                    expires_at,
+                    channel_id: workflow.channel_id,
+                    owner_pubkey: hex::encode(workflow.owner_pubkey),
+                    execution_trace: JsonValue::Array(execution_trace.to_vec()),
+                },
+            )
+            .await
         }
 
         Delay { duration } => {
@@ -689,14 +739,17 @@ pub async fn dispatch_action(
     }
 }
 
-/// Generate a cryptographically random approval token.
-///
-/// Uses `Uuid::new_v4()` which draws from the OS CSPRNG (via the `getrandom`
-/// crate). The `run_id` and `step_id` parameters are accepted for logging
-/// context but are not mixed into the token — the UUID's own randomness is
-/// sufficient and avoids the predictability of time-based entropy.
-fn generate_approval_token(_run_id: Uuid, _step_id: &str) -> String {
-    Uuid::new_v4().to_string()
+async fn dispatch_approval_request(
+    sink: &dyn ActionSink,
+    request: ApprovalRequest,
+) -> Result<StepResult, WorkflowError> {
+    let receipt = sink
+        .request_approval(request)
+        .await
+        .map_err(WorkflowError::from)?;
+    Ok(StepResult::Suspended {
+        request_event_id: receipt.request_event_id,
+    })
 }
 
 /// Parse a duration string like "5m", "1h", "30s" into seconds.
@@ -932,14 +985,14 @@ async fn add_reaction_impl(message_id: &str, emoji: &str) -> Result<JsonValue, W
 /// Rich return type from `execute_run` / `execute_from_step`.
 ///
 /// Carries enough information for the caller to:
-/// - Persist the approval record when suspended at a `RequestApproval` step.
+/// - Identify the durable request event when suspended at a `RequestApproval` step.
 /// - Update the run's execution trace and current step in the DB.
 /// - Resume execution from the correct step after approval.
 #[derive(Debug)]
 pub struct ExecutionResult {
-    /// Set when execution suspended at a `RequestApproval` step.
+    /// Durable request event set when execution suspended at an approval step.
     /// `None` means the run completed normally.
-    pub approval_token: Option<String>,
+    pub approval_request_event_id: Option<String>,
     /// Index of the step that suspended (or the total step count on completion).
     pub step_index: usize,
     /// Accumulated step outputs at the point of suspension or completion.
@@ -956,10 +1009,10 @@ pub struct ExecutionResult {
 /// 3. Dispatches the action.
 /// 4. Stores the step output for use by later steps.
 ///
-/// On `RequestApproval`: returns `ExecutionResult` with `approval_token = Some(token)`.
-/// Caller must persist the approval record and update the run status.
+/// On `RequestApproval`: returns an `ExecutionResult` referencing the request
+/// event already persisted by the action sink.
 ///
-/// Returns `ExecutionResult` with `approval_token = None` on normal completion.
+/// Returns `ExecutionResult` with no approval request on normal completion.
 ///
 /// Enforces `engine.config.max_concurrent` via a semaphore — returns
 /// [`WorkflowError::CapacityExceeded`] immediately if all permits are taken.
@@ -1137,11 +1190,13 @@ async fn execute_steps(
             std::time::Duration::from_secs(timeout_secs),
             dispatch_action(
                 &step.id,
+                i,
                 &resolved_action,
                 engine,
                 community_id,
                 run_id,
                 trigger_ctx,
+                &trace,
             ),
         )
         .await;
@@ -1180,15 +1235,19 @@ async fn execute_steps(
                 }));
                 step_outputs.insert(step.id.clone(), output);
             }
-            StepResult::Suspended { approval_token } => {
+            StepResult::Suspended { request_event_id } => {
                 info!(
                     run_id = %run_id, step = %step.id,
-                    "Step suspended — awaiting approval (token: <redacted>)"
+                    request_event_id = %request_event_id,
+                    "Step suspended — awaiting approval"
                 );
-                // Return the token and current state so the caller can persist the
-                // approval record and update the run's execution trace.
+                trace.push(serde_json::json!({
+                    "step_id": step.id,
+                    "status": "waiting_approval",
+                    "request_event_id": request_event_id,
+                }));
                 return Ok(ExecutionResult {
-                    approval_token: Some(approval_token),
+                    approval_request_event_id: Some(request_event_id),
                     step_index: i,
                     step_outputs,
                     trace,
@@ -1206,7 +1265,7 @@ async fn execute_steps(
 
     info!(run_id = %run_id, "Workflow run completed");
     Ok(ExecutionResult {
-        approval_token: None,
+        approval_request_event_id: None,
         step_index: def.steps.len(),
         step_outputs,
         trace,
@@ -1216,7 +1275,110 @@ async fn execute_steps(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::action_sink::{ActionSink, ActionSinkError, ApprovalReceipt, ApprovalRequest};
     use serde_json::json;
+    use std::future::Future;
+    use std::pin::Pin;
+    use std::sync::Mutex;
+
+    struct RecordingActionSink {
+        request: Mutex<Option<ApprovalRequest>>,
+        fail_request: bool,
+    }
+
+    impl RecordingActionSink {
+        fn succeeds() -> Self {
+            Self {
+                request: Mutex::new(None),
+                fail_request: false,
+            }
+        }
+
+        fn fails() -> Self {
+            Self {
+                request: Mutex::new(None),
+                fail_request: true,
+            }
+        }
+    }
+
+    impl ActionSink for RecordingActionSink {
+        fn send_message(
+            &self,
+            _community_id: CommunityId,
+            _channel_id: &str,
+            _text: &str,
+            _author_pubkey: &str,
+        ) -> Pin<Box<dyn Future<Output = Result<String, ActionSinkError>> + Send + '_>> {
+            Box::pin(async { Err(ActionSinkError::InvalidInput("not exercised".into())) })
+        }
+
+        fn request_approval(
+            &self,
+            request: ApprovalRequest,
+        ) -> Pin<Box<dyn Future<Output = Result<ApprovalReceipt, ActionSinkError>> + Send + '_>>
+        {
+            Box::pin(async move {
+                *self.request.lock().expect("record request") = Some(request);
+                if self.fail_request {
+                    Err(ActionSinkError::Database("write failed".into()))
+                } else {
+                    Ok(ApprovalReceipt {
+                        request_event_id: "ab".repeat(32),
+                    })
+                }
+            })
+        }
+    }
+
+    fn approval_request() -> ApprovalRequest {
+        ApprovalRequest {
+            community_id: CommunityId::from_uuid(Uuid::from_u128(1)),
+            workflow_id: Uuid::from_u128(2),
+            run_id: Uuid::from_u128(3),
+            step_id: "gate".to_owned(),
+            step_index: 4,
+            approver_spec: "@Aiden".to_owned(),
+            message: "Ship the release?".to_owned(),
+            expires_at: chrono::DateTime::from_timestamp(2_000_000_000, 0)
+                .expect("valid timestamp"),
+            channel_id: Some(Uuid::from_u128(5)),
+            owner_pubkey: "cd".repeat(32),
+            execution_trace: json!([{"step_id":"prepare","status":"completed"}]),
+        }
+    }
+
+    #[tokio::test]
+    async fn approval_dispatch_suspends_only_after_sink_persists_request() {
+        let sink = RecordingActionSink::succeeds();
+        let request = approval_request();
+
+        let result = dispatch_approval_request(&sink, request.clone())
+            .await
+            .expect("persisted approval suspends");
+
+        match result {
+            StepResult::Suspended { request_event_id } => {
+                assert_eq!(request_event_id, "ab".repeat(32));
+            }
+            other => panic!("expected suspension, got {other:?}"),
+        }
+        assert_eq!(
+            sink.request.lock().expect("read request").as_ref(),
+            Some(&request)
+        );
+    }
+
+    #[tokio::test]
+    async fn approval_dispatch_propagates_sink_failure_without_suspending() {
+        let sink = RecordingActionSink::fails();
+
+        let error = dispatch_approval_request(&sink, approval_request())
+            .await
+            .expect_err("failed persistence must fail the step");
+
+        assert!(matches!(error, WorkflowError::WebhookError(_)));
+    }
 
     fn make_trigger() -> TriggerContext {
         TriggerContext {

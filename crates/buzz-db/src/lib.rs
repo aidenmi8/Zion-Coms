@@ -2758,6 +2758,28 @@ impl Db {
         workflow::get_run_approvals(&self.pool, community_id, workflow_id, run_id).await
     }
 
+    /// Atomically create an actionable approval request and suspend its run.
+    pub async fn create_actionable_approval(
+        &self,
+        params: workflow::ActionableApprovalParams<'_>,
+    ) -> Result<(StoredEvent, bool)> {
+        let community_id = params.community_id;
+        let request_event = params.request_event.clone();
+        let channel_id = params.channel_id;
+        let result = workflow::create_actionable_approval(&self.pool, params).await?;
+        if result.1 {
+            if let Err(error) =
+                insert_mentions(&self.pool, community_id, &request_event, channel_id).await
+            {
+                tracing::warn!(
+                    event_id = %request_event.id,
+                    "Failed to insert actionable approval mention: {error}"
+                );
+            }
+        }
+        Ok(result)
+    }
+
     /// Update an approval's status.
     pub async fn update_approval(
         &self,

@@ -285,7 +285,7 @@ class _FloatingTabDestination extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: Grid.xxs,
-              vertical: Grid.xxs,
+              vertical: Grid.half,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -311,6 +311,7 @@ class _FloatingTabDestination extends StatelessWidget {
                   destination.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  textScaler: TextScaler.noScaling,
                   style: textStyle?.copyWith(
                     color: foregroundColor,
                     fontSize: 10.5,

@@ -11,8 +11,8 @@ const _themeModeKey = 'buzz_theme_mode';
 const _accentKey = 'buzz_accent_color';
 const _schemeKey = 'buzz_color_scheme';
 
-const defaultSchemeName = 'github-light';
-const defaultSchemeDisplayName = 'GitHub Light';
+const defaultSchemeName = 'zion-orbit';
+const defaultSchemeDisplayName = 'Zion Orbit';
 
 /// Pre-loaded SharedPreferences instance, overridden in main().
 final savedPrefsProvider = Provider<SharedPreferences>(
@@ -42,7 +42,8 @@ class AccentNotifier extends Notifier<int> {
   int build() {
     final prefs = ref.read(savedPrefsProvider);
     final stored = prefs.getInt(_accentKey);
-    if (stored == legacyDefaultAccentIndex) {
+    if (stored == legacyDefaultAccentIndex ||
+        stored == legacyAutomaticBlackAccentIndex) {
       prefs.setInt(_accentKey, defaultAccentIndex);
       return defaultAccentIndex;
     }

@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:buzz/features/pairing/pairing_page.dart';
 import 'package:buzz/features/pairing/pairing_provider.dart';
+import 'package:buzz/shared/branding/sentra_branding.dart';
+import 'package:buzz/shared/branding/sentra_liquid_orbit.dart';
 
 import '../../helpers/widget_helpers.dart';
 
@@ -15,15 +17,54 @@ void main() {
         WidgetHelpers.testable(child: const PairingPage()),
       );
 
-      expect(
-        find.image(const AssetImage('assets/images/buzz-icon.png')),
-        findsOneWidget,
-      );
       expect(find.text('Welcome to Zion'), findsOneWidget);
+      expect(find.bySemanticsLabel('Sentra'), findsOneWidget);
+      final wordmark = tester.widget<Image>(
+        find.descendant(
+          of: find.bySemanticsLabel('Sentra'),
+          matching: find.byType(Image),
+        ),
+      );
+      expect(wordmark.image, const AssetImage(sentraBlackWordmarkAsset));
       expect(find.text('Scan QR Code'), findsOneWidget);
       expect(find.text('or paste pairing code'), findsOneWidget);
+      expect(find.text('Paste a pairing link or code'), findsOneWidget);
+      expect(find.textContaining('buzz://'), findsNothing);
       expect(find.text('Connect'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('keeps pairing controls visible with the liquid-orb welcome', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        WidgetHelpers.testable(child: const PairingPage()),
+      );
+
+      expect(find.byType(SentraLiquidOrbit), findsOneWidget);
+      expect(find.text('Welcome to Zion'), findsOneWidget);
+      final pageBounds = tester.getRect(
+        find.descendant(
+          of: find.byType(PairingPage),
+          matching: find.byType(Scaffold),
+        ),
+      );
+      final scanButton = find.widgetWithText(FilledButton, 'Scan QR Code');
+      final textField = find.byType(TextField);
+      final connectButton = find.widgetWithText(FilledButton, 'Connect');
+
+      for (final control in [scanButton, textField, connectButton]) {
+        expect(control, findsOneWidget);
+        expect(control.hitTestable(), findsOneWidget);
+        final bounds = tester.getRect(control);
+        expect(bounds.top, greaterThanOrEqualTo(pageBounds.top));
+        expect(bounds.bottom, lessThanOrEqualTo(pageBounds.bottom));
+      }
+
+      expect(tester.widget<TextField>(textField).enabled, isTrue);
+      expect(tester.widget<FilledButton>(scanButton).onPressed, isNotNull);
+      expect(tester.widget<FilledButton>(connectButton).onPressed, isNotNull);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('connect button is below text field, not beside it', (

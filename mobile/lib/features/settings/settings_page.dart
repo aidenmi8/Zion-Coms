@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:nostr/nostr.dart' as nostr;
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../shared/branding/sentra_branding.dart';
 import '../../shared/auth/auth.dart';
 import '../../shared/clipboard_utils.dart';
 import '../../shared/relay/relay.dart';
@@ -178,15 +179,27 @@ class SettingsPage extends HookConsumerWidget {
               top: false,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: Grid.xs, top: Grid.xxs),
-                child: Center(
-                  child: Text(
-                    'v${packageInfo.data!.version}',
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colors.onSurfaceVariant.withValues(
-                        alpha: 0.6,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Semantics(
+                      label: 'Sentra',
+                      image: true,
+                      child: Image.asset(
+                        sentraWordmarkAssetFor(context.colors.brightness),
+                        height: 36,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: Grid.xxs),
+                    Text(
+                      'Zion · v${packageInfo.data!.version}',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colors.onSurfaceVariant.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -5,14 +5,31 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/theme.dart';
 
-/// Height of the frosted app bar content area below the safe area.
+/// Minimum height of the frosted app bar content area below the safe area.
 const _kBarContentHeight = Grid.xxs + 32 + Grid.xxs; // 48
+
+double _frostedAppBarContentHeight(BuildContext context) {
+  final textScaler = MediaQuery.textScalerOf(context);
+  final titleStyle = context.textTheme.titleMedium;
+  final detailStyle = context.textTheme.bodySmall;
+  final titleHeight =
+      textScaler.scale(titleStyle?.fontSize ?? 20) * (titleStyle?.height ?? 1);
+  final detailHeight =
+      textScaler.scale(detailStyle?.fontSize ?? 12) *
+      (detailStyle?.height ?? 1);
+  final requiredHeight = titleHeight + detailHeight;
+
+  return requiredHeight > _kBarContentHeight
+      ? requiredHeight.ceilToDouble()
+      : _kBarContentHeight;
+}
 
 /// Returns the total height of the [FrostedAppBar] including safe area padding.
 ///
 /// Use this to add top spacing to body content so it starts below the bar.
 double frostedAppBarHeight(BuildContext context) {
-  return MediaQuery.paddingOf(context).top + _kBarContentHeight;
+  return MediaQuery.paddingOf(context).top +
+      _frostedAppBarContentHeight(context);
 }
 
 /// A frosted-glass floating app bar designed to sit inside a [Stack].
@@ -74,7 +91,7 @@ class FrostedAppBar extends StatelessWidget {
               ),
             ),
             child: SizedBox(
-              height: _kBarContentHeight,
+              height: _frostedAppBarContentHeight(context),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: Grid.quarter),
                 child: Row(

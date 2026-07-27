@@ -1,0 +1,278 @@
+{
+  "version": 1,
+  "sourceDirectory": "/private/tmp/zion-brand-source",
+  "assets": {
+    "sentraV2_2": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-2.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-2.png",
+      "sourceFormat": "png",
+      "sha256": "c52e77b57c3e24284bd0794fa917da612a3d953a8725eece6fc4798d43a62e6a",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_3": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-3.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-3.png",
+      "sourceFormat": "png",
+      "sha256": "6af0cd4ab5b72e52e4aa2712e0dae003aaaf2ccef774b95e669a3bc75d3b9cd7",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_4": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-4.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-4.png",
+      "sourceFormat": "png",
+      "sha256": "f6ef000cad2cc1dddbd68bc86ca93336ae5299e8f1f0c591bb6053f46cd1de45",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_5": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-5.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-5.png",
+      "sourceFormat": "png",
+      "sha256": "f44dfea9e6e9b423729ac76f47a7366ae19df304da6a77204b81599c8ff9850f",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_6": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-6.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-6.png",
+      "sourceFormat": "png",
+      "sha256": "9836d450544705316dc4b0bc894b89922b6470d9006835558ad0227e28bce43f",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_7": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-7.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-7.png",
+      "sourceFormat": "png",
+      "sha256": "88acc7498b4532393b837b53c89cbe3cbf0dde7d5c887ae49ef28c66eb0da16d",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "appIcon": {
+      "role": "appIcon",
+      "canonicalPath": "/branding/zion-app-icon-1024.png",
+      "aliases": [
+        "/app-icon@2x.png",
+        "/app-icon@3x.png",
+        "web/src/assets/zion-app-icon@3x.png",
+        "web/src/assets/app-icon@3x.png"
+      ],
+      "sourceFile": "Logos-sentra-v2-8.png",
+      "sourceFormat": "png",
+      "sha256": "9dd5bcf31e3b8d531d9e2df38edd3b61fc41cf579541b6fda41713c76b6e5b1b",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "dmgBackground": {
+      "role": "dmgBackground",
+      "canonicalPath": "/branding/sentra-dmg-background-1200x800.png",
+      "aliases": [
+        "/branding/sentra-dmg-background-600x400.png"
+      ],
+      "sourceFile": "Logos-sentra-v2-9.png",
+      "sourceFormat": "png",
+      "sha256": "bf47cb14de31ceec35e9e55ec1fb583f1e2c5c03f181dd366ae0d6b4830d0e28",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_10": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-10.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-10.png",
+      "sourceFormat": "png",
+      "sha256": "8b171011068555e7a6e89cce1355480ce46dc180df2a1b484117601fe4ab3433",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraWordmark": {
+      "role": "sentraWordmark",
+      "canonicalPath": "/branding/sentra-wordmark.svg",
+      "aliases": [
+        "desktop/public/landing/buzz-wordmark.png"
+      ],
+      "sourceFile": "logo-TW-wordmark.png",
+      "sourceFormat": "png",
+      "sha256": "9b44ba56ecde2204c2f05c8dcde8274c3618b91ae3ae7a739054a7ff8289e0d6",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "sentraLockup": {
+      "role": "sentraLockup",
+      "canonicalPath": "/branding/sentra-lockup-horizontal.svg",
+      "aliases": [
+        "/branding/sentra-lockup-light.svg"
+      ],
+      "sourceFile": "logo-TW2-wordmark.png",
+      "sourceFormat": "png",
+      "sha256": "afee3e2b37ba84cfb8e6d0c9b586a93916356bd7a91b0641707bb0e17486ac64",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "sentraLockupDark": {
+      "role": "sentraLockupDark",
+      "canonicalPath": "/branding/sentra-lockup-dark.svg",
+      "aliases": [],
+      "sourceFile": "logo-TB-wordmark.png",
+      "sourceFormat": "png",
+      "sha256": "111af13d62c2496724450142d051b060caae63c3bd4f04d6e39aa2085400bedb",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "webAppIcon": {
+      "role": "webAppIcon",
+      "canonicalPath": "/branding/zion-app-icon-1024.png",
+      "aliases": [
+        "web/src/assets/app-icon@3x.png"
+      ],
+      "sourceFile": "Logos-sentra-v2-8.png",
+      "sourceFormat": "png",
+      "sha256": "9dd5bcf31e3b8d531d9e2df38edd3b61fc41cf579541b6fda41713c76b6e5b1b",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "adminMark": {
+      "role": "adminMark",
+      "canonicalPath": "/branding/zion-mark.svg",
+      "aliases": [
+        "admin-web/public/favicon.svg"
+      ],
+      "sourceFile": "Logos-sentra-v2-2.png",
+      "sourceFormat": "png",
+      "sha256": "c52e77b57c3e24284bd0794fa917da612a3d953a8725eece6fc4798d43a62e6a",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    }
+  },
+  "sources": {
+    "Logos-sentra-v2-2.png": {
+      "disposition": "shipped"
+    },
+    "Logos-sentra-v2-3.png": {
+      "disposition": "shipped"
+    },
+    "Logos-sentra-v2-4.png": {
+      "disposition": "shipped"
+    },
+    "Logos-sentra-v2-5.png": {
+      "disposition": "shipped"
+    },
+    "Logos-sentra-v2-6.png": {
+      "disposition": "shipped"
+    },
+    "Logos-sentra-v2-7.png": {
+      "disposition": "shipped"
+    },
+    "Logos-sentra-v2-8.png": {
+      "disposition": "shipped"
+    },
+    "Logos-sentra-v2-9.png": {
+      "disposition": "shipped"
+    },
+    "Logos-sentra-v2-10.png": {
+      "disposition": "shipped"
+    },
+    "logo-TW-wordmark.png": {
+      "disposition": "shipped"
+    },
+    "logo-TW2-wordmark.png": {
+      "disposition": "shipped"
+    },
+    "logo-TB-wordmark.png": {
+      "disposition": "shipped"
+    },
+    "Logos-sentra-v2-1.png": {
+      "disposition": "reference-only"
+    },
+    "sentra-agent-ARQ-and Agents.png": {
+      "disposition": "reference-only"
+    },
+    "sentra-logo-branding -jul-2026.png": {
+      "disposition": "reference-only"
+    }
+  },
+  "motion": {
+    "frameSourcePolicy": "dedicated-frame-or-code-native",
+    "variants": [
+      "loader",
+      "onboarding",
+      "liveness",
+      "pairing",
+      "agent-entrance"
+    ],
+    "loader": {
+      "durationMs": 1800,
+      "loop": true,
+      "mode": "code-native",
+      "reducedMotion": "static"
+    },
+    "onboarding": {
+      "durationMs": 900,
+      "settleMs": 2400,
+      "loop": false,
+      "mode": "code-native",
+      "reducedMotion": "settled"
+    },
+    "liveness": {
+      "durationMs": 1400,
+      "loop": true,
+      "mode": "code-native",
+      "reducedMotion": "static"
+    },
+    "pairing": {
+      "durationMs": 1800,
+      "loop": false,
+      "mode": "code-native",
+      "reducedMotion": "settled"
+    },
+    "agent-entrance": {
+      "durationMs": 900,
+      "staggerMs": 320,
+      "loop": false,
+      "mode": "code-native",
+      "reducedMotion": "settled"
+    }
+  }
+}

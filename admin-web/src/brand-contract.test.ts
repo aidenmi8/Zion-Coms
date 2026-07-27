@@ -10,7 +10,8 @@ const styleSource = readFileSync(
 describe("Zion admin brand contract", () => {
   test("keeps the visible admin identity and compatibility key", () => {
     expect(appSource).toMatch(/Zion <b>Admin<\/b>/);
-    expect(appSource).toMatch(/src="\/sentra-lockup-dark\.svg"/);
+    expect(appSource).toMatch(/data-brand-surface="zion-mark"/);
+    expect(appSource).not.toMatch(/sentra-lockup-dark\.svg/);
     expect(appSource).toMatch(/className="app zion-brand-shell"/);
     expect(appSource).toMatch(/buzz-admin-feedback-status/);
     expect(styleSource).toMatch(/\.zion-brand-shell\s*\{/);

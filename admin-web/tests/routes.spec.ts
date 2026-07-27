@@ -17,6 +17,47 @@ for (const [path, heading] of [
   });
 }
 
+test("shared header renders a compact high-contrast Zion mark", async ({
+  page,
+}) => {
+  for (const path of ["/reports", "/feedback"]) {
+    await page.goto(path);
+
+    const slot = page.locator(".brand-mark");
+    const mark = slot.locator("svg");
+    await expect(mark).toBeVisible();
+    await expect(slot.locator("img")).toHaveCount(0);
+
+    const metrics = await mark.evaluate((element) => {
+      const svg = element as SVGSVGElement;
+      const glyph = svg.querySelector<SVGGraphicsElement>("g");
+      if (!glyph) throw new Error("Zion mark glyph is missing");
+
+      const slotRect = svg.parentElement?.getBoundingClientRect();
+      const markRect = svg.getBoundingClientRect();
+      const glyphBounds = glyph.getBBox();
+      const viewBox = svg.viewBox.baseVal;
+
+      return {
+        background: getComputedStyle(svg.parentElement as Element)
+          .backgroundColor,
+        fill: getComputedStyle(glyph).fill,
+        glyphHeightRatio: glyphBounds.height / viewBox.height,
+        glyphWidthRatio: glyphBounds.width / viewBox.width,
+        markToSlotRatio: slotRect ? markRect.width / slotRect.width : 0,
+      };
+    });
+
+    expect(metrics.glyphHeightRatio).toBeGreaterThanOrEqual(0.5);
+    expect(metrics.glyphWidthRatio).toBeGreaterThanOrEqual(0.5);
+    expect(metrics.markToSlotRatio).toBeGreaterThanOrEqual(0.5);
+    expect(metrics.markToSlotRatio).toBeLessThanOrEqual(0.75);
+    expect(
+      contrastRatio(metrics.fill, metrics.background),
+    ).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
 test("forbidden reads have an explicit state", async ({ page }) => {
   await page.route("**/api/admin/v1/reports?**", (route) =>
     route.fulfill({
@@ -250,3 +291,32 @@ test("feedback attachments render from imeta without raw markdown", async ({
     .evaluate((element) => element.getBoundingClientRect().height);
   expect(fileHeight).toBeLessThan(100);
 });
+
+function contrastRatio(foreground: string, background: string) {
+  const foregroundLuminance = relativeLuminance(parseRgb(foreground));
+  const backgroundLuminance = relativeLuminance(parseRgb(background));
+  const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+  const darker = Math.min(foregroundLuminance, backgroundLuminance);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function parseRgb(color: string) {
+  const channels = color
+    .match(/\d+(?:\.\d+)?/g)
+    ?.slice(0, 3)
+    .map(Number);
+  if (channels?.length !== 3) {
+    throw new Error(`Expected an rgb color, received ${color}`);
+  }
+  return channels;
+}
+
+function relativeLuminance(channels: number[]) {
+  const [red, green, blue] = channels.map((channel) => {
+    const normalized = channel / 255;
+    return normalized <= 0.04045
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  });
+  return red * 0.2126 + green * 0.7152 + blue * 0.0722;
+}

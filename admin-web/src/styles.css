@@ -86,16 +86,11 @@ button {
   box-shadow: 0 0 1.5rem rgb(185 154 255 / 12%);
 }
 
-.brand-mark img {
-  position: absolute;
-  top: -72%;
-  left: -110%;
-  width: 320%;
-  height: 320%;
-  max-width: none;
-  max-height: none;
-  object-fit: contain;
-  filter: invert(1) drop-shadow(0 0 0.5rem rgb(185 154 255 / 18%));
+.brand-mark svg {
+  width: 1.65rem;
+  height: 1.65rem;
+  color: #f3efff;
+  filter: drop-shadow(0 0 0.5rem rgb(185 154 255 / 18%));
 }
 
 nav {

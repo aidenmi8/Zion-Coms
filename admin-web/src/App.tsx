@@ -659,7 +659,19 @@ function date(value: string) {
 }
 
 function ZionMark() {
-  return <img alt="" aria-hidden="true" src="/sentra-lockup-dark.svg" />;
+  return (
+    <svg
+      aria-hidden="true"
+      data-brand-surface="zion-mark"
+      focusable="false"
+      viewBox="0 0 64 64"
+    >
+      <g fill="currentColor">
+        <path d="M16 30 32 12h20L36 30H16Z" />
+        <path d="M12 52 28 34h20L32 52H12Z" />
+      </g>
+    </svg>
+  );
 }
 
 function ReportIcon() {

@@ -68,17 +68,20 @@ context.drawRadialGradient(
 )
 context.setBlendMode(.normal)
 
-if let source = CGImageSourceCreateWithURL(sourceURL as CFURL, nil),
-   let lockup = CGImageSourceCreateImageAtIndex(source, 0, nil) {
-  // CGContext draws CGImage pixels from a bottom-left image origin. Flip only
-  // this placed image so the transparent source remains upright in the
-  // top-left layout used by the rest of this composition.
-  context.saveGState()
-  context.translateBy(x: 150, y: 600)
-  context.scaleBy(x: 1, y: -1)
-  context.draw(lockup, in: CGRect(x: 0, y: 0, width: 420, height: 420))
-  context.restoreGState()
+guard let source = CGImageSourceCreateWithURL(sourceURL as CFURL, nil),
+      let lockup = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+  fputs("could not load transparent lockup at \(sourceURL.path)\n", stderr)
+  exit(1)
 }
+
+// CGContext draws CGImage pixels from a bottom-left image origin. Flip only
+// this placed image so the transparent source remains upright in the
+// top-left layout used by the rest of this composition.
+context.saveGState()
+context.translateBy(x: 150, y: 600)
+context.scaleBy(x: 1, y: -1)
+context.draw(lockup, in: CGRect(x: 0, y: 0, width: 420, height: 420))
+context.restoreGState()
 
 context.setStrokeColor(NSColor(calibratedRed: 0.82, green: 0.75, blue: 1, alpha: 0.9).cgColor)
 context.setLineWidth(8)

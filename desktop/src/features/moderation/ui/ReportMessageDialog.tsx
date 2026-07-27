@@ -67,7 +67,10 @@ export function ReportMessageDialog({
           toast.success("Report submitted to community moderators");
           onOpenChange(false);
         },
-        onError: () => toast.error("Failed to submit report"),
+        onError: (error) =>
+          toast.error(
+            error instanceof Error ? error.message : "Failed to submit report",
+          ),
       },
     );
   };

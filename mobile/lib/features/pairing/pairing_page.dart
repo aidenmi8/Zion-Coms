@@ -4,6 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../shared/brand/zion_brand_motion.dart';
+import '../../shared/brand/zion_brand_tokens.dart';
 import '../../shared/theme/theme.dart';
 import 'pairing_provider.dart';
 
@@ -18,10 +20,17 @@ class PairingPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pairingState = ref.watch(pairingProvider);
     final codeController = useTextEditingController();
-    final isBusy =
-        pairingState.status == PairingStatus.connecting ||
+    final isConnecting = pairingState.status == PairingStatus.connecting;
+    final isLoading =
         pairingState.status == PairingStatus.transferring ||
         pairingState.status == PairingStatus.storing;
+    final isBusy = isConnecting || isLoading;
+    final brandState = _brandStateForStatus(pairingState.status);
+    final connectButtonLabel = switch (pairingState.status) {
+      PairingStatus.connecting => 'Connecting…',
+      PairingStatus.transferring || PairingStatus.storing => 'Syncing…',
+      _ => 'Connect',
+    };
 
     // When adding a community and pairing succeeds, pop back.
     if (addingCommunity && pairingState.status == PairingStatus.success) {
@@ -65,7 +74,13 @@ class PairingPage extends HookConsumerWidget {
                     children: [
                       const Spacer(flex: 2),
 
-                      Image.asset('assets/images/buzz-icon.png', height: 64),
+                      ZionBrandMotion(
+                        variant: brandState.variant,
+                        playing: brandState.playing,
+                        loop: brandState.loop,
+                        label: brandState.label,
+                        size: ZionBrandTokens.heroMotionSize,
+                      ),
                       const SizedBox(height: Grid.xs),
                       Text(
                         'Welcome to Zion',
@@ -147,16 +162,7 @@ class PairingPage extends HookConsumerWidget {
                                         .pair(code);
                                   }
                                 },
-                          child: isBusy
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Connect'),
+                          child: Text(connectButtonLabel),
                         ),
                       ),
 
@@ -212,6 +218,43 @@ class PairingPage extends HookConsumerWidget {
       ),
     );
   }
+}
+
+class _PairingBrandState {
+  final String variant;
+  final bool playing;
+  final bool loop;
+  final String label;
+
+  const _PairingBrandState({
+    required this.variant,
+    required this.playing,
+    required this.loop,
+    required this.label,
+  });
+}
+
+_PairingBrandState _brandStateForStatus(PairingStatus status) {
+  return switch (status) {
+    PairingStatus.connecting => const _PairingBrandState(
+      variant: ZionBrandMotionVariants.pairing,
+      playing: true,
+      loop: false,
+      label: 'Zion pairing in progress',
+    ),
+    PairingStatus.transferring || PairingStatus.storing => const _PairingBrandState(
+      variant: ZionBrandMotionVariants.loader,
+      playing: true,
+      loop: true,
+      label: 'Zion transfer in progress',
+    ),
+    _ => const _PairingBrandState(
+      variant: ZionBrandMotionVariants.onboarding,
+      playing: false,
+      loop: false,
+      label: 'Zion welcome mark',
+    ),
+  };
 }
 
 /// SAS verification screen shown during NIP-AB pairing.

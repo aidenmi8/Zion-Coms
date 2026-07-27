@@ -44,6 +44,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/images/zion-icon.png
     - assets/images/buzz-icon.png
   fonts:
     - family: Inter

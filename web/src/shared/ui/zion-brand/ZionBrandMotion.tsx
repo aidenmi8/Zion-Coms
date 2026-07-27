@@ -75,7 +75,6 @@ export function ZionBrandMotion({
         } as React.CSSProperties
       }
     >
-      {decorative && label ? <span className="sr-only">{label}</span> : null}
       <img
         alt={decorative ? "" : (label ?? "Zion")}
         aria-hidden={decorative ? true : undefined}

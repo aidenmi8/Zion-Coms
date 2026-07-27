@@ -55,6 +55,16 @@ html.dark .zion-brand-motion--theme-aware .zion-brand-motion__mark {
   animation-iteration-count: 1;
 }
 
+.zion-brand-motion[data-playing="true"][data-loop="false"]
+  .zion-brand-motion__mark {
+  animation-iteration-count: 1;
+}
+
+.zion-brand-motion[data-playing="true"][data-loop="true"]
+  .zion-brand-motion__mark {
+  animation-iteration-count: infinite;
+}
+
 .zion-brand-motion[data-playing="false"] .zion-brand-motion__mark {
   animation: none;
   opacity: 1;

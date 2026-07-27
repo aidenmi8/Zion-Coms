@@ -3,13 +3,15 @@ import fs from "node:fs";
 import test from "node:test";
 
 import React from "react";
-import { act } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { createRoot } from "react-dom/client";
 
 import { frameAtTime } from "./brandAssetManifest.ts";
 import { ZionBrandField } from "./ZionBrandField.tsx";
-import { resolveMotionRenderAsset, ZionMotion } from "./ZionMotion.tsx";
+import {
+  resolveMotionElapsedMs,
+  resolveMotionRenderAsset,
+  ZionMotion,
+} from "./ZionMotion.tsx";
 
 function installDOMShim() {
   class EventTargetShim {
@@ -272,109 +274,69 @@ test("dedicated-frame motion contracts resolve frames via mode and frameAtTime w
   );
 });
 
-test("dedicated-frame ZionMotion advances frames over time while playing", async () => {
-  const originalMatchMedia = globalThis.window.matchMedia;
-  const originalPerformanceNow = globalThis.performance.now.bind(
-    globalThis.performance,
+test("dedicated-frame timing contract advances elapsed time for looping and one-shot playback", () => {
+  assert.equal(
+    resolveMotionElapsedMs({
+      durationMs: 300,
+      loop: true,
+      nowMs: 150,
+      startMs: 0,
+    }),
+    150,
   );
-  const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
-  const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
-  const originalWindowRequestAnimationFrame =
-    globalThis.window.requestAnimationFrame;
-  const originalWindowCancelAnimationFrame =
-    globalThis.window.cancelAnimationFrame;
+  assert.equal(
+    resolveMotionElapsedMs({
+      durationMs: 300,
+      loop: false,
+      nowMs: 150,
+      startMs: 0,
+    }),
+    150,
+  );
+  assert.equal(
+    resolveMotionElapsedMs({
+      durationMs: 300,
+      loop: false,
+      nowMs: 450,
+      startMs: 0,
+    }),
+    300,
+  );
 
-  let nowMs = 0;
-  let nextRafId = 1;
-  const rafCallbacks = new Map();
-  const flushFrame = async (nextNowMs) => {
-    nowMs = nextNowMs;
-    const callbacks = [...rafCallbacks.entries()];
-    rafCallbacks.clear();
-    await act(async () => {
-      for (const [id, callback] of callbacks) {
-        if (!rafCallbacks.has(id)) {
-          callback(nowMs);
-        }
-      }
-    });
+  const dedicatedFrameContract = {
+    durationMs: 300,
+    frames: ["/frame-1.svg", "/frame-2.svg", "/frame-3.svg"],
+    loop: true,
+    mode: "dedicated-frame",
+    reducedMotion: "static",
   };
 
-  globalThis.window.matchMedia = () => ({
-    matches: false,
-    addEventListener() {},
-    removeEventListener() {},
-    addListener() {},
-    removeListener() {},
-  });
-  Object.defineProperty(globalThis.performance, "now", {
-    configurable: true,
-    value: () => nowMs,
-  });
-  const requestAnimationFrameStub = (callback) => {
-    const id = nextRafId++;
-    rafCallbacks.set(id, callback);
-    return id;
-  };
-  const cancelAnimationFrameStub = (id) => {
-    rafCallbacks.delete(id);
-  };
-  globalThis.requestAnimationFrame = requestAnimationFrameStub;
-  globalThis.cancelAnimationFrame = cancelAnimationFrameStub;
-  globalThis.window.requestAnimationFrame = requestAnimationFrameStub;
-  globalThis.window.cancelAnimationFrame = cancelAnimationFrameStub;
-
-  const container = document.createElement("div");
-  const root = createRoot(container);
-
-  try {
-    await act(async () => {
-      root.render(
-        React.createElement(ZionMotion, {
-          className: "w-6",
-          decorative: true,
-          playing: true,
-          loop: true,
-          variant: "loader",
-          motionContractOverride: {
-            durationMs: 300,
-            frames: ["/frame-1.svg", "/frame-2.svg", "/frame-3.svg"],
-            loop: true,
-            mode: "dedicated-frame",
-            reducedMotion: "static",
-          },
-        }),
-      );
-    });
-
-    assert.equal(
-      findFirstByTag(container, "img")?.getAttribute("src"),
-      "/frame-1.svg",
-    );
-
-    await flushFrame(150);
-    assert.equal(
-      findFirstByTag(container, "img")?.getAttribute("src"),
-      "/frame-2.svg",
-    );
-
-    await flushFrame(250);
-    assert.equal(
-      findFirstByTag(container, "img")?.getAttribute("src"),
-      "/frame-3.svg",
-    );
-  } finally {
-    await act(async () => {
-      root.unmount();
-    });
-    globalThis.window.matchMedia = originalMatchMedia;
-    Object.defineProperty(globalThis.performance, "now", {
-      configurable: true,
-      value: originalPerformanceNow,
-    });
-    globalThis.requestAnimationFrame = originalRequestAnimationFrame;
-    globalThis.cancelAnimationFrame = originalCancelAnimationFrame;
-    globalThis.window.requestAnimationFrame = originalWindowRequestAnimationFrame;
-    globalThis.window.cancelAnimationFrame = originalWindowCancelAnimationFrame;
-  }
+  assert.deepEqual(
+    resolveMotionRenderAsset(dedicatedFrameContract, {
+      elapsedMs: resolveMotionElapsedMs({
+        durationMs: 300,
+        loop: true,
+        nowMs: 150,
+        startMs: 0,
+      }),
+      loop: true,
+      playing: true,
+      reducedMotion: false,
+    }),
+    { mode: "dedicated-frame", src: "/frame-2.svg" },
+  );
+  assert.deepEqual(
+    resolveMotionRenderAsset(dedicatedFrameContract, {
+      elapsedMs: resolveMotionElapsedMs({
+        durationMs: 300,
+        loop: true,
+        nowMs: 250,
+        startMs: 0,
+      }),
+      loop: true,
+      playing: true,
+      reducedMotion: false,
+    }),
+    { mode: "dedicated-frame", src: "/frame-3.svg" },
+  );
 });

@@ -2,12 +2,15 @@ import BRAND_MANIFEST from "../../../../../branding/zion-brand-manifest.json" wi
   type: "json",
 };
 
-export type ZionMotionVariant =
-  | "loader"
-  | "onboarding"
-  | "liveness"
-  | "pairing"
-  | "agent-entrance";
+export const ZION_MOTION_VARIANTS = [
+  "loader",
+  "onboarding",
+  "liveness",
+  "pairing",
+  "agent-entrance",
+] as const;
+
+export type ZionMotionVariant = (typeof ZION_MOTION_VARIANTS)[number];
 
 export type ZionBrandAsset = {
   canonicalPath: string;
@@ -15,6 +18,92 @@ export type ZionBrandAsset = {
   role: "mark" | "appIcon" | "wordmark" | "lockup" | "status" | "packaging";
   source: string;
 };
+
+type ZionMotionMode = "code-native" | "dedicated-frame";
+type ZionReducedMotionPolicy = "static" | "settled";
+type ZionMotionFrameRecord = {
+  path: string;
+  dedicatedAnimationFrame: true;
+};
+
+type ZionMotionDefinitionBase = {
+  durationMs: number;
+  frames?: readonly ZionMotionFrameRecord[];
+  loop: boolean;
+  mode: ZionMotionMode;
+  reducedMotion: ZionReducedMotionPolicy;
+};
+
+type ZionMotionDefinitionMap = {
+  loader: ZionMotionDefinitionBase;
+  onboarding: ZionMotionDefinitionBase & { settleMs: number };
+  liveness: ZionMotionDefinitionBase;
+  pairing: ZionMotionDefinitionBase;
+  "agent-entrance": ZionMotionDefinitionBase & { staggerMs: number };
+};
+
+type ZionMotionManifestRecord = {
+  frameSourcePolicy: "dedicated-frame-or-code-native";
+  variants?: readonly string[];
+} & ZionMotionDefinitionMap;
+
+type ZionNormalizedMotionDefinition = Omit<ZionMotionDefinitionBase, "frames"> & {
+  frames: readonly string[];
+};
+
+export type ZionMotionManifest = {
+  frameSourcePolicy: "dedicated-frame-or-code-native";
+  variants: readonly ZionMotionVariant[];
+} & {
+  [Variant in ZionMotionVariant]: ZionNormalizedMotionDefinition &
+    (Variant extends "onboarding"
+      ? { settleMs: number }
+      : Variant extends "agent-entrance"
+        ? { staggerMs: number }
+        : {});
+};
+
+function isZionMotionVariant(value: string): value is ZionMotionVariant {
+  return (ZION_MOTION_VARIANTS as readonly string[]).includes(value);
+}
+
+function normalizeMotionBase(definition: ZionMotionDefinitionBase) {
+  const frames = (definition.frames ?? []).map((frame) => frame.path);
+
+  return {
+    durationMs: definition.durationMs,
+    frames,
+    loop: definition.loop,
+    mode: definition.mode,
+    reducedMotion: definition.reducedMotion,
+  };
+}
+
+function normalizeMotionManifest(
+  manifest: ZionMotionManifestRecord,
+): ZionMotionManifest {
+  const manifestVariants =
+    manifest.variants?.filter(isZionMotionVariant) ?? ZION_MOTION_VARIANTS;
+
+  return {
+    frameSourcePolicy: manifest.frameSourcePolicy,
+    variants:
+      manifestVariants.length === ZION_MOTION_VARIANTS.length
+        ? [...manifestVariants]
+        : [...ZION_MOTION_VARIANTS],
+    loader: normalizeMotionBase(manifest.loader),
+    onboarding: {
+      ...normalizeMotionBase(manifest.onboarding),
+      settleMs: manifest.onboarding.settleMs,
+    },
+    liveness: normalizeMotionBase(manifest.liveness),
+    pairing: normalizeMotionBase(manifest.pairing),
+    "agent-entrance": {
+      ...normalizeMotionBase(manifest["agent-entrance"]),
+      staggerMs: manifest["agent-entrance"].staggerMs,
+    },
+  };
+}
 
 export { BRAND_MANIFEST };
 
@@ -53,18 +142,27 @@ export const ZION_BRAND_ASSETS = {
   },
 } satisfies Record<string, ZionBrandAsset>;
 
+export const ZION_MOTION_MANIFEST = normalizeMotionManifest(
+  BRAND_MANIFEST.motion as ZionMotionManifestRecord,
+);
+
 export const ZION_MOTION_FRAMES: Readonly<
   Record<ZionMotionVariant, readonly string[]>
-> = {
-  loader: [],
-  onboarding: [],
-  liveness: [],
-  pairing: [],
-  "agent-entrance": [],
-};
+> = Object.freeze(
+  Object.fromEntries(
+    ZION_MOTION_VARIANTS.map((variant) => [
+      variant,
+      ZION_MOTION_MANIFEST[variant].frames,
+    ]),
+  ) as Record<ZionMotionVariant, readonly string[]>,
+);
 
 export function framesForVariant(variant: ZionMotionVariant) {
   return ZION_MOTION_FRAMES[variant];
+}
+
+export function motionForVariant(variant: ZionMotionVariant) {
+  return ZION_MOTION_MANIFEST[variant];
 }
 
 export function frameAtTime(

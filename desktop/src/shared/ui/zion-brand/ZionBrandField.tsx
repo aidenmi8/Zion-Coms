@@ -24,24 +24,70 @@ const MARKS: readonly Mark[] = [
 
 const ONBOARDING_MOTION = motionForVariant("onboarding");
 const FIELD_SETTLE_MS =
-  ONBOARDING_MOTION.durationMs + ("settleMs" in ONBOARDING_MOTION ? ONBOARDING_MOTION.settleMs : 0);
+  ONBOARDING_MOTION.durationMs +
+  ("settleMs" in ONBOARDING_MOTION ? ONBOARDING_MOTION.settleMs : 0);
 
-function applyFieldFrame(progress: number, elements: readonly (HTMLSpanElement | null)[]) {
-  const clampedProgress = Math.min(Math.max(progress, 0), 1);
-  const settleProgress = 1 - Math.pow(1 - clampedProgress, 3);
+function readReducedMotionPreference() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+export function getZionBrandFieldProgress({
+  elapsedMs = 0,
+  reducedMotion = false,
+}: {
+  elapsedMs?: number;
+  reducedMotion?: boolean;
+}) {
+  if (reducedMotion) return 1;
+  return Math.min(Math.max(elapsedMs / FIELD_SETTLE_MS, 0), 1);
+}
+
+function getSettledProgress(progress: number) {
+  return 1 - Math.pow(1 - progress, 3);
+}
+
+export function getZionBrandFieldMarkStyle(
+  mark: Mark,
+  {
+    elapsedMs = 0,
+    reducedMotion = false,
+  }: {
+    elapsedMs?: number;
+    reducedMotion?: boolean;
+  } = {},
+) {
+  const settleProgress = getSettledProgress(
+    getZionBrandFieldProgress({ elapsedMs, reducedMotion }),
+  );
+
+  const translateX = (1 - settleProgress) * mark.driftX;
+  const translateY = (1 - settleProgress) * mark.driftY;
+  const opacity = 0.24 + settleProgress * 0.52;
+  const scale = mark.scale + settleProgress * (1 - mark.scale);
+
+  return {
+    opacity,
+    transform: `translate(${translateX}px, ${translateY}px) rotate(${mark.rotate}deg) scale(${scale})`,
+  };
+}
+
+function applyFieldFrame(
+  elapsedMs: number,
+  reducedMotion: boolean,
+  elements: readonly (HTMLSpanElement | null)[],
+) {
+  const styleInput = { elapsedMs, reducedMotion };
 
   elements.forEach((element, index) => {
     const mark = MARKS[index];
     if (!element || !mark) return;
-
-    const translateX = (1 - settleProgress) * mark.driftX;
-    const translateY = (1 - settleProgress) * mark.driftY;
-    const opacity = 0.24 + settleProgress * 0.52;
-    const scale = mark.scale + settleProgress * (1 - mark.scale);
-
-    element.style.opacity = `${opacity}`;
-    element.style.transform =
-      `translate(${translateX}px, ${translateY}px) rotate(${mark.rotate}deg) scale(${scale})`;
+    const style = getZionBrandFieldMarkStyle(mark, styleInput);
+    element.style.opacity = `${style.opacity}`;
+    element.style.transform = style.transform;
   });
 }
 
@@ -51,9 +97,15 @@ function supportsMediaListener(queryList: MediaQueryList) {
 
 export function ZionBrandField() {
   const markRefs = React.useRef<(HTMLSpanElement | null)[]>([]);
-  const [reducedMotion, setReducedMotion] = React.useState(false);
+  const [reducedMotion, setReducedMotion] = React.useState(
+    readReducedMotionPreference,
+  );
 
   React.useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const handleChange = () => setReducedMotion(mediaQuery.matches);
 
@@ -72,18 +124,18 @@ export function ZionBrandField() {
     const elements = markRefs.current;
 
     if (reducedMotion) {
-      applyFieldFrame(1, elements);
+      applyFieldFrame(FIELD_SETTLE_MS, true, elements);
       return;
     }
 
-    applyFieldFrame(0, elements);
+    applyFieldFrame(0, false, elements);
 
     let animationFrameId = 0;
     const startTime = performance.now();
 
     const tick = (now: number) => {
       const elapsedMs = Math.min(now - startTime, FIELD_SETTLE_MS);
-      applyFieldFrame(elapsedMs / FIELD_SETTLE_MS, elements);
+      applyFieldFrame(elapsedMs, false, elements);
 
       if (elapsedMs < FIELD_SETTLE_MS) {
         animationFrameId = window.requestAnimationFrame(tick);
@@ -101,29 +153,36 @@ export function ZionBrandField() {
       className="pointer-events-none absolute inset-0 overflow-hidden"
       data-brand-surface="zion-brand-field"
     >
-      {MARKS.map((mark, index) => (
-        <span
-          key={`${mark.top}-${mark.left}`}
-          ref={(element) => {
-            markRefs.current[index] = element;
-          }}
-          className="absolute block will-change-transform"
-          style={{
-            left: mark.left,
-            opacity: 0.24,
-            top: mark.top,
-            width: mark.size,
-          }}
-        >
-          <ZionMotion
-            className="w-full opacity-70"
-            decorative
-            loop={false}
-            playing={!reducedMotion}
-            variant="onboarding"
-          />
-        </span>
-      ))}
+      {MARKS.map((mark, index) => {
+        const presentation = getZionBrandFieldMarkStyle(mark, {
+          reducedMotion,
+        });
+
+        return (
+          <span
+            key={`${mark.top}-${mark.left}`}
+            ref={(element) => {
+              markRefs.current[index] = element;
+            }}
+            className="absolute block will-change-transform"
+            style={{
+              left: mark.left,
+              opacity: presentation.opacity,
+              top: mark.top,
+              transform: presentation.transform,
+              width: mark.size,
+            }}
+          >
+            <ZionMotion
+              className="w-full opacity-70"
+              decorative
+              loop={false}
+              playing={!reducedMotion}
+              variant="onboarding"
+            />
+          </span>
+        );
+      })}
     </div>
   );
 }

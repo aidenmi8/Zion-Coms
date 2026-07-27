@@ -153,7 +153,7 @@ function stripComments(text) {
       inRegexClass = false;
       lastClosedControlParen = false;
     } else {
-      lastClosedControlParen = false;
+      if (!/\s/.test(character)) lastClosedControlParen = false;
       output += character;
     }
   }

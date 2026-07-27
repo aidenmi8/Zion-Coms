@@ -174,7 +174,7 @@ test("ignores comments and embedded base64 artwork while scanning visible code",
 
 test("does not mistake slashes inside a regex literal for a comment", () => {
   const result = scanText(
-    "const re = /[\\/\\/]/; const markup = <span>Sion</span>;",
+    "const re = /[//]/; const markup = <span>Sion</span>;",
     "desktop/src/fixture.tsx",
     allowlist,
   );
@@ -185,7 +185,7 @@ test("does not mistake slashes inside a regex literal for a comment", () => {
 
 test("recognizes regex literals after control-condition parentheses", () => {
   const result = scanText(
-    "if (ok) /[\\/\\/]/; const markup = <span>Sion</span>;",
+    "if (ok) /[//]/; const markup = <span>Sion</span>;",
     "desktop/src/fixture.tsx",
     allowlist,
   );

@@ -86,6 +86,23 @@ test("buildCompactToolSummary formats shell command preview", () => {
   assert.equal(summary.presentation, "inline");
 });
 
+test("buildCompactToolSummary presents ACP execute commands with the Zion CLI name", () => {
+  const summary = buildCompactToolSummary(
+    makeTool({
+      title: "buzz messages send --help",
+      toolName: "execute",
+      args: { command: "buzz messages send --help" },
+    }),
+  );
+
+  assert.equal(summary.preview, "Zion messages send --help");
+  assert.deepEqual(summary.action, {
+    verb: "Ran",
+    object: "Zion messages send --help",
+  });
+  assert.equal(summary.presentation, "inline");
+});
+
 test("buildCompactToolSummary formats view_image thumbnail source", () => {
   const source =
     "https://sprout-oss.stage.blox.sqprod.co/media/ffd1b2721f2d52e19f0ca2be9aa7842cdec5b4e0215aaab2a67c26a2a76a6a83.png";

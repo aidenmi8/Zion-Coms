@@ -1,5 +1,6 @@
 import type { TranscriptItem } from "./agentSessionTypes";
 import { buildCompactToolSummary } from "./agentSessionToolSummary";
+import { formatZionAgentText } from "./agentSessionBranding";
 
 /**
  * Whether a polished activity row should render the opt-in timestamp footer.
@@ -35,7 +36,7 @@ export function getActivityHeadline(item: TranscriptItem): string | null {
 
   if (item.type === "message") {
     if (item.role === "assistant") {
-      const trimmed = item.text.trim();
+      const trimmed = formatZionAgentText(item.text.trim());
       if (trimmed.length > 0) {
         const firstLine = trimmed.split("\n")[0]?.trim() ?? "";
         if (firstLine.length > 0) {

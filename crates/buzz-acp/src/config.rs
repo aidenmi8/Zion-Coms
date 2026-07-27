@@ -623,19 +623,26 @@ fn default_agent_args(command: &str) -> Option<Vec<String>> {
     }
 }
 
-/// Build the `CODEX_CONFIG` environment variable that enables full outbound
-/// network access in Codex's macOS Seatbelt sandbox.
+/// Build the managed-agent `CODEX_CONFIG` environment variable for Codex.
 ///
 /// Codex sandboxes MCP subprocesses (including `buzz-cli`) behind a Seatbelt sandbox
 /// that blocks all outbound network by default. Without this env var, `buzz-cli`
 /// requests are blocked before they can reach the relay WebSocket.
 ///
-/// Returns `Some(("CODEX_CONFIG", "{\"sandbox_workspace_write\":{\"network_access\":true}}"))` for
-/// Codex agents, or `None` for non-Codex agents or when the relay URL cannot be parsed.
+/// Codex also inherits every enabled host plugin skill and renders their descriptions into
+/// a hard-capped model-context block. A large host catalog produces a user-visible warning
+/// and adds avoidable startup tokens to every simple Zion turn. Managed sessions already
+/// receive their Zion CLI contract through `base_prompt.md`, so this override disables the
+/// inherited skill-description block without renaming or removing the real `buzz` executable.
+///
+/// Returns a `CODEX_CONFIG` JSON object with relay network access enabled and
+/// `skills.include_instructions = false` for Codex agents, or `None` for non-Codex agents
+/// or when the relay URL cannot be parsed.
 ///
 /// The env var is forwarded by the `@agentclientprotocol/codex-acp` adapter (1.x) as a
 /// session-level config override (via `CODEX_CONFIG` → `thread/start config`), which is
-/// equivalent to the TOML override `sandbox_workspace_write.network_access = true`.
+/// equivalent to the TOML overrides `sandbox_workspace_write.network_access = true` and
+/// `skills.include_instructions = false`.
 /// That sets `NetworkSandboxPolicy::Enabled`, causing the Seatbelt policy to include
 /// `(allow network-outbound)` — full outbound TCP/TLS at the OS level.
 ///
@@ -668,11 +675,14 @@ pub fn codex_network_env(agent_command: &str, relay_url: &str) -> Option<(String
         }
     };
 
-    tracing::debug!(host, "injecting CODEX_CONFIG network_access for relay host");
+    tracing::debug!(
+        host,
+        "injecting managed CODEX_CONFIG for Zion relay access and focused skills"
+    );
 
     Some((
         "CODEX_CONFIG".into(),
-        "{\"sandbox_workspace_write\":{\"network_access\":true}}".into(),
+        "{\"sandbox_workspace_write\":{\"network_access\":true},\"skills\":{\"include_instructions\":false}}".into(),
     ))
 }
 
@@ -1532,7 +1542,7 @@ mod tests {
 
     // --- codex_network_env tests ---
 
-    const CODEX_CONFIG_JSON: &str = "{\"sandbox_workspace_write\":{\"network_access\":true}}";
+    const CODEX_CONFIG_JSON: &str = "{\"sandbox_workspace_write\":{\"network_access\":true},\"skills\":{\"include_instructions\":false}}";
 
     #[test]
     fn codex_network_env_wss_url() {
@@ -1611,6 +1621,19 @@ mod tests {
         assert!(
             val.contains("\"network_access\":true"),
             "JSON must set network_access=true"
+        );
+    }
+
+    #[test]
+    fn codex_network_env_disables_inherited_skill_catalog_instructions() {
+        let result = codex_network_env("codex-acp", "wss://relay.example.com");
+        let (key, val) = result.expect("expected Some for valid codex + valid url");
+        assert_eq!(key, "CODEX_CONFIG");
+        let config: serde_json::Value =
+            serde_json::from_str(&val).expect("CODEX_CONFIG must be valid JSON");
+        assert_eq!(
+            config["skills"]["include_instructions"], false,
+            "managed Codex sessions must not inject the host-wide skill catalog"
         );
     }
 

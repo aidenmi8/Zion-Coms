@@ -1,6 +1,7 @@
 import type { UserProfileLookup } from "@/features/profile/lib/identity";
 import { Markdown } from "@/shared/ui/markdown";
 import { useAgentSessionTranscriptVariant } from "../agentSessionTranscriptContext";
+import { formatZionAgentText } from "../agentSessionBranding";
 import { formatTranscriptTimestampTitle } from "../agentSessionUtils";
 import type { TranscriptItem } from "../agentSessionTypes";
 import { ToolActivity } from "./ToolActivity";
@@ -29,7 +30,6 @@ function MessageItem({
   const variant = useAgentSessionTranscriptVariant();
   const isCompactPreview = variant === "compactPreview";
   const isAssistant = item.role === "assistant";
-  const text = item.text.trim();
   const messageLink = getTranscriptMessageLink(item);
 
   if (!isAssistant) {
@@ -46,6 +46,8 @@ function MessageItem({
       />
     );
   }
+
+  const text = formatZionAgentText(item.text.trim());
 
   return (
     <div

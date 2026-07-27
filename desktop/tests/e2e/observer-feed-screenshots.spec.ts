@@ -814,4 +814,101 @@ test.describe("observer feed screenshots", () => {
       path: `${SHOTS}/11-first-turn-ordering.png`,
     });
   });
+
+  test("12 — Zion activity branding omits the Codex skills-budget warning", async ({
+    page,
+  }) => {
+    await installMockBridge(page, { managedAgents: MANAGED_AGENTS });
+    const feedPanel = await openObserverFeedPanel(page, OBSERVER_AGENT_PUBKEY);
+
+    await seedObserverEvents(page, OBSERVER_AGENT_PUBKEY, [
+      {
+        seq: 1,
+        timestamp: NOW,
+        kind: "acp_read",
+        agentIndex: 0,
+        channelId: CHANNEL_ID,
+        sessionId: "session-012",
+        turnId: "turn-012",
+        payload: {
+          method: "session/update",
+          params: {
+            sessionId: "session-012",
+            update: {
+              sessionUpdate: "agent_message_chunk",
+              content: {
+                type: "text",
+                text: "Warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill.",
+              },
+            },
+          },
+        },
+      },
+      {
+        seq: 2,
+        timestamp: NOW,
+        kind: "acp_read",
+        agentIndex: 0,
+        channelId: CHANNEL_ID,
+        sessionId: "session-012",
+        turnId: "turn-012",
+        payload: {
+          method: "session/update",
+          params: {
+            sessionId: "session-012",
+            update: {
+              sessionUpdate: "tool_call",
+              toolCallId: "call-zion-message-help",
+              status: "completed",
+              title: "buzz messages send --help",
+              toolName: "execute",
+              rawInput: { command: "buzz messages send --help" },
+              rawOutput: "Send a message",
+            },
+          },
+        },
+      },
+      {
+        seq: 3,
+        timestamp: NOW,
+        kind: "acp_read",
+        agentIndex: 0,
+        channelId: CHANNEL_ID,
+        sessionId: "session-012",
+        turnId: "turn-012",
+        payload: {
+          method: "session/update",
+          params: {
+            sessionId: "session-012",
+            update: {
+              sessionUpdate: "agent_message_chunk",
+              content: {
+                type: "text",
+                text: "The Buzz relay hostname failed DNS resolution.",
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    await expect(feedPanel.getByText("Ran", { exact: true })).toBeVisible({
+      timeout: 5_000,
+    });
+    await expect(
+      feedPanel.getByText("Zion messages send --help", { exact: true }),
+    ).toBeVisible({ timeout: 5_000 });
+    await expect(
+      feedPanel.getByText("The Zion relay hostname failed DNS resolution.", {
+        exact: true,
+      }),
+    ).toBeVisible({ timeout: 5_000 });
+    await expect(feedPanel.getByText(/skills context budget/i)).toHaveCount(0);
+    await expect(feedPanel.getByText(/Buzz relay/i)).toHaveCount(0);
+
+    await settleAnimations(feedPanel);
+    await feedPanel.screenshot({
+      path: `${SHOTS}/12-zion-activity-branding.png`,
+    });
+  });
 });

@@ -229,8 +229,8 @@ fn deep_merge(
 
 /// Build the merged `CODEX_CONFIG` environment-variable value for a Codex agent spawn.
 ///
-/// Returns `Some(json_string)` when `has_generated_codex_config` is true (Buzz injected a
-/// `CODEX_CONFIG` entry via `codex_network_env()`), `None` otherwise.
+/// Returns `Some(json_string)` when `has_generated_codex_config` is true (Zion injected a
+/// managed-runtime `CODEX_CONFIG` entry via `codex_network_env()`), `None` otherwise.
 ///
 /// # Merge contract (when `has_generated_codex_config` is true)
 ///
@@ -242,8 +242,10 @@ fn deep_merge(
 /// 3. **Parent-env precedence** — if `parent_codex_config` is `Some`, its keys are
 ///    deep-merged into the result (parent wins on colliding keys at every nesting level;
 ///    unrelated keys from either side survive).
-/// 4. **Forced overlay** — `sandbox_workspace_write.network_access = true` is applied
-///    last so relay access is guaranteed regardless of operator / persona config.
+/// 4. **Forced network overlay** — `sandbox_workspace_write.network_access = true` is
+///    applied last so relay access is guaranteed regardless of operator / persona config.
+///    Other generated settings, including the managed skill-catalog default, remain
+///    overridable by an explicit parent `CODEX_CONFIG`.
 ///
 /// When `has_generated_codex_config` is false, the function returns `None` and the
 /// caller handles any persona-supplied `CODEX_CONFIG` with ordinary operator-wins
@@ -3492,7 +3494,7 @@ mod tests {
             .collect()
     }
 
-    const GENERATED: &str = r#"{"sandbox_workspace_write":{"network_access":true}}"#;
+    const GENERATED: &str = r#"{"sandbox_workspace_write":{"network_access":true},"skills":{"include_instructions":false}}"#;
 
     #[test]
     fn build_codex_config_env_returns_none_when_no_codex_config_in_extra_env() {
@@ -3663,6 +3665,19 @@ mod tests {
         assert_eq!(v["sandbox_workspace_write"]["network_access"], true);
         // other_sandbox_key survives (parent's sws merged, then network_access forced)
         assert_eq!(v["sandbox_workspace_write"]["other_sandbox_key"], "val");
+    }
+
+    #[test]
+    fn build_codex_config_env_keeps_managed_skill_default_and_parent_skill_keys() {
+        let persona = r#"{}"#;
+        let extra = env(&[("CODEX_CONFIG", persona), ("CODEX_CONFIG", GENERATED)]);
+        let parent = r#"{"skills":{"other_skill_key":"keep"}}"#;
+        let merged = build_codex_config_env(&extra, Some(parent), true)
+            .unwrap()
+            .unwrap();
+        let v: serde_json::Value = serde_json::from_str(&merged).unwrap();
+        assert_eq!(v["skills"]["include_instructions"], false);
+        assert_eq!(v["skills"]["other_skill_key"], "keep");
     }
 
     #[test]

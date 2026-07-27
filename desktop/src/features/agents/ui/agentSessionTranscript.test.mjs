@@ -262,6 +262,18 @@ function assistantChunk(seq, messageId, text, overrides = {}) {
   );
 }
 
+test("buildTranscript suppresses the Codex skills context-budget warning", () => {
+  const items = buildTranscript([
+    assistantChunk(
+      24,
+      null,
+      "Warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.\n\n",
+    ),
+  ]);
+
+  assert.deepEqual(items, []);
+});
+
 test("buildTranscript preserves author pubkeys on user message chunks", () => {
   const authorPubkey = "b".repeat(64);
   const [item] = buildTranscript([

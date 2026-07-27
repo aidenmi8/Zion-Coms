@@ -28,6 +28,7 @@ import {
   parseSystemPromptSections,
 } from "./agentSessionTranscriptHelpers";
 import { friendlyTurnErrorCopy } from "../lib/friendlyAgentLastError";
+import { isCodexSkillsContextWarning } from "./agentSessionBranding";
 
 export { describeRawEvent } from "./agentSessionTranscriptHelpers";
 
@@ -935,17 +936,20 @@ export function processTranscriptEvent(
       const messageId = asString(update.messageId);
 
       if (updateType === "agent_message_chunk") {
-        upsertMessage(
-          d,
-          `assistant:${ch}:${messageId ?? turnKey}`,
-          "assistant",
-          "Assistant",
-          extractContentText(update.content),
-          event.timestamp,
-          ctx,
-          null,
-          updateType,
-        );
+        const messageText = extractContentText(update.content);
+        if (!isCodexSkillsContextWarning(messageText)) {
+          upsertMessage(
+            d,
+            `assistant:${ch}:${messageId ?? turnKey}`,
+            "assistant",
+            "Assistant",
+            messageText,
+            event.timestamp,
+            ctx,
+            null,
+            updateType,
+          );
+        }
       } else if (updateType === "user_message_chunk") {
         // Suppress user_message_chunk echo when a steer already rendered
         // the user message for this turn (Goose echoes steered content back).

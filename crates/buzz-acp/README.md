@@ -1,19 +1,19 @@
 # buzz-acp
 
-ACP harness that connects AI agents to Buzz. The harness listens for @mentions on the relay, prompts your agent, and the agent replies using the Buzz CLI.
+ACP harness that connects AI agents to Zion. The harness listens for @mentions on the Zion relay, prompts your agent, and the agent replies using the Zion CLI compatibility executable, `buzz`.
 
 ```
-Buzz Relay ──WS──→ buzz-acp ──stdio──→ Your Agent
+Zion Relay ──WS──→ buzz-acp ──stdio──→ Your Agent
                                                │
-                                          Buzz CLI
-                                       (send_message, etc.)
+                                          Zion CLI
+                                      (`buzz` executable)
 ```
 
 Supports any agent that speaks [ACP](https://agentclientprotocol.com/) over stdio: **goose**, **codex** (via [codex-acp](https://github.com/agentclientprotocol/codex-acp)), and **claude code** (via [claude-agent-acp](https://github.com/agentclientprotocol/claude-agent-acp)).
 
 ## Prerequisites
 
-- A running Buzz relay (`just relay` starts Docker services automatically, or use a hosted instance)
+- A running Zion relay (`just relay` starts Docker services automatically, or use a hosted instance)
 - A Nostr keypair for the agent (see [Generating Keys](#generating-keys))
 
 Build:
@@ -25,7 +25,7 @@ export PATH="$PWD/target/release:$PATH"
 
 ## Generating Keys
 
-Each agent needs a Nostr keypair — this is the agent's identity in Buzz. Use `buzz-admin` to mint one:
+Each agent needs a Nostr keypair — this is the agent's identity in Zion. Use `buzz-admin` to mint one:
 
 ```bash
 cargo run -p buzz-admin -- mint-token --name "my-agent" --scopes "messages:read,messages:write,channels:read"
@@ -41,7 +41,7 @@ The harness discovers channels by querying the relay with the agent's authentica
 
 By default, the harness discovers only channels the agent is a **member** of (`GET /api/channels?member=true`). When the agent is added to a new channel, the membership notification subscription auto-subscribes to it.
 
-**Private channels** require explicit membership. The relay doesn't yet have a REST/event API for managing channel members — this is a known gap. For now, use `create_channel` via the Buzz CLI to create new channels (the creator is automatically a member).
+**Private channels** require explicit membership. The relay doesn't yet have a REST/event API for managing channel members — this is a known gap. For now, use `create_channel` via the Zion CLI compatibility executable to create new channels (the creator is automatically a member).
 
 ## Quick Start (goose)
 
@@ -53,7 +53,7 @@ export GOOSE_MODE=auto
 buzz-acp
 ```
 
-That's it. The harness spawns `goose acp`, connects to the relay, discovers channels, and starts listening. When someone @mentions the agent, goose receives the message and can reply using the Buzz CLI that the harness configures automatically.
+That's it. The harness spawns `goose acp`, connects to the relay, discovers channels, and starts listening. When someone @mentions the agent, goose receives the message and can reply using the Zion CLI compatibility executable that the harness configures automatically.
 
 ## Running with Codex
 
@@ -70,6 +70,46 @@ buzz-acp
 ```
 
 > **API key note:** `codex-acp` always attempts a ChatGPT WebSocket login first, which logs a `426 Upgrade Required` error. This is expected and non-fatal — it falls back to `OPENAI_API_KEY` automatically. Set `OPENAI_API_KEY` to ensure it has a working fallback.
+
+### Managed Codex skill catalog
+
+Codex allocates a fixed 2% of its context window to the model-visible skill
+catalog. A host with many enabled skills or plugins can exceed that limit.
+`codex-acp` converts Codex's warning into an ordinary assistant message, which
+previously made this runtime setup issue appear in Zion's Activity panel:
+
+```text
+Warning: Skill descriptions were shortened to fit the 2% skills context budget.
+```
+
+For managed Codex sessions, `buzz-acp` now adds this session override:
+
+```json
+{
+  "skills": {
+    "include_instructions": false
+  }
+}
+```
+
+The shared Zion system prompt still provides the complete `buzz` CLI contract.
+The override removes the inherited host-wide skill-description block; it does
+not rename the executable or compatibility environment variables. An explicit
+parent `CODEX_CONFIG` can override this default when a managed agent genuinely
+needs the full host skill catalog.
+
+After changing this setting, start a new managed-agent session. Existing Codex
+sessions retain the configuration they started with. Zion Desktop also omits
+the legacy, exact skill-budget warning from Activity history; other warnings
+remain visible.
+
+If the warning returns:
+
+1. Confirm the spawned process's final `CODEX_CONFIG` contains
+   `"skills":{"include_instructions":false}`.
+2. Check whether an agent/persona or parent process explicitly overrides
+   `skills.include_instructions`.
+3. Rotate or restart that agent's session after correcting the override.
 
 ## Running with Claude Code
 
@@ -245,7 +285,7 @@ Forum event kinds:
 2. **Channel discovery** — Queries the relay REST API for accessible channels, subscribes to each.
 3. **Event loop** — Listens for @mention events (kind 9 with the agent's pubkey in a `#p` tag). Events queue per channel.
 4. **Prompting** — When events are pending and no prompt is in flight for that channel, drains all queued events for the oldest channel into a single batched prompt via ACP `session/prompt`.
-5. **Agent response** — The agent processes the prompt and uses the Buzz CLI (`send_message`, `get_messages`, etc.) to interact with Buzz.
+5. **Agent response** — The agent processes the prompt and uses the Zion CLI compatibility executable (`send_message`, `get_messages`, etc.) to interact with Zion.
 6. **Recovery** — If the agent crashes, the harness respawns it. If the relay disconnects, the harness reconnects with a `since` filter to avoid missing events.
 
 Each channel has at most one prompt in flight. Multiple channels can be processed concurrently when agents > 1.

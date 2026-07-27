@@ -15,6 +15,7 @@ import {
   getToolString,
   getToolStringList,
 } from "./agentSessionUtils";
+import { formatZionActivityCommand } from "./agentSessionBranding";
 
 type ToolItem = Extract<TranscriptItem, { type: "tool" }>;
 
@@ -177,11 +178,12 @@ function classifyDeveloperHarnessTool(
     if (buzzCli) {
       return buzzCli;
     }
+    const displayCommand = command ? formatZionActivityCommand(command) : null;
     return {
       renderClass: "shell",
       label: "Ran command",
-      preview: command,
-      action: { verb: "Ran", object: command ?? "command" },
+      preview: displayCommand,
+      action: { verb: "Ran", object: displayCommand ?? "command" },
       source: "harness",
       groupKey: "shell:command",
     };
@@ -301,7 +303,8 @@ function classifyBuzzTool(
 function genericDescriptor(
   input: ToolClassificationInput,
 ): AgentActivityDescriptor {
-  const preview = genericPreview(input);
+  const rawPreview = genericPreview(input);
+  const preview = rawPreview ? formatZionActivityCommand(rawPreview) : null;
   return {
     renderClass: "generic",
     label: "Ran tool",

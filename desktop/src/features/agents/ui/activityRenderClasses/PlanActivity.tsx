@@ -7,6 +7,7 @@ import {
 import { ToolActivity } from "./ToolActivity";
 import { formatTranscriptTimestampTitle } from "../agentSessionUtils";
 import type { ActivityRenderClassItemProps } from "./types";
+import { formatZionAgentText } from "../agentSessionBranding";
 
 export function PlanActivity(props: ActivityRenderClassItemProps) {
   if (props.item.type === "tool") {
@@ -23,7 +24,11 @@ export function PlanActivity(props: ActivityRenderClassItemProps) {
         title={formatTranscriptTimestampTitle(props.item.timestamp)}
       >
         <ActivityRowLabel
-          object={<PlanUpdateLabelObject text={props.item.text} />}
+          object={
+            <PlanUpdateLabelObject
+              text={formatZionAgentText(props.item.text)}
+            />
+          }
           openToneScope="none"
           verb="Updated"
         />
@@ -40,7 +45,9 @@ export function PlanActivity(props: ActivityRenderClassItemProps) {
       <ActivityRowContent className="pt-1 pb-1.5 text-sm leading-5 text-muted-foreground">
         <Markdown
           className="leading-5"
-          content={props.item.text.trim() || "No plan details."}
+          content={
+            formatZionAgentText(props.item.text.trim()) || "No plan details."
+          }
         />
       </ActivityRowContent>
     </ActivityRow>

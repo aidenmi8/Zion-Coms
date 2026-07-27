@@ -4,6 +4,7 @@ import { formatTranscriptTimestampTitle } from "../agentSessionUtils";
 import { ActivityRow, ActivityRowLabel } from "./ActivityRow";
 import { ToolActivity } from "./ToolActivity";
 import type { ActivityRenderClassItemProps } from "./types";
+import { formatZionAgentText } from "../agentSessionBranding";
 
 /**
  * Split the permission item's text into the request description lines and the
@@ -50,9 +51,11 @@ export function LifecycleActivity(props: ActivityRenderClassItemProps) {
     props.item.title.toLowerCase().includes("error");
   const isPermission = props.item.renderClass === "permission";
   const timestampTitle = formatTranscriptTimestampTitle(props.item.timestamp);
+  const displayTitle = formatZionAgentText(props.item.title);
+  const displayText = formatZionAgentText(props.item.text);
 
   if (isPermission) {
-    const { requestLines, optionsLine } = splitPermissionText(props.item.text);
+    const { requestLines, optionsLine } = splitPermissionText(displayText);
     const outcome = props.item.outcome;
     const tone = outcome ? permissionOutcomeTone(outcome) : null;
     return (
@@ -64,7 +67,7 @@ export function LifecycleActivity(props: ActivityRenderClassItemProps) {
         {/* Row 1: request */}
         <div>
           <ShieldCheck className="mr-1.5 inline h-3.5 w-3.5 align-text-bottom" />
-          <span className="font-medium">{props.item.title}</span>
+          <span className="font-medium">{displayTitle}</span>
           {requestLines ? (
             <span className="opacity-80"> · {requestLines}</span>
           ) : null}
@@ -110,9 +113,9 @@ export function LifecycleActivity(props: ActivityRenderClassItemProps) {
         title={timestampTitle}
       >
         <AlertCircle className="mr-1.5 inline h-3.5 w-3.5 align-text-bottom" />
-        <span className="font-medium">{props.item.title}</span>
-        {props.item.text ? (
-          <span className="opacity-80"> · {props.item.text}</span>
+        <span className="font-medium">{displayTitle}</span>
+        {displayText ? (
+          <span className="opacity-80"> · {displayText}</span>
         ) : null}
       </div>
     );
@@ -121,9 +124,9 @@ export function LifecycleActivity(props: ActivityRenderClassItemProps) {
   return (
     <ActivityRow testId="transcript-lifecycle-item" title={timestampTitle}>
       <ActivityRowLabel
-        object={props.item.text || undefined}
+        object={displayText || undefined}
         openToneScope="none"
-        verb={props.item.title}
+        verb={displayTitle}
       />
     </ActivityRow>
   );

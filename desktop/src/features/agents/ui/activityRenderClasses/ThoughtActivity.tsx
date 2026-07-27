@@ -7,6 +7,7 @@ import {
 import { ToolActivity } from "./ToolActivity";
 import { formatTranscriptTimestampTitle } from "../agentSessionUtils";
 import type { ActivityRenderClassItemProps } from "./types";
+import { formatZionAgentText } from "../agentSessionBranding";
 
 export function ThoughtActivity(props: ActivityRenderClassItemProps) {
   if (props.item.type === "tool") {
@@ -25,7 +26,7 @@ export function ThoughtActivity(props: ActivityRenderClassItemProps) {
       <ActivityRowContent className="pt-1 pb-1.5 text-sm leading-5 text-muted-foreground">
         <Markdown
           className="leading-5"
-          content={props.item.text.trim() || " "}
+          content={formatZionAgentText(props.item.text.trim()) || " "}
         />
       </ActivityRowContent>
     </ActivityRow>

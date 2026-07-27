@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../shared/relay/relay.dart';
@@ -35,9 +36,7 @@ final threadRepliesProvider =
       final replies = <NostrEvent>[];
       _ThreadCursor? cursor;
       for (var page = 0; page < 500; page++) {
-        final events = await session.queryRelay([
-          _threadRepliesFilter(args, cursor),
-        ]);
+        final events = await _loadThreadRepliesPage(session, args, cursor);
         replies.addAll(events);
         if (events.length < 200) return replies;
         final last = events.last;
@@ -45,6 +44,34 @@ final threadRepliesProvider =
       }
       throw Exception('Thread ${args.rootId} exceeded the page safety limit.');
     });
+
+Future<List<NostrEvent>> _loadThreadRepliesPage(
+  RelaySessionNotifier session,
+  ThreadRepliesArgs args,
+  _ThreadCursor? cursor,
+) async {
+  try {
+    final events = await session.queryRelay([
+      _threadRepliesFilter(args, cursor),
+    ]);
+    if (events.isNotEmpty || cursor != null) return events;
+  } catch (error) {
+    // Only the initial page can be recovered by a full WebSocket query.
+    if (cursor != null) rethrow;
+    debugPrint(
+      '[ThreadReplies] HTTP query unavailable for ${args.rootId}; '
+      'falling back to WebSocket history: $error',
+    );
+  }
+
+  final events =
+      (await session.fetchHistory(_threadRepliesFallbackFilter(args))).toList()
+        ..sort((a, b) {
+          final byCreatedAt = a.createdAt.compareTo(b.createdAt);
+          return byCreatedAt != 0 ? byCreatedAt : a.id.compareTo(b.id);
+        });
+  return events;
+}
 
 NostrFilter _threadRepliesFilter(
   ThreadRepliesArgs args,
@@ -62,5 +89,16 @@ NostrFilter _threadRepliesFilter(
       if (cursor != null) 'thread_cursor': cursor.createdAt,
       if (cursor != null) 'thread_cursor_id': cursor.eventId,
     },
+  );
+}
+
+NostrFilter _threadRepliesFallbackFilter(ThreadRepliesArgs args) {
+  return NostrFilter(
+    kinds: EventKind.channelTimelineContentKinds,
+    tags: {
+      '#e': [args.rootId],
+      '#h': [args.channelId],
+    },
+    limit: 500,
   );
 }

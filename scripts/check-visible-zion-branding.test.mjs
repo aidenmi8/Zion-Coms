@@ -43,11 +43,6 @@ const allowlist = {
   ],
   forbiddenPatterns: [
     {
-      name: "SION",
-      pattern: "\\bSion\\b",
-      reason: "legacy visible product name",
-    },
-    {
       name: "VISIBLE_LABEL",
       pattern:
         "\\b(?:Buzz|buzz)\\s+(?:Agent|app|Desktop|Web|releases?|will|Bee|bee)\\b",
@@ -179,18 +174,39 @@ test("ignores comments and embedded base64 artwork while scanning visible code",
 
 test("does not mistake slashes inside a regex literal for a comment", () => {
   const result = scanText(
-    'const re = /[\\/\\/]/; const label = "Sion";',
+    "const re = /[\\/\\/]/; const markup = <span>Sion</span>;",
     "desktop/src/fixture.tsx",
     allowlist,
   );
 
   assert.equal(result.forbidden.length, 1);
-  assert.equal(result.forbidden[0].match, "Sion");
+  assert.match(result.forbidden[0].match, />Sion</);
+});
+
+test("recognizes regex literals after control-condition parentheses", () => {
+  const result = scanText(
+    "if (ok) /[\\/\\/]/; const markup = <span>Sion</span>;",
+    "desktop/src/fixture.tsx",
+    allowlist,
+  );
+
+  assert.equal(result.forbidden.length, 1);
+  assert.match(result.forbidden[0].match, />Sion</);
+});
+
+test("does not treat ordinary data properties as visible branding", () => {
+  const result = scanText(
+    'const data = { label: "Buzz", text: "Sion" }; save({ text: "Sion" });',
+    "desktop/src/fixture.tsx",
+    allowlist,
+  );
+
+  assert.deepEqual(result.forbidden, []);
 });
 
 test("does not broadly exempt visible branding under internal API paths", () => {
   const result = scanText(
-    'const label = "Sion";',
+    "return <span>Sion</span>;",
     "desktop/src/shared/api/fixture.ts",
     allowlist,
   );
@@ -233,7 +249,7 @@ test("excludes test and fixture paths from the visible production scan", () => {
   fs.mkdirSync(path.join(rootDirectory, "src/fixtures"), { recursive: true });
   fs.writeFileSync(
     path.join(rootDirectory, "src/production.tsx"),
-    'const label = "Sion";',
+    "const markup = <span>Sion</span>;",
   );
   fs.writeFileSync(
     path.join(rootDirectory, "src/ignored.test.tsx"),
@@ -257,7 +273,7 @@ test("excludes test and fixture paths from the visible production scan", () => {
   fs.rmSync(rootDirectory, { recursive: true, force: true });
   assert.deepEqual(
     result.forbidden.map(({ file, line, match }) => ({ file, line, match })),
-    [{ file: "src/production.tsx", line: 1, match: "Sion" }],
+    [{ file: "src/production.tsx", line: 1, match: ">Sion<" }],
   );
 });
 

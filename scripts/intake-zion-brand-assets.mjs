@@ -10,138 +10,45 @@ const DEFAULT_SOURCE_DIR =
   "/Users/Aiden-Mi8/Library/Mobile Documents/com~apple~CloudDocs/SENTRA-MAIN/logo and media";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MANIFEST_PATH = path.join(ROOT, "branding", "zion-brand-manifest.json");
-
 const sourceDirectory = process.env.ZION_BRAND_SOURCE_DIR || DEFAULT_SOURCE_DIR;
 
 const MARK_SOURCE_NAME = "Logos-sentra-v2-2.png";
 
 const SHIPPED_SOURCES = {
   "Logos-sentra-v2-2.png": {
-    assetId: "sentraV2_2",
-    role: "sentraV2",
-    canonicalPath: "/branding/sentra-v2-2.png",
-    aliases: [],
     sourceSubdir: "",
   },
   "Logos-sentra-v2-3.png": {
-    assetId: "sentraV2_3",
-    role: "sentraV2",
-    canonicalPath: "/branding/sentra-v2-3.png",
-    aliases: [],
     sourceSubdir: "",
   },
   "Logos-sentra-v2-4.png": {
-    assetId: "sentraV2_4",
-    role: "sentraV2",
-    canonicalPath: "/branding/sentra-v2-4.png",
-    aliases: [],
     sourceSubdir: "",
   },
   "Logos-sentra-v2-5.png": {
-    assetId: "sentraV2_5",
-    role: "sentraV2",
-    canonicalPath: "/branding/sentra-v2-5.png",
-    aliases: [],
     sourceSubdir: "",
   },
   "Logos-sentra-v2-6.png": {
-    assetId: "sentraV2_6",
-    role: "sentraV2",
-    canonicalPath: "/branding/sentra-v2-6.png",
-    aliases: [],
     sourceSubdir: "",
   },
   "Logos-sentra-v2-7.png": {
-    assetId: "sentraV2_7",
-    role: "sentraV2",
-    canonicalPath: "/branding/sentra-v2-7.png",
-    aliases: [],
     sourceSubdir: "",
   },
   "Logos-sentra-v2-8.png": {
-    assetId: "appIcon",
-    role: "appIcon",
-    canonicalPath: "/branding/zion-app-icon-1024.png",
-    canonicalDimensions: { width: 1024, height: 1024 },
-    aliases: [
-      "/app-icon@2x.png",
-      "/app-icon@3x.png",
-      "web/src/assets/zion-app-icon@3x.png",
-      "web/src/assets/app-icon@3x.png",
-    ],
-    aliasSourceMap: {
-      "/app-icon@2x.png": "desktop/public/branding/zion-app-icon@2x.png",
-      "/app-icon@3x.png": "desktop/public/branding/zion-app-icon@3x.png",
-      "web/src/assets/zion-app-icon@3x.png":
-        "desktop/public/branding/zion-app-icon@3x.png",
-      "web/src/assets/app-icon@3x.png":
-        "desktop/public/branding/zion-app-icon@3x.png",
-    },
-    derivatives: [
-      {
-        path: "desktop/public/branding/zion-app-icon@2x.png",
-        width: 2048,
-        height: 2048,
-      },
-      {
-        path: "desktop/public/branding/zion-app-icon@3x.png",
-        width: 3072,
-        height: 3072,
-      },
-    ],
     sourceSubdir: "",
   },
   "Logos-sentra-v2-9.png": {
-    assetId: "dmgBackground",
-    role: "dmgBackground",
-    canonicalPath: "/branding/sentra-dmg-background-1200x800.png",
-    canonicalDimensions: { width: 1200, height: 800 },
-    aliases: ["/branding/sentra-dmg-background-600x400.png"],
-    aliasSourceMap: {
-      "/branding/sentra-dmg-background-600x400.png":
-        "desktop/public/branding/sentra-dmg-background-600x400.png",
-    },
-    derivatives: [
-      {
-        path: "desktop/public/branding/sentra-dmg-background-600x400.png",
-        width: 600,
-        height: 400,
-      },
-    ],
     sourceSubdir: "",
   },
   "Logos-sentra-v2-10.png": {
-    assetId: "sentraV2_10",
-    role: "sentraV2",
-    canonicalPath: "/branding/sentra-v2-10.png",
-    aliases: [],
     sourceSubdir: "",
   },
   "logo-TW-wordmark.png": {
-    assetId: "sentraWordmark",
-    role: "sentraWordmark",
-    canonicalPath: "/branding/sentra-wordmark.svg",
-    aliases: ["desktop/public/landing/buzz-wordmark.png"],
-    wrappers: ["desktop/public/branding/sentra-wordmark.svg"],
     sourceSubdir: "transparent -logos",
   },
   "logo-TW2-wordmark.png": {
-    assetId: "sentraLockup",
-    role: "sentraLockup",
-    canonicalPath: "/branding/sentra-lockup-horizontal.svg",
-    aliases: ["/branding/sentra-lockup-light.svg"],
-    wrappers: [
-      "desktop/public/branding/sentra-lockup-horizontal.svg",
-      "desktop/public/branding/sentra-lockup-light.svg",
-    ],
     sourceSubdir: "transparent -logos",
   },
   "logo-TB-wordmark.png": {
-    assetId: "sentraLockupDark",
-    role: "sentraLockupDark",
-    canonicalPath: "/branding/sentra-lockup-dark.svg",
-    aliases: [],
-    wrappers: ["desktop/public/branding/sentra-lockup-dark.svg"],
     sourceSubdir: "transparent -logos",
   },
 };
@@ -152,110 +59,455 @@ const REFERENCE_SOURCES = [
   "sentra-logo-branding -jul-2026.png",
 ];
 
-function readSipsMetadata(sourcePath) {
-  const stdout = execFileSync(
-    "sips",
-    [
-      "-g",
-      "pixelWidth",
-      "-g",
-      "pixelHeight",
-      "-g",
-      "hasAlpha",
-      "-g",
-      "format",
-      "-g",
-      "space",
-      sourcePath,
+const OUTPUT_ASSET_SPECS = [
+  {
+    id: "sentraV2_2",
+    sourceFile: "Logos-sentra-v2-2.png",
+    role: "sentraV2",
+    canonicalPath: "/branding/sentra-v2-2.png",
+    outputPath: "desktop/public/branding/sentra-v2-2.png",
+    strategy: { kind: "copy" },
+    aliases: [],
+  },
+  {
+    id: "sentraV2_3",
+    sourceFile: "Logos-sentra-v2-3.png",
+    role: "sentraV2",
+    canonicalPath: "/branding/sentra-v2-3.png",
+    outputPath: "desktop/public/branding/sentra-v2-3.png",
+    strategy: { kind: "copy" },
+    aliases: [],
+  },
+  {
+    id: "sentraV2_4",
+    sourceFile: "Logos-sentra-v2-4.png",
+    role: "sentraV2",
+    canonicalPath: "/branding/sentra-v2-4.png",
+    outputPath: "desktop/public/branding/sentra-v2-4.png",
+    strategy: { kind: "copy" },
+    aliases: [],
+  },
+  {
+    id: "sentraV2_5",
+    sourceFile: "Logos-sentra-v2-5.png",
+    role: "sentraV2",
+    canonicalPath: "/branding/sentra-v2-5.png",
+    outputPath: "desktop/public/branding/sentra-v2-5.png",
+    strategy: { kind: "copy" },
+    aliases: [],
+  },
+  {
+    id: "sentraV2_6",
+    sourceFile: "Logos-sentra-v2-6.png",
+    role: "sentraV2",
+    canonicalPath: "/branding/sentra-v2-6.png",
+    outputPath: "desktop/public/branding/sentra-v2-6.png",
+    strategy: { kind: "copy" },
+    aliases: [],
+  },
+  {
+    id: "sentraV2_7",
+    sourceFile: "Logos-sentra-v2-7.png",
+    role: "sentraV2",
+    canonicalPath: "/branding/sentra-v2-7.png",
+    outputPath: "desktop/public/branding/sentra-v2-7.png",
+    strategy: { kind: "copy" },
+    aliases: [],
+  },
+  {
+    id: "appIcon",
+    sourceFile: "Logos-sentra-v2-8.png",
+    role: "appIcon",
+    canonicalPath: "/branding/zion-app-icon-1024.png",
+    outputPath: "desktop/public/branding/zion-app-icon-1024.png",
+    strategy: { kind: "resize", width: 1024, height: 1024 },
+    aliases: [],
+    compatibilityPaths: ["/app-icon@2x.png", "/app-icon@3x.png"],
+  },
+  {
+    id: "appIcon2x",
+    sourceFile: "Logos-sentra-v2-8.png",
+    role: "appIcon",
+    canonicalPath: "/branding/zion-app-icon@2x.png",
+    outputPath: "desktop/public/branding/zion-app-icon@2x.png",
+    strategy: { kind: "resize", width: 2048, height: 2048 },
+    aliases: [
+      {
+        path: "desktop/public/app-icon@2x.png",
+        publicPath: "/app-icon@2x.png",
+      },
     ],
-    { encoding: "utf8" },
-  );
+  },
+  {
+    id: "appIcon3x",
+    sourceFile: "Logos-sentra-v2-8.png",
+    role: "appIcon",
+    canonicalPath: "/branding/zion-app-icon@3x.png",
+    outputPath: "desktop/public/branding/zion-app-icon@3x.png",
+    strategy: { kind: "resize", width: 3072, height: 3072 },
+    aliases: [
+      {
+        path: "desktop/public/app-icon@3x.png",
+        publicPath: "/app-icon@3x.png",
+      },
+      {
+        path: "web/src/assets/zion-app-icon@3x.png",
+      },
+      {
+        path: "web/src/assets/app-icon@3x.png",
+      },
+    ],
+  },
+  {
+    id: "dmgBackground",
+    sourceFile: "Logos-sentra-v2-9.png",
+    role: "dmgBackground",
+    canonicalPath: "/branding/sentra-dmg-background-1200x800.png",
+    outputPath: "desktop/public/branding/sentra-dmg-background-1200x800.png",
+    strategy: { kind: "resize", width: 1200, height: 800 },
+    aliases: [],
+  },
+  {
+    id: "dmgBackgroundSmall",
+    sourceFile: "Logos-sentra-v2-9.png",
+    role: "dmgBackground",
+    canonicalPath: "/branding/sentra-dmg-background-600x400.png",
+    outputPath: "desktop/public/branding/sentra-dmg-background-600x400.png",
+    strategy: { kind: "resize", width: 600, height: 400 },
+    aliases: [],
+  },
+  {
+    id: "sentraV2_10",
+    sourceFile: "Logos-sentra-v2-10.png",
+    role: "sentraV2",
+    canonicalPath: "/branding/sentra-v2-10.png",
+    outputPath: "desktop/public/branding/sentra-v2-10.png",
+    strategy: { kind: "copy" },
+    aliases: [],
+  },
+  {
+    id: "sentraWordmark",
+    sourceFile: "logo-TW-wordmark.png",
+    role: "sentraWordmark",
+    canonicalPath: "/branding/sentra-wordmark.svg",
+    outputPath: "desktop/public/branding/sentra-wordmark.svg",
+    strategy: { kind: "svg-wrapper", label: "Zion wordmark" },
+    aliases: [
+      {
+        path: "desktop/public/landing/buzz-wordmark.png",
+        source: "logo-TW-wordmark.png",
+        publicPath: "/landing/buzz-wordmark.png",
+      },
+    ],
+  },
+  {
+    id: "sentraLockup",
+    sourceFile: "logo-TW2-wordmark.png",
+    role: "sentraLockup",
+    canonicalPath: "/branding/sentra-lockup-horizontal.svg",
+    outputPath: "desktop/public/branding/sentra-lockup-horizontal.svg",
+    strategy: { kind: "svg-wrapper", label: "Sentra lockup" },
+    aliases: [],
+  },
+  {
+    id: "sentraLockupLight",
+    sourceFile: "logo-TW2-wordmark.png",
+    role: "sentraLockupLight",
+    canonicalPath: "/branding/sentra-lockup-light.svg",
+    outputPath: "desktop/public/branding/sentra-lockup-light.svg",
+    strategy: {
+      kind: "copy-output",
+      source: "desktop/public/branding/sentra-lockup-horizontal.svg",
+    },
+    aliases: [],
+  },
+  {
+    id: "sentraLockupDark",
+    sourceFile: "logo-TB-wordmark.png",
+    role: "sentraLockupDark",
+    canonicalPath: "/branding/sentra-lockup-dark.svg",
+    outputPath: "desktop/public/branding/sentra-lockup-dark.svg",
+    strategy: { kind: "svg-wrapper", label: "Sentra lockup dark" },
+    aliases: [],
+  },
+  {
+    id: "zionMark",
+    sourceFile: MARK_SOURCE_NAME,
+    role: "mark",
+    canonicalPath: "/branding/zion-mark.svg",
+    outputPath: "desktop/public/branding/zion-mark.svg",
+    strategy: { kind: "svg-wrapper", label: "Zion mark" },
+    aliases: [
+      {
+        path: "desktop/public/buzz.svg",
+        publicPath: "/buzz.svg",
+      },
+      {
+        path: "admin-web/public/zion-mark.svg",
+        publicPath: "/zion-mark.svg",
+      },
+      {
+        path: "admin-web/public/favicon.svg",
+        publicPath: "/favicon.svg",
+      },
+    ],
+    compatibilityPaths: ["/buzz.svg", "/favicon.svg"],
+  },
+  {
+    id: "sentraStatusGlyph",
+    sourceFile: MARK_SOURCE_NAME,
+    role: "status",
+    canonicalPath: "/branding/sentra-status-glyph.svg",
+    outputPath: "desktop/public/branding/sentra-status-glyph.svg",
+    strategy: { kind: "svg-wrapper", label: "Sentra status glyph" },
+    aliases: [],
+  },
+];
 
+function parseSipsOutput(stdout) {
   const map = {};
   for (const line of stdout.split("\n")) {
     const match = line.match(/^\s*(\w+):\s*(.*)$/);
-    if (match) map[match[1]] = match[2];
+    if (match) {
+      map[match[1]] = match[2];
+    }
   }
+
+  return map;
+}
+
+function readPngMetadata(filePath) {
+  const map = parseSipsOutput(
+    execFileSync(
+      "sips",
+      [
+        "-g",
+        "pixelWidth",
+        "-g",
+        "pixelHeight",
+        "-g",
+        "hasAlpha",
+        "-g",
+        "format",
+        "-g",
+        "space",
+        filePath,
+      ],
+      { encoding: "utf8" },
+    ),
+  );
 
   return {
     width: Number(map.pixelWidth),
     height: Number(map.pixelHeight),
     hasAlpha: map.hasAlpha === "yes",
-    sourceFormat: map.format,
+    format: map.format.toLowerCase(),
     colorSpace: map.space,
   };
 }
 
+function readSvgMetadata(filePath, sourceMetadata) {
+  const text = fs.readFileSync(filePath, "utf8");
+  if (!/<svg\b[^>]*>[\s\S]*<\/svg>\s*$/.test(text)) {
+    throw new Error(`Invalid generated SVG: ${filePath}`);
+  }
+  const widthMatch = text.match(/\bwidth="([0-9.]+)"/);
+  const heightMatch = text.match(/\bheight="([0-9.]+)"/);
+
+  return {
+    width: Number(widthMatch?.[1] ?? sourceMetadata.width),
+    height: Number(heightMatch?.[1] ?? sourceMetadata.height),
+    hasAlpha: sourceMetadata.hasAlpha,
+    format: "svg",
+    colorSpace: sourceMetadata.colorSpace,
+  };
+}
+
+function readOutputMetadata(filePath, sourceMetadata) {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === ".png") {
+    return readPngMetadata(filePath);
+  }
+  if (ext === ".svg") {
+    return readSvgMetadata(filePath, sourceMetadata);
+  }
+
+  throw new Error(`Unsupported output extension: ${filePath}`);
+}
+
 function sha256(filePath) {
-  return createHash("sha256")
-    .update(fs.readFileSync(filePath))
-    .digest("hex");
+  return createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
 }
 
 function ensureParent(filePath) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
 
-function copyFile(sourcePath, destPath) {
-  ensureParent(destPath);
-  fs.copyFileSync(sourcePath, destPath);
+function copyFile(sourcePath, destinationPath) {
+  ensureParent(destinationPath);
+  fs.copyFileSync(sourcePath, destinationPath);
 }
 
-function resizePng(sourcePath, destinationPath, width, height) {
+function writePng(sourcePath, destinationPath, width, height) {
   ensureParent(destinationPath);
   execFileSync("sips", ["-z", String(height), String(width), sourcePath, "--out", destinationPath]);
 }
 
-function writeSvgWrapper(sourcePath, destinationPath, label) {
-  const { width, height } = readSipsMetadata(sourcePath);
-  const png = fs.readFileSync(sourcePath).toString("base64");
+function writeWrapper(sourcePath, destinationPath, sourceMetadata, label) {
+  const pngBytes = fs.readFileSync(sourcePath).toString("base64");
   const svg = [
-    `<?xml version="1.0" encoding="UTF-8"?>`,
-    `<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${label}" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">`,
-    `<image href="data:image/png;base64,${png}" width="${width}" height="${height}"/>`,
-    `</svg>`,
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    `<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${label}" viewBox="0 0 ${sourceMetadata.width} ${sourceMetadata.height}" width="${sourceMetadata.width}" height="${sourceMetadata.height}">`,
+    `<image href="data:image/png;base64,${pngBytes}" width="${sourceMetadata.width}" height="${sourceMetadata.height}"/>`,
+    "</svg>",
     "",
   ].join("\n");
+
   ensureParent(destinationPath);
   fs.writeFileSync(destinationPath, svg);
 }
 
-function toRepoPath(filePath) {
-  if (filePath.startsWith("/")) {
-    if (filePath.startsWith("/branding/")) {
-      filePath = `desktop/public${filePath}`;
-    } else {
-      filePath = `desktop/public${filePath}`;
+function normalizeOutputPath(outputPath) {
+  if (outputPath.startsWith("/")) {
+    return path.join(ROOT, "desktop/public", outputPath.replace(/^\//, ""));
+  }
+
+  return path.join(ROOT, outputPath);
+}
+
+function resolveSourcePath(sourceFileName) {
+  const subdir = SHIPPED_SOURCES[sourceFileName]?.sourceSubdir;
+  return subdir ? path.join(sourceDirectory, subdir, sourceFileName) : path.join(sourceDirectory, sourceFileName);
+}
+
+function resolveAliasSource(aliasSource, canonicalPath, sourceMetadataByName) {
+  if (!aliasSource) {
+    return canonicalPath;
+  }
+
+  const sourceMetadata = sourceMetadataByName.get(aliasSource);
+  if (sourceMetadata) {
+    return sourceMetadata.sourcePath;
+  }
+
+  if (aliasSource.endsWith(".png")) {
+    return normalizeOutputPath(aliasSource);
+  }
+
+  return path.join(ROOT, aliasSource);
+}
+
+function writeAsset(assetSpec, sourceMetadataByName) {
+  const sourceMetadata = sourceMetadataByName.get(assetSpec.sourceFile);
+  if (!sourceMetadata) {
+    throw new Error(`Missing source metadata for asset source file ${assetSpec.sourceFile}`);
+  }
+
+  const sourcePath = sourceMetadata.sourcePath;
+  const canonicalOutputPath = normalizeOutputPath(assetSpec.outputPath);
+
+  switch (assetSpec.strategy.kind) {
+    case "copy":
+      copyFile(sourcePath, canonicalOutputPath);
+      break;
+    case "resize":
+      writePng(
+        sourcePath,
+        canonicalOutputPath,
+        assetSpec.strategy.width,
+        assetSpec.strategy.height,
+      );
+      break;
+    case "svg-wrapper":
+      writeWrapper(
+        sourcePath,
+        canonicalOutputPath,
+        sourceMetadata,
+        assetSpec.strategy.label ?? "Zion brand asset",
+      );
+      break;
+    case "copy-output":
+      copyFile(
+        normalizeOutputPath(assetSpec.strategy.source),
+        canonicalOutputPath,
+      );
+      break;
+    default:
+      throw new Error(`Unknown asset strategy for ${assetSpec.id}: ${assetSpec.strategy.kind}`);
+  }
+
+  if (assetSpec.aliases?.length) {
+    for (const alias of assetSpec.aliases) {
+      const aliasEntry = typeof alias === "string" ? { path: alias } : alias;
+      const aliasTarget = resolveAliasSource(
+        aliasEntry.source,
+        canonicalOutputPath,
+        sourceMetadataByName,
+      );
+      if (!aliasTarget) {
+        throw new Error(`Unable to resolve alias source for ${assetSpec.id} alias ${aliasEntry.path}`);
+      }
+
+      const aliasPath = normalizeOutputPath(aliasEntry.path);
+      copyFile(aliasTarget, aliasPath);
     }
   }
-  return path.join(ROOT, filePath);
 }
 
-function canonicalToRepoPath(canonicalPath) {
-  return toRepoPath(`desktop/public${canonicalPath}`);
-}
-
-function outputAliasPath(aliasPath) {
-  if (aliasPath.startsWith("/")) {
-    return toRepoPath(aliasPath);
+function buildManifestAsset(assetSpec, sourceMetadataByName) {
+  const sourceMetadata = sourceMetadataByName.get(assetSpec.sourceFile);
+  if (!sourceMetadata) {
+    throw new Error(`Missing source metadata for asset ${assetSpec.id}`);
   }
 
-  return path.join(ROOT, aliasPath);
+  const canonicalOutputPath = normalizeOutputPath(assetSpec.outputPath);
+  const outputMetadata = readOutputMetadata(canonicalOutputPath, sourceMetadata);
+
+  return {
+    role: assetSpec.role,
+    canonicalPath: assetSpec.canonicalPath,
+    outputPath: assetSpec.outputPath,
+    aliases: (assetSpec.aliases ?? []).map((alias) =>
+      typeof alias === "string" ? alias : alias.path,
+    ),
+    sourceFile: assetSpec.sourceFile,
+    format: outputMetadata.format,
+    sha256: sha256(canonicalOutputPath),
+    width: outputMetadata.width,
+    height: outputMetadata.height,
+    hasAlpha: outputMetadata.hasAlpha,
+    colorSpace: outputMetadata.colorSpace,
+    ...(assetSpec.compatibilityPaths ? { compatibilityPaths: assetSpec.compatibilityPaths } : {}),
+  };
 }
 
-function buildAssetRecord(sourceFileName, spec, sourceMetadata) {
-  return {
-    role: spec.role,
-    canonicalPath: spec.canonicalPath,
-    aliases: spec.aliases,
-    sourceFile: sourceFileName,
-    sourceFormat: sourceMetadata.sourceFormat,
-    sha256: sourceMetadata.sha256,
-    width: sourceMetadata.width,
-    height: sourceMetadata.height,
-    hasAlpha: sourceMetadata.hasAlpha,
-    colorSpace: sourceMetadata.colorSpace,
-  };
+function buildAliasInventory(assetSpec, sourceMetadataByName) {
+  const sourceMetadata = sourceMetadataByName.get(assetSpec.sourceFile);
+  if (!sourceMetadata) {
+    throw new Error(`Missing source metadata for alias inventory ${assetSpec.id}`);
+  }
+
+  return Object.fromEntries(
+    (assetSpec.aliases ?? []).map((alias) => {
+      const aliasEntry = typeof alias === "string" ? { path: alias } : alias;
+      const aliasPath = normalizeOutputPath(aliasEntry.path);
+      const outputMetadata = readOutputMetadata(aliasPath, sourceMetadata);
+      return [
+        aliasEntry.path,
+        {
+          sourceAsset: assetSpec.id,
+          sourceFile: assetSpec.sourceFile,
+          ...(aliasEntry.publicPath ? { publicPath: aliasEntry.publicPath } : {}),
+          format: outputMetadata.format,
+          sha256: sha256(aliasPath),
+          width: outputMetadata.width,
+          height: outputMetadata.height,
+          hasAlpha: outputMetadata.hasAlpha,
+          colorSpace: outputMetadata.colorSpace,
+        },
+      ];
+    }),
+  );
 }
 
 function writeManifest(manifest) {
@@ -264,10 +516,6 @@ function writeManifest(manifest) {
   ensureParent(tempPath);
   fs.writeFileSync(tempPath, manifestJson);
   fs.renameSync(tempPath, MANIFEST_PATH);
-}
-
-function normalizeRootPath(inputPath) {
-  return path.resolve(inputPath);
 }
 
 function assertSourceReadable(directory) {
@@ -279,65 +527,8 @@ function assertSourceReadable(directory) {
   }
 }
 
-function resolveSourcePath(sourceFileName, sourceSubdir) {
-  if (sourceSubdir) {
-    return path.join(sourceDirectory, sourceSubdir, sourceFileName);
-  }
-
-  return path.join(sourceDirectory, sourceFileName);
-}
-
-function writeRequiredFiles(sourcePath, spec) {
-  const canonicalPath = canonicalToRepoPath(spec.canonicalPath);
-  if (spec.wrappers?.length) {
-    for (const wrapperPath of spec.wrappers) {
-      writeSvgWrapper(sourcePath, path.join(ROOT, wrapperPath), spec.role);
-    }
-  } else if (spec.canonicalDimensions) {
-    resizePng(
-      sourcePath,
-      canonicalPath,
-      spec.canonicalDimensions.width,
-      spec.canonicalDimensions.height,
-    );
-  } else {
-    copyFile(sourcePath, canonicalPath);
-  }
-
-  if (Array.isArray(spec.derivatives)) {
-    for (const derivative of spec.derivatives) {
-      resizePng(sourcePath, path.join(ROOT, derivative.path), derivative.width, derivative.height);
-    }
-  }
-
-  for (const aliasPath of spec.aliases ?? []) {
-    const aliasSourcePath = spec.aliasSourceMap?.[aliasPath];
-    const copySource = aliasSourcePath
-      ? path.join(ROOT, aliasSourcePath)
-      : sourcePath;
-    copyFile(copySource, outputAliasPath(aliasPath));
-  }
-}
-
-function writeMarkAliasOutputs(markSourcePath) {
-  const markCanonicalPath = path.join(ROOT, "desktop/public/branding/zion-mark.svg");
-  const buzzAliasPath = path.join(ROOT, "desktop/public/buzz.svg");
-  const adminMarkAliasPath = path.join(ROOT, "admin-web/public/zion-mark.svg");
-  const adminFaviconAliasPath = path.join(ROOT, "admin-web/public/favicon.svg");
-
-  writeSvgWrapper(markSourcePath, markCanonicalPath, "Zion mark");
-  writeSvgWrapper(
-    markSourcePath,
-    path.join(ROOT, "desktop/public/branding/sentra-status-glyph.svg"),
-    "Sentra status glyph",
-  );
-  for (const alias of [buzzAliasPath, adminMarkAliasPath, adminFaviconAliasPath]) {
-    copyFile(markCanonicalPath, alias);
-  }
-}
-
 function main() {
-  const normalizedSourceDirectory = normalizeRootPath(sourceDirectory);
+  const normalizedSourceDirectory = path.resolve(sourceDirectory);
 
   if (!fs.existsSync(normalizedSourceDirectory)) {
     throw new Error(
@@ -346,90 +537,65 @@ function main() {
   }
 
   assertSourceReadable(normalizedSourceDirectory);
+
   const requiredSourceNames = new Set([
     ...Object.keys(SHIPPED_SOURCES),
     ...REFERENCE_SOURCES,
   ]);
 
-  const requiredList = [...requiredSourceNames];
   const sourceMetadataByName = new Map();
-
-  for (const sourceFileName of requiredList) {
-    const spec = SHIPPED_SOURCES[sourceFileName];
-    const sourceSubdir = spec?.sourceSubdir ?? "";
-    const sourcePath = resolveSourcePath(sourceFileName, sourceSubdir);
+  for (const sourceFileName of requiredSourceNames) {
+    const sourcePath = resolveSourcePath(sourceFileName);
     if (!fs.existsSync(sourcePath)) {
       throw new Error(`Missing required source file: ${sourcePath}`);
     }
 
-    const { width, height, hasAlpha, sourceFormat, colorSpace } = readSipsMetadata(sourcePath);
-    const sha = sha256(sourcePath);
+    const sourceMetadata = readPngMetadata(sourcePath);
     const disposition = Object.hasOwn(SHIPPED_SOURCES, sourceFileName)
       ? "shipped"
       : "reference-only";
 
     sourceMetadataByName.set(sourceFileName, {
-      width,
-      height,
-      hasAlpha,
-      sourceFormat,
-      colorSpace,
-      sha256: sha,
-      disposition,
+      ...sourceMetadata,
+      sha256: sha256(sourcePath),
       sourcePath,
-      sourceSubdir: spec?.sourceSubdir,
+      disposition,
     });
-  }
-
-  const assets = {};
-
-  for (const [sourceFileName, spec] of Object.entries(SHIPPED_SOURCES)) {
-    const source = sourceMetadataByName.get(sourceFileName);
-    if (!source) {
-      throw new Error(`Missing source metadata for shipped file: ${sourceFileName}`);
-    }
-
-    writeRequiredFiles(source.sourcePath, spec);
-    assets[spec.assetId] = buildAssetRecord(sourceFileName, spec, source);
   }
 
   const markSource = sourceMetadataByName.get(MARK_SOURCE_NAME);
   if (!markSource) {
     throw new Error(`Missing required mark source file: ${MARK_SOURCE_NAME}`);
   }
-  writeMarkAliasOutputs(markSource.sourcePath);
 
-  assets.webAppIcon = {
-    role: "webAppIcon",
-    canonicalPath: "/branding/zion-app-icon-1024.png",
-    aliases: ["web/src/assets/app-icon@3x.png"],
-    sourceFile: "Logos-sentra-v2-8.png",
-    sourceFormat: assets.appIcon.sourceFormat,
-    sha256: assets.appIcon.sha256,
-    width: assets.appIcon.width,
-    height: assets.appIcon.height,
-    hasAlpha: assets.appIcon.hasAlpha,
-    colorSpace: assets.appIcon.colorSpace,
-  };
+  for (const assetSpec of OUTPUT_ASSET_SPECS) {
+    writeAsset(assetSpec, sourceMetadataByName);
+  }
 
-  assets.adminMark = {
-    role: "adminMark",
-    canonicalPath: "/branding/zion-mark.svg",
-    aliases: ["admin-web/public/favicon.svg"],
-    sourceFile: MARK_SOURCE_NAME,
-    sourceFormat: markSource.sourceFormat,
-    sha256: markSource.sha256,
-    width: markSource.width,
-    height: markSource.height,
-    hasAlpha: markSource.hasAlpha,
-    colorSpace: markSource.colorSpace,
-  };
+  const assets = {};
+  for (const assetSpec of OUTPUT_ASSET_SPECS) {
+    assets[assetSpec.id] = buildManifestAsset(assetSpec, sourceMetadataByName);
+  }
+
+  const aliasInventory = Object.assign(
+    {},
+    ...OUTPUT_ASSET_SPECS.map((assetSpec) =>
+      buildAliasInventory(assetSpec, sourceMetadataByName),
+    ),
+  );
 
   const sources = Object.fromEntries(
-    [...sourceMetadataByName.entries()].map(([sourceFileName, metadata]) => [
+    [...sourceMetadataByName.entries()].map(([sourceFileName, sourceMetadata]) => [
       sourceFileName,
       {
-        disposition: metadata.disposition,
+        disposition: sourceMetadata.disposition,
+        relativePath: path.relative(normalizedSourceDirectory, sourceMetadata.sourcePath),
+        format: sourceMetadata.format,
+        sha256: sourceMetadata.sha256,
+        width: sourceMetadata.width,
+        height: sourceMetadata.height,
+        hasAlpha: sourceMetadata.hasAlpha,
+        colorSpace: sourceMetadata.colorSpace,
       },
     ]),
   );
@@ -438,6 +604,7 @@ function main() {
     version: 1,
     sourceDirectory: normalizedSourceDirectory,
     assets,
+    aliasInventory,
     sources,
     motion: {
       frameSourcePolicy: "dedicated-frame-or-code-native",

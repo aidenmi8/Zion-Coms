@@ -20,14 +20,14 @@ export { BRAND_MANIFEST };
 
 export const ZION_BRAND_ASSETS = {
   mark: {
-    canonicalPath: "/branding/zion-mark.svg",
-    compatibilityPaths: ["/buzz.svg", "/favicon.svg"],
+    canonicalPath: BRAND_MANIFEST.assets.zionMark.canonicalPath,
+    compatibilityPaths: BRAND_MANIFEST.assets.zionMark.compatibilityPaths,
     role: "mark",
-    source: BRAND_MANIFEST.assets.sentraV2_2.sourceFile,
+    source: BRAND_MANIFEST.assets.zionMark.sourceFile,
   },
   appIcon: {
     canonicalPath: BRAND_MANIFEST.assets.appIcon.canonicalPath,
-    compatibilityPaths: ["/app-icon@2x.png", "/app-icon@3x.png"],
+    compatibilityPaths: BRAND_MANIFEST.assets.appIcon.compatibilityPaths,
     role: "appIcon",
     source: BRAND_MANIFEST.assets.appIcon.sourceFile,
   },
@@ -42,9 +42,9 @@ export const ZION_BRAND_ASSETS = {
     source: BRAND_MANIFEST.assets.sentraLockup.sourceFile,
   },
   sentraStatusGlyph: {
-    canonicalPath: "/branding/sentra-status-glyph.svg",
+    canonicalPath: BRAND_MANIFEST.assets.sentraStatusGlyph.canonicalPath,
     role: "status",
-    source: "Sentra status glyph",
+    source: BRAND_MANIFEST.assets.sentraStatusGlyph.sourceFile,
   },
   dmgBackground: {
     canonicalPath: BRAND_MANIFEST.assets.dmgBackground.canonicalPath,
@@ -75,6 +75,8 @@ export function frameAtTime(
 ) {
   if (frames.length === 0 || frameDurationMs <= 0) return null;
   const rawIndex = Math.floor(Math.max(elapsedMs, 0) / frameDurationMs);
-  const index = loop ? rawIndex % frames.length : Math.min(rawIndex, frames.length - 1);
+  const index = loop
+    ? rawIndex % frames.length
+    : Math.min(rawIndex, frames.length - 1);
   return frames[index] ?? null;
 }

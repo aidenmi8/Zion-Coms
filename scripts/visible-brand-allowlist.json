@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "roots": [
+    "desktop/src",
+    "desktop/public",
+    "web/src",
+    "admin-web/src",
+    "admin-web/public",
+    "mobile/lib",
+    "mobile/assets"
+  ],
+  "extensions": [
+    ".css",
+    ".dart",
+    ".html",
+    ".js",
+    ".json",
+    ".mjs",
+    ".svg",
+    ".ts",
+    ".tsx"
+  ],
+  "excludePathFragments": [
+    "/node_modules/",
+    "/target/",
+    "/build/",
+    "/dist/",
+    "/.dart_tool/",
+    "/test/",
+    "/tests/",
+    "/testing/",
+    "/fixtures/",
+    "/__snapshots__/",
+    ".test.",
+    ".spec."
+  ],
+  "identifiers": [
+    "BUZZ_*",
+    "buzz://",
+    "xyz.block.buzz.app"
+  ],
+  "legacyAssetPaths": [
+    "/buzz.svg",
+    "/favicon.svg",
+    "/app-icon@2x.png",
+    "/app-icon@3x.png",
+    "/landing/buzz-wordmark.png"
+  ],
+  "compatibilityAssetPaths": [
+    {
+      "path": "mobile/assets/images/buzz-icon.png",
+      "reason": "mobile compatibility asset path"
+    }
+  ],
+  "internalPaths": [
+    "crates/",
+    "desktop/src-tauri/migration",
+    "desktop/src/shared/api/"
+  ],
+  "protectedPatterns": [
+    {
+      "name": "BUZZ_ENV",
+      "pattern": "\\bBUZZ_[A-Z0-9_]+\\b",
+      "reason": "BUZZ_* environment/API compatibility"
+    },
+    {
+      "name": "DEEP_LINK",
+      "pattern": "\\bbuzz://[^\\s\"'`<>)]*",
+      "reason": "buzz:// deep-link compatibility"
+    },
+    {
+      "name": "SIDECAR_COMMAND",
+      "pattern": "\\bbuzz-agent\\b",
+      "reason": "buzz-agent sidecar command compatibility"
+    },
+    {
+      "name": "BUNDLE_ID",
+      "pattern": "\\bxyz\\.block\\.buzz\\.app(?:\\.[A-Za-z0-9._-]+)?\\b",
+      "reason": "bundle identifier compatibility"
+    },
+    {
+      "name": "LEGACY_ASSET_URL",
+      "pattern": "(?:/|\\b)(?:buzz\\.svg|favicon\\.svg|app-icon@(?:2x|3x)\\.png|landing/buzz-wordmark\\.png)",
+      "reason": "legacy asset URL alias"
+    }
+  ],
+  "forbiddenPatterns": [
+    {
+      "name": "SION",
+      "pattern": "\\bSion\\b",
+      "reason": "legacy visible product name"
+    },
+    {
+      "name": "VISIBLE_LABEL",
+      "pattern": "\\b(?:Buzz|buzz)\\s+(?:Agent|app|Desktop|Web|releases?|will|Bee|bee)\\b",
+      "reason": "legacy visible product label"
+    },
+    {
+      "name": "LEGACY_MARK_IDENTIFIER",
+      "pattern": "\\b(?:BuzzMark|FuzzyLogo|FlappingBee|LandingBees)\\b|\\b(?:bee|buzz)[-_](?:wing|logo|mark|icon|spinner|field|animation|motion|wordmark)\\b",
+      "reason": "legacy bee/logo mark or animation identifier"
+    }
+  ],
+  "visibleContextPatterns": [
+    {
+      "name": "VISIBLE_BRAND_ATTRIBUTE",
+      "pattern": "\\b(?:aria-label|alt|title|placeholder|label|description|heading|text|children|displayName|productName)\\s*[:=]\\s*(?:\"[^\"\\n]*\\b(?:Buzz|buzz|Sion)\\b[^\"\\n]*\"|'[^'\\n]*\\b(?:Buzz|buzz|Sion)\\b[^'\\n]*'|`[^`\\n]*\\b(?:Buzz|buzz|Sion)\\b[^`\\n]*`)",
+      "reason": "legacy visible brand word in a user-facing attribute"
+    },
+    {
+      "name": "VISIBLE_JSX_TEXT",
+      "pattern": ">[^<{\\n]*\\b(?:Buzz|buzz|Sion)\\b[^<{\\n]*<",
+      "reason": "legacy visible brand word in rendered text"
+    }
+  ]
+}

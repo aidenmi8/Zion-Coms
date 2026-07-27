@@ -31,8 +31,12 @@ test("web Zion motion exposes all shared variants and reduced-motion hooks", asy
   }
   assert.match(source, /data-brand-surface="zion-motion"/);
   assert.match(source, /data-reduced-motion/);
+  assert.match(source, /data-loop/);
+  assert.doesNotMatch(source, /className="sr-only"/);
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /animation:\s*none/);
+  assert.match(css, /data-loop="false"/);
+  assert.match(css, /data-loop="true"/);
 });
 
 test("invite keeps the Buzz deep-link compatibility contract", async () => {

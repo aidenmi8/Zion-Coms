@@ -5,6 +5,7 @@ import 'package:buzz/features/pairing/pairing_page.dart';
 import 'package:buzz/features/pairing/pairing_provider.dart';
 import 'package:buzz/shared/brand/zion_brand_motion.dart';
 import 'package:buzz/shared/brand/zion_brand_tokens.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../helpers/widget_helpers.dart';
 
@@ -21,6 +22,7 @@ void main() {
 
       expect(motion.variant, ZionBrandMotionVariants.onboarding);
       expect(motion.playing, isFalse);
+      expect(find.byType(SvgPicture), findsOneWidget);
       expect(find.text('Welcome to Zion'), findsOneWidget);
       expect(find.text('Scan QR Code'), findsOneWidget);
       expect(find.text('or paste pairing code'), findsOneWidget);
@@ -107,6 +109,37 @@ void main() {
       expect(motion.variant, ZionBrandMotionVariants.loader);
       expect(motion.playing, isTrue);
       expect(find.text('Syncing…'), findsOneWidget);
+    });
+
+    testWidgets('parent status region owns semantics and motion stays decorative', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        WidgetHelpers.testable(
+          overrides: [
+            pairingProvider.overrideWith(() => _ConnectingPairingNotifier()),
+          ],
+          child: const PairingPage(),
+        ),
+      );
+      await tester.pump();
+
+      final statusRegion = tester.widget<Semantics>(
+        find.byKey(const ValueKey('pairing-brand-status-region')),
+      );
+      final motion = tester.widget<ZionBrandMotion>(find.byType(ZionBrandMotion));
+
+      expect(statusRegion.properties.label, 'Zion pairing in progress');
+      expect(statusRegion.properties.liveRegion, isTrue);
+      expect(motion.label, isNull);
+      expect(
+        find.descendant(
+          of: find.byType(ZionBrandMotion),
+          matching: find.byType(ExcludeSemantics),
+        ),
+        findsWidgets,
+      );
+      expect(find.bySemanticsLabel('Zion pairing in progress'), findsOneWidget);
     });
 
     testWidgets('text field and buttons disabled when connecting', (

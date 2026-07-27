@@ -39,7 +39,8 @@
 
 .zion-motion--onboarding[data-playing="true"] .zion-motion__mark {
   animation-duration: calc(
-    var(--zion-motion-duration) + var(--zion-motion-settle-duration)
+    var(--zion-motion-duration) +
+    var(--zion-motion-settle-duration)
   );
   animation-fill-mode: both;
   animation-iteration-count: var(--zion-motion-iteration-count);
@@ -187,20 +188,32 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .zion-motion__mark {
-    animation: none;
-  }
-
-  .zion-motion--loader .zion-motion__mark,
-  .zion-motion--liveness .zion-motion__mark {
+  .zion-motion--loader[data-playing="true"] .zion-motion__mark,
+  .zion-motion--loader[data-playing="false"] .zion-motion__mark,
+  .zion-motion--loader[data-loop="false"] .zion-motion__mark,
+  .zion-motion--liveness[data-playing="true"] .zion-motion__mark,
+  .zion-motion--liveness[data-playing="false"] .zion-motion__mark,
+  .zion-motion--liveness[data-loop="false"] .zion-motion__mark {
+    animation-duration: 0s;
+    animation-iteration-count: 1;
+    animation-name: none;
     opacity: 0.9;
     transform: scale(1);
     filter: drop-shadow(0 0 0.25rem rgb(185 154 255 / 0.1));
   }
 
-  .zion-motion--onboarding .zion-motion__mark,
-  .zion-motion--pairing .zion-motion__mark,
-  .zion-motion--agent-entrance .zion-motion__mark {
+  .zion-motion--onboarding[data-playing="true"] .zion-motion__mark,
+  .zion-motion--onboarding[data-playing="false"] .zion-motion__mark,
+  .zion-motion--onboarding[data-loop="false"] .zion-motion__mark,
+  .zion-motion--pairing[data-playing="true"] .zion-motion__mark,
+  .zion-motion--pairing[data-playing="false"] .zion-motion__mark,
+  .zion-motion--pairing[data-loop="false"] .zion-motion__mark,
+  .zion-motion--agent-entrance[data-playing="true"] .zion-motion__mark,
+  .zion-motion--agent-entrance[data-playing="false"] .zion-motion__mark,
+  .zion-motion--agent-entrance[data-loop="false"] .zion-motion__mark {
+    animation-duration: 0s;
+    animation-iteration-count: 1;
+    animation-name: none;
     opacity: 1;
     transform: translateY(0) scale(1);
     filter: drop-shadow(0 0 0.35rem rgb(185 154 255 / 0.1));

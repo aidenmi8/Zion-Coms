@@ -100,11 +100,22 @@ test("Zion brand motion shows neutral starter-team presence with staggered settl
       "data-zion-variant",
       "agent-entrance",
     );
-    await expect(presence).toHaveAttribute("data-phase", "entering");
     await expectNoBeeOrBuzzLogoClasses(presence);
-    await expect(presence).toHaveAttribute("data-phase", "settled", {
-      timeout: 4_000,
-    });
+  }
+
+  const leadPresence = starterPersonaCard(page, "Fizz").locator(
+    '[data-brand-surface="starter-team-presence"]',
+  );
+  await expect(leadPresence).toHaveAttribute("data-phase", "entering");
+  await expect(leadPresence).toHaveAttribute("data-phase", "settled", {
+    timeout: 4_000,
+  });
+
+  for (const name of ["Fizz", "Honey", "Bumble"] as const) {
+    const presence = starterPersonaCard(page, name).locator(
+      '[data-brand-surface="starter-team-presence"]',
+    );
+    await expect(presence).toHaveAttribute("data-phase", "settled");
     await expect(
       presence.locator('[data-brand-surface="zion-motion"]'),
     ).toHaveAttribute("data-playing", "false");

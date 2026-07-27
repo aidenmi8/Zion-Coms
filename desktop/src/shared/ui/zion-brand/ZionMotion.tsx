@@ -22,7 +22,6 @@ export type ZionMotionProps = {
   className?: string;
   decorative?: boolean;
   loop?: boolean;
-  motionContractOverride?: ZionMotionContract;
   playing?: boolean;
   variant?: ZionMotionVariant;
 };
@@ -106,6 +105,21 @@ export function resolveMotionRenderAsset(
   };
 }
 
+export function resolveMotionElapsedMs({
+  durationMs,
+  loop,
+  nowMs,
+  startMs,
+}: {
+  durationMs: number;
+  loop: boolean;
+  nowMs: number;
+  startMs: number;
+}) {
+  const rawElapsedMs = Math.max(0, nowMs - startMs);
+  return loop ? rawElapsedMs : Math.min(rawElapsedMs, durationMs);
+}
+
 function useMotionElapsedMs({
   durationMs,
   loop,
@@ -131,9 +145,12 @@ function useMotionElapsedMs({
     const startMs = performance.now();
 
     const tick = (nowMs: number) => {
-      const nextElapsedMs = loop
-        ? Math.max(0, nowMs - startMs)
-        : Math.min(Math.max(0, nowMs - startMs), durationMs);
+      const nextElapsedMs = resolveMotionElapsedMs({
+        durationMs,
+        loop,
+        nowMs,
+        startMs,
+      });
 
       setElapsedMs(nextElapsedMs);
 
@@ -156,11 +173,10 @@ export function ZionMotion({
   className,
   decorative = true,
   loop,
-  motionContractOverride,
   playing = true,
   variant = "loader",
 }: ZionMotionProps) {
-  const contract = motionContractOverride ?? motionForVariant(variant);
+  const contract = motionForVariant(variant);
   const effectiveLoop = loop ?? contract.loop;
   const reducedMotion = usePrefersReducedMotion();
   const elapsedMs = useMotionElapsedMs({

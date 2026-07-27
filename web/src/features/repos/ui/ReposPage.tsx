@@ -52,6 +52,7 @@ function CommunityEmptyState() {
         <ZionBrandMotion
           ariaLabel="Zion"
           className="zion-brand-motion--light-surface zion-brand-motion--theme-aware h-20 w-20"
+          decorative={false}
           variant="onboarding"
         />
         <h1 className="mt-6 text-2xl font-semibold tracking-tight text-black dark:text-white">

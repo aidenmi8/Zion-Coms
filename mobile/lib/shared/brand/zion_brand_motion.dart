@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'zion_brand_tokens.dart';
@@ -26,6 +27,10 @@ class ZionBrandMotion extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final reducedMotion = MediaQuery.of(context).disableAnimations;
     final spec = zionBrandMotionSpecFor(variant);
+    final asset = zionBrandMotionAssetFor(
+      variant: variant,
+      brightness: Theme.of(context).brightness,
+    );
     final shouldLoop = loop ?? spec.loop;
     final controller = useAnimationController(
       duration: reducedMotion ? Duration.zero : spec.totalDuration,
@@ -88,10 +93,11 @@ class ZionBrandMotion extends HookConsumerWidget {
       staticValue: staticPose?.glowOpacity,
     );
 
+    final width = asset.widthForHeight(size);
     final image = ExcludeSemantics(
-      child: Image.asset(
-        ZionBrandAssets.iconPng,
-        width: size,
+      child: SvgPicture.asset(
+        asset.path,
+        width: width,
         height: size,
         fit: BoxFit.contain,
       ),
@@ -130,9 +136,10 @@ class ZionBrandMotion extends HookConsumerWidget {
       },
     );
 
-    final content = SizedBox.square(
+    final content = SizedBox(
       key: ValueKey('zion-brand-motion-$variant'),
-      dimension: size,
+      width: width,
+      height: size,
       child: Center(child: motion),
     );
 

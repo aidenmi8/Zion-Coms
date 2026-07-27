@@ -74,12 +74,17 @@ class PairingPage extends HookConsumerWidget {
                     children: [
                       const Spacer(flex: 2),
 
-                      ZionBrandMotion(
-                        variant: brandState.variant,
-                        playing: brandState.playing,
-                        loop: brandState.loop,
+                      Semantics(
+                        key: const ValueKey('pairing-brand-status-region'),
+                        container: true,
+                        liveRegion: brandState.liveRegion,
                         label: brandState.label,
-                        size: ZionBrandTokens.heroMotionSize,
+                        child: ZionBrandMotion(
+                          variant: brandState.variant,
+                          playing: brandState.playing,
+                          loop: brandState.loop,
+                          size: ZionBrandTokens.heroMotionSize,
+                        ),
                       ),
                       const SizedBox(height: Grid.xs),
                       Text(
@@ -225,12 +230,14 @@ class _PairingBrandState {
   final bool playing;
   final bool loop;
   final String label;
+  final bool liveRegion;
 
   const _PairingBrandState({
     required this.variant,
     required this.playing,
     required this.loop,
     required this.label,
+    required this.liveRegion,
   });
 }
 
@@ -241,18 +248,21 @@ _PairingBrandState _brandStateForStatus(PairingStatus status) {
       playing: true,
       loop: false,
       label: 'Zion pairing in progress',
+      liveRegion: true,
     ),
     PairingStatus.transferring || PairingStatus.storing => const _PairingBrandState(
       variant: ZionBrandMotionVariants.loader,
       playing: true,
       loop: true,
       label: 'Zion transfer in progress',
+      liveRegion: true,
     ),
     _ => const _PairingBrandState(
       variant: ZionBrandMotionVariants.onboarding,
       playing: false,
       loop: false,
       label: 'Zion welcome mark',
+      liveRegion: false,
     ),
   };
 }

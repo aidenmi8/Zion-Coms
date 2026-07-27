@@ -2,6 +2,18 @@ import 'package:flutter/material.dart';
 
 abstract final class ZionBrandAssets {
   static const iconPng = 'assets/images/zion-icon.png';
+  static const zionMarkSvg = 'assets/images/zion-mark.svg';
+  static const sentraLockupLightSvg = 'assets/images/sentra-lockup-light.svg';
+  static const sentraLockupDarkSvg = 'assets/images/sentra-lockup-dark.svg';
+
+  static const zionIconSha256 =
+      '4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50';
+  static const zionMarkSha256 =
+      'fd0d912d30cb3b817df0b3167b7c77f6929cfa0d0b8f1407c9b1d6d9e7acd124';
+  static const sentraLockupLightSha256 =
+      'fe7a257f666946b064571bcd73700f30ebf33e0bcd5076f47790bda076c9b01d';
+  static const sentraLockupDarkSha256 =
+      '087a92c1efdaba769e851fc72638f777e8f89adb8530f6661428536ee4b0c9d5';
 }
 
 abstract final class ZionBrandMotionVariants {
@@ -78,6 +90,23 @@ abstract final class ZionBrandTokens {
   static const markGlowColor = Color(0xFFB99AFF);
   static const defaultMotionSize = 64.0;
   static const heroMotionSize = 72.0;
+  static const lockupWidthFactor = 2.9;
+}
+
+enum ZionBrandMotionAssetKind { mark, lockup }
+
+@immutable
+class ZionBrandMotionAsset {
+  final String path;
+  final ZionBrandMotionAssetKind kind;
+
+  const ZionBrandMotionAsset({required this.path, required this.kind});
+
+  bool get isLockup => kind == ZionBrandMotionAssetKind.lockup;
+
+  double widthForHeight(double height) {
+    return isLockup ? height * ZionBrandTokens.lockupWidthFactor : height;
+  }
 }
 
 const _loaderPausedPose = ZionBrandMotionPose(
@@ -322,4 +351,32 @@ ZionBrandMotionSpec zionBrandMotionSpecFor(String variant) {
     );
   }
   return spec;
+}
+
+ZionBrandMotionAsset zionBrandMotionAssetFor({
+  required String variant,
+  required Brightness brightness,
+}) {
+  final normalizedVariant = zionBrandMotionSpecFor(variant).variant;
+
+  return switch (normalizedVariant) {
+    ZionBrandMotionVariants.loader ||
+    ZionBrandMotionVariants.liveness ||
+    ZionBrandMotionVariants.agentEntrance => const ZionBrandMotionAsset(
+      path: ZionBrandAssets.zionMarkSvg,
+      kind: ZionBrandMotionAssetKind.mark,
+    ),
+    ZionBrandMotionVariants.onboarding || ZionBrandMotionVariants.pairing =>
+      ZionBrandMotionAsset(
+        path: brightness == Brightness.dark
+            ? ZionBrandAssets.sentraLockupLightSvg
+            : ZionBrandAssets.sentraLockupDarkSvg,
+        kind: ZionBrandMotionAssetKind.lockup,
+      ),
+    _ => throw ArgumentError.value(
+      variant,
+      'variant',
+      'Expected one of ${ZionBrandMotionVariants.values.join(', ')}',
+    ),
+  };
 }

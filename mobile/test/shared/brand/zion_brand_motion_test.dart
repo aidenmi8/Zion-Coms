@@ -2,11 +2,50 @@ import 'package:buzz/shared/brand/zion_brand_motion.dart';
 import 'package:buzz/shared/brand/zion_brand_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../helpers/widget_helpers.dart';
 
 void main() {
   group('ZionBrandMotion', () {
+    test('selects the approved mark and lockup assets by variant and brightness', () {
+      expect(
+        zionBrandMotionAssetFor(
+          variant: ZionBrandMotionVariants.loader,
+          brightness: Brightness.light,
+        ).path,
+        ZionBrandAssets.zionMarkSvg,
+      );
+      expect(
+        zionBrandMotionAssetFor(
+          variant: ZionBrandMotionVariants.liveness,
+          brightness: Brightness.dark,
+        ).path,
+        ZionBrandAssets.zionMarkSvg,
+      );
+      expect(
+        zionBrandMotionAssetFor(
+          variant: ZionBrandMotionVariants.agentEntrance,
+          brightness: Brightness.light,
+        ).path,
+        ZionBrandAssets.zionMarkSvg,
+      );
+      expect(
+        zionBrandMotionAssetFor(
+          variant: ZionBrandMotionVariants.onboarding,
+          brightness: Brightness.light,
+        ).path,
+        ZionBrandAssets.sentraLockupDarkSvg,
+      );
+      expect(
+        zionBrandMotionAssetFor(
+          variant: ZionBrandMotionVariants.pairing,
+          brightness: Brightness.dark,
+        ).path,
+        ZionBrandAssets.sentraLockupLightSvg,
+      );
+    });
+
     testWidgets('renders reduced-motion fallback immediately without looping', (
       tester,
     ) async {
@@ -33,6 +72,7 @@ void main() {
       expect(fadeTransition.opacity.value, 0.9);
       expect(scaleTransition.scale.value, 1);
       expect(find.bySemanticsLabel('Zion loading'), findsOneWidget);
+      expect(find.byType(SvgPicture), findsOneWidget);
       expect(tester.binding.transientCallbackCount, 0);
     });
 
@@ -47,7 +87,7 @@ void main() {
       );
 
       expect(find.bySemanticsLabel('Zion pairing in progress'), findsOneWidget);
-      expect(find.byType(Image), findsOneWidget);
+      expect(find.byType(SvgPicture), findsOneWidget);
     });
   });
 }

@@ -52,10 +52,29 @@
       "reason": "mobile compatibility asset path"
     }
   ],
-  "internalPaths": [
-    "crates/",
-    "desktop/src-tauri/migration",
-    "desktop/src/shared/api/"
+  "legacyVisibleWords": [
+    "Buzz",
+    "buzz",
+    "BUZZ",
+    "Sion",
+    "sion",
+    "Bee",
+    "bee",
+    "BEE"
+  ],
+  "visibleAttributeNames": [
+    "aria-label",
+    "ariaLabel",
+    "alt",
+    "title",
+    "placeholder",
+    "label",
+    "description",
+    "heading",
+    "text",
+    "children",
+    "displayName",
+    "productName"
   ],
   "protectedPatterns": [
     {
@@ -101,16 +120,5 @@
       "reason": "legacy bee/logo mark or animation identifier"
     }
   ],
-  "visibleContextPatterns": [
-    {
-      "name": "VISIBLE_BRAND_ATTRIBUTE",
-      "pattern": "\\b(?:aria-label|alt|title|placeholder|label|description|heading|text|children|displayName|productName)\\s*[:=]\\s*(?:\"[^\"\\n]*\\b(?:Buzz|buzz|Sion)\\b[^\"\\n]*\"|'[^'\\n]*\\b(?:Buzz|buzz|Sion)\\b[^'\\n]*'|`[^`\\n]*\\b(?:Buzz|buzz|Sion)\\b[^`\\n]*`)",
-      "reason": "legacy visible brand word in a user-facing attribute"
-    },
-    {
-      "name": "VISIBLE_JSX_TEXT",
-      "pattern": ">[^<{\\n]*\\b(?:Buzz|buzz|Sion)\\b[^<{\\n]*<",
-      "reason": "legacy visible brand word in rendered text"
-    }
-  ]
+  "visibleContextPatterns": []
 }

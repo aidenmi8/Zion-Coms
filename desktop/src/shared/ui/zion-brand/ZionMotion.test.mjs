@@ -101,7 +101,9 @@ function installDOMShim() {
       return child;
     }
     contains(node) {
-      return this === node || this.children.some((child) => child.contains(node));
+      return (
+        this === node || this.children.some((child) => child.contains(node))
+      );
     }
   }
 
@@ -151,16 +153,6 @@ function installDOMShim() {
 }
 
 installDOMShim();
-
-function findFirstByTag(node, tagName) {
-  if (!node) return null;
-  if (node.tagName === tagName) return node;
-  for (const child of node.children ?? []) {
-    const match = findFirstByTag(child, tagName);
-    if (match) return match;
-  }
-  return null;
-}
 
 test("frameAtTime loops, clamps, and safely handles empty frame sets", () => {
   assert.equal(frameAtTime(["a", "b", "c"], 250, 100), "c");

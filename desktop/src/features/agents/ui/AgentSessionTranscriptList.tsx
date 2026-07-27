@@ -211,14 +211,12 @@ export function AgentSessionTranscriptList({
           role={isLoading ? "status" : undefined}
         >
           {isLoading ? (
-            <>
-              <span className="sr-only">Waiting for ACP activity</span>
-              <ZionMotion
-                className="mx-auto text-muted-foreground"
-                variant="liveness"
-                loop
-              />
-            </>
+            <ZionMotion
+              ariaLabel="Waiting for ACP activity"
+              className="mx-auto text-muted-foreground"
+              variant="liveness"
+              loop
+            />
           ) : (
             <>
               <Radio className="mx-auto h-4 w-4 text-muted-foreground" />

@@ -8,43 +8,46 @@ import '../../helpers/widget_helpers.dart';
 
 void main() {
   group('ZionBrandMotion', () {
-    test('selects the approved mark and lockup assets by variant and brightness', () {
-      expect(
-        zionBrandMotionAssetFor(
-          variant: ZionBrandMotionVariants.loader,
-          brightness: Brightness.light,
-        ).path,
-        ZionBrandAssets.zionMarkSvg,
-      );
-      expect(
-        zionBrandMotionAssetFor(
-          variant: ZionBrandMotionVariants.liveness,
-          brightness: Brightness.dark,
-        ).path,
-        ZionBrandAssets.zionMarkSvg,
-      );
-      expect(
-        zionBrandMotionAssetFor(
-          variant: ZionBrandMotionVariants.agentEntrance,
-          brightness: Brightness.light,
-        ).path,
-        ZionBrandAssets.zionMarkSvg,
-      );
-      expect(
-        zionBrandMotionAssetFor(
-          variant: ZionBrandMotionVariants.onboarding,
-          brightness: Brightness.light,
-        ).path,
-        ZionBrandAssets.sentraLockupDarkSvg,
-      );
-      expect(
-        zionBrandMotionAssetFor(
-          variant: ZionBrandMotionVariants.pairing,
-          brightness: Brightness.dark,
-        ).path,
-        ZionBrandAssets.sentraLockupLightSvg,
-      );
-    });
+    test(
+      'selects the approved mark and lockup assets by variant and brightness',
+      () {
+        expect(
+          zionBrandMotionAssetFor(
+            variant: ZionBrandMotionVariants.loader,
+            brightness: Brightness.light,
+          ).path,
+          ZionBrandAssets.zionMarkSvg,
+        );
+        expect(
+          zionBrandMotionAssetFor(
+            variant: ZionBrandMotionVariants.liveness,
+            brightness: Brightness.dark,
+          ).path,
+          ZionBrandAssets.zionMarkSvg,
+        );
+        expect(
+          zionBrandMotionAssetFor(
+            variant: ZionBrandMotionVariants.agentEntrance,
+            brightness: Brightness.light,
+          ).path,
+          ZionBrandAssets.zionMarkSvg,
+        );
+        expect(
+          zionBrandMotionAssetFor(
+            variant: ZionBrandMotionVariants.onboarding,
+            brightness: Brightness.light,
+          ).path,
+          ZionBrandAssets.sentraLockupDarkSvg,
+        );
+        expect(
+          zionBrandMotionAssetFor(
+            variant: ZionBrandMotionVariants.pairing,
+            brightness: Brightness.dark,
+          ).path,
+          ZionBrandAssets.sentraLockupLightSvg,
+        );
+      },
+    );
 
     testWidgets('renders reduced-motion fallback immediately without looping', (
       tester,
@@ -63,10 +66,16 @@ void main() {
 
       final motionFinder = find.byType(ZionBrandMotion);
       final fadeTransition = tester.widget<FadeTransition>(
-        find.descendant(of: motionFinder, matching: find.byType(FadeTransition)),
+        find.descendant(
+          of: motionFinder,
+          matching: find.byType(FadeTransition),
+        ),
       );
       final scaleTransition = tester.widget<ScaleTransition>(
-        find.descendant(of: motionFinder, matching: find.byType(ScaleTransition)),
+        find.descendant(
+          of: motionFinder,
+          matching: find.byType(ScaleTransition),
+        ),
       );
 
       expect(fadeTransition.opacity.value, 0.9);
@@ -76,7 +85,9 @@ void main() {
       expect(tester.binding.transientCallbackCount, 0);
     });
 
-    testWidgets('owns a single accessible label on the wrapper', (tester) async {
+    testWidgets('owns a single accessible label on the wrapper', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         WidgetHelpers.testable(
           child: const ZionBrandMotion(

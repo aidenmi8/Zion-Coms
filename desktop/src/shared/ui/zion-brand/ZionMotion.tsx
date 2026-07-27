@@ -33,7 +33,10 @@ type ZionMotionRenderAsset = {
 };
 
 function readReducedMotionPreference() {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+  if (
+    typeof window === "undefined" ||
+    typeof window.matchMedia !== "function"
+  ) {
     return false;
   }
 
@@ -45,10 +48,15 @@ function supportsMediaListener(queryList: MediaQueryList) {
 }
 
 function usePrefersReducedMotion() {
-  const [reducedMotion, setReducedMotion] = useState(readReducedMotionPreference);
+  const [reducedMotion, setReducedMotion] = useState(
+    readReducedMotionPreference,
+  );
 
   useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
       return;
     }
 
@@ -204,13 +212,11 @@ export function ZionMotion({
 
   return (
     <span
-      aria-label={!decorative ? trimmedLabel : undefined}
       className={cn("zion-motion", `zion-motion--${variant}`, className)}
       data-brand-surface="zion-motion"
       data-loop={effectiveLoop ? "true" : "false"}
       data-playing={playing ? "true" : "false"}
       data-zion-variant={variant}
-      role={!decorative && trimmedLabel ? "img" : undefined}
       style={rootStyle}
     >
       {decorative && trimmedLabel ? (
@@ -224,7 +230,7 @@ export function ZionMotion({
         />
       ) : (
         <img
-          alt={decorative ? "" : trimmedLabel ?? ""}
+          alt={decorative ? "" : (trimmedLabel ?? "")}
           aria-hidden={decorative ? true : undefined}
           className="zion-motion__frame"
           data-brand-surface="zion-motion-frame"

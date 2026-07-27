@@ -14,12 +14,60 @@ type Mark = {
 };
 
 const MARKS: readonly Mark[] = [
-  { top: "11%", left: "17%", size: 26, rotate: -8, scale: 0.9, driftX: -8, driftY: 7 },
-  { top: "19%", left: "74%", size: 22, rotate: 10, scale: 0.88, driftX: 7, driftY: -6 },
-  { top: "37%", left: "11%", size: 20, rotate: 16, scale: 0.84, driftX: -6, driftY: 5 },
-  { top: "51%", left: "66%", size: 28, rotate: -10, scale: 0.92, driftX: 9, driftY: 8 },
-  { top: "73%", left: "28%", size: 24, rotate: 6, scale: 0.9, driftX: 5, driftY: -5 },
-  { top: "84%", left: "81%", size: 18, rotate: -14, scale: 0.82, driftX: -4, driftY: 4 },
+  {
+    top: "11%",
+    left: "17%",
+    size: 26,
+    rotate: -8,
+    scale: 0.9,
+    driftX: -8,
+    driftY: 7,
+  },
+  {
+    top: "19%",
+    left: "74%",
+    size: 22,
+    rotate: 10,
+    scale: 0.88,
+    driftX: 7,
+    driftY: -6,
+  },
+  {
+    top: "37%",
+    left: "11%",
+    size: 20,
+    rotate: 16,
+    scale: 0.84,
+    driftX: -6,
+    driftY: 5,
+  },
+  {
+    top: "51%",
+    left: "66%",
+    size: 28,
+    rotate: -10,
+    scale: 0.92,
+    driftX: 9,
+    driftY: 8,
+  },
+  {
+    top: "73%",
+    left: "28%",
+    size: 24,
+    rotate: 6,
+    scale: 0.9,
+    driftX: 5,
+    driftY: -5,
+  },
+  {
+    top: "84%",
+    left: "81%",
+    size: 18,
+    rotate: -14,
+    scale: 0.82,
+    driftX: -4,
+    driftY: 4,
+  },
 ] as const;
 
 const ONBOARDING_MOTION = motionForVariant("onboarding");
@@ -28,7 +76,10 @@ const FIELD_SETTLE_MS =
   ("settleMs" in ONBOARDING_MOTION ? ONBOARDING_MOTION.settleMs : 0);
 
 function readReducedMotionPreference() {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+  if (
+    typeof window === "undefined" ||
+    typeof window.matchMedia !== "function"
+  ) {
     return false;
   }
 
@@ -47,7 +98,7 @@ export function getZionBrandFieldProgress({
 }
 
 function getSettledProgress(progress: number) {
-  return 1 - Math.pow(1 - progress, 3);
+  return 1 - (1 - progress) ** 3;
 }
 
 export function getZionBrandFieldMarkStyle(
@@ -102,7 +153,10 @@ export function ZionBrandField() {
   );
 
   React.useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
       return;
     }
 

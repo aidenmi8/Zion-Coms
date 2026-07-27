@@ -250,7 +250,8 @@ _PairingBrandState _brandStateForStatus(PairingStatus status) {
       label: 'Zion pairing in progress',
       liveRegion: true,
     ),
-    PairingStatus.transferring || PairingStatus.storing => const _PairingBrandState(
+    PairingStatus.transferring ||
+    PairingStatus.storing => const _PairingBrandState(
       variant: ZionBrandMotionVariants.loader,
       playing: true,
       loop: true,

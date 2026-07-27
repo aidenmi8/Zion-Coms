@@ -366,13 +366,13 @@ ZionBrandMotionAsset zionBrandMotionAssetFor({
       path: ZionBrandAssets.zionMarkSvg,
       kind: ZionBrandMotionAssetKind.mark,
     ),
-    ZionBrandMotionVariants.onboarding || ZionBrandMotionVariants.pairing =>
-      ZionBrandMotionAsset(
-        path: brightness == Brightness.dark
-            ? ZionBrandAssets.sentraLockupLightSvg
-            : ZionBrandAssets.sentraLockupDarkSvg,
-        kind: ZionBrandMotionAssetKind.lockup,
-      ),
+    ZionBrandMotionVariants.onboarding ||
+    ZionBrandMotionVariants.pairing => ZionBrandMotionAsset(
+      path: brightness == Brightness.dark
+          ? ZionBrandAssets.sentraLockupLightSvg
+          : ZionBrandAssets.sentraLockupDarkSvg,
+      kind: ZionBrandMotionAssetKind.lockup,
+    ),
     _ => throw ArgumentError.value(
       variant,
       'variant',

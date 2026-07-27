@@ -47,7 +47,10 @@ type ZionMotionManifestRecord = {
   variants?: readonly string[];
 } & ZionMotionDefinitionMap;
 
-type ZionNormalizedMotionDefinition = Omit<ZionMotionDefinitionBase, "frames"> & {
+type ZionNormalizedMotionDefinition = Omit<
+  ZionMotionDefinitionBase,
+  "frames"
+> & {
   frames: readonly string[];
 };
 
@@ -60,7 +63,7 @@ export type ZionMotionManifest = {
       ? { settleMs: number }
       : Variant extends "agent-entrance"
         ? { staggerMs: number }
-        : {});
+        : Record<never, never>);
 };
 
 function isZionMotionVariant(value: string): value is ZionMotionVariant {

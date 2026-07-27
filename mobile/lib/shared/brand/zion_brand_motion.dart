@@ -55,12 +55,11 @@ class ZionBrandMotion extends HookConsumerWidget {
       return controller.stop;
     }, [controller, reducedMotion, playing, shouldLoop, spec.totalDuration]);
 
-    final staticPose =
-        reducedMotion
-            ? spec.reducedMotionPose
-            : playing
-            ? null
-            : spec.pausedPose;
+    final staticPose = reducedMotion
+        ? spec.reducedMotionPose
+        : playing
+        ? null
+        : spec.pausedPose;
 
     final opacityAnimation = _resolveAnimation(
       controller: controller,
@@ -147,7 +146,12 @@ class ZionBrandMotion extends HookConsumerWidget {
       return ExcludeSemantics(child: content);
     }
 
-    return Semantics(container: true, image: true, label: label, child: content);
+    return Semantics(
+      container: true,
+      image: true,
+      label: label,
+      child: content,
+    );
   }
 }
 

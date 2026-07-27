@@ -22,6 +22,7 @@ export type ZionMotionProps = {
   className?: string;
   decorative?: boolean;
   loop?: boolean;
+  motionContractOverride?: ZionMotionContract;
   playing?: boolean;
   variant?: ZionMotionVariant;
 };
@@ -105,19 +106,72 @@ export function resolveMotionRenderAsset(
   };
 }
 
+function useMotionElapsedMs({
+  durationMs,
+  loop,
+  mode,
+  playing,
+  reducedMotion,
+}: {
+  durationMs: number;
+  loop: boolean;
+  mode: ZionMotionContract["mode"];
+  playing: boolean;
+  reducedMotion: boolean;
+}) {
+  const [elapsedMs, setElapsedMs] = useState(0);
+
+  useEffect(() => {
+    if (mode !== "dedicated-frame" || !playing || reducedMotion) {
+      setElapsedMs(0);
+      return;
+    }
+
+    let animationFrameId = 0;
+    const startMs = performance.now();
+
+    const tick = (nowMs: number) => {
+      const nextElapsedMs = loop
+        ? Math.max(0, nowMs - startMs)
+        : Math.min(Math.max(0, nowMs - startMs), durationMs);
+
+      setElapsedMs(nextElapsedMs);
+
+      if (loop || nextElapsedMs < durationMs) {
+        animationFrameId = requestAnimationFrame(tick);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [durationMs, loop, mode, playing, reducedMotion]);
+
+  return elapsedMs;
+}
+
 /** Shared motion layer for loaders, onboarding, pairing, and agent activity. */
 export function ZionMotion({
   ariaLabel,
   className,
   decorative = true,
   loop,
+  motionContractOverride,
   playing = true,
   variant = "loader",
 }: ZionMotionProps) {
-  const contract = motionForVariant(variant);
+  const contract = motionContractOverride ?? motionForVariant(variant);
   const effectiveLoop = loop ?? contract.loop;
   const reducedMotion = usePrefersReducedMotion();
+  const elapsedMs = useMotionElapsedMs({
+    durationMs: contract.durationMs,
+    loop: effectiveLoop,
+    mode: contract.mode,
+    playing,
+    reducedMotion,
+  });
   const renderAsset = resolveMotionRenderAsset(contract, {
+    elapsedMs,
     loop: effectiveLoop,
     playing,
     reducedMotion,

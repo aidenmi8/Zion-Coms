@@ -16,6 +16,10 @@ function lineNumberAt(text, index) {
   return text.slice(0, index).split("\n").length;
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function replaceEmbeddedData(text) {
   return text.replace(/data:[^,\s]+;base64,[A-Za-z0-9+/=\r\n]+/g, (match) =>
     match.replace(/[^\r\n]/g, " "),
@@ -27,6 +31,34 @@ function stripComments(text) {
   let state = "code";
   let quote = null;
   let escaped = false;
+  let inRegexClass = false;
+
+  const canStartRegex = () => {
+    let index = output.length - 1;
+    while (index >= 0 && /\s/.test(output[index])) index -= 1;
+    if (index < 0) return true;
+
+    const previous = output[index];
+    if ("=([{,:;!&|?+-*%^~<>".includes(previous)) return true;
+
+    const word = output
+      .slice(0, index + 1)
+      .match(/[A-Za-z_$][A-Za-z0-9_$]*$/)?.[0];
+    return new Set([
+      "await",
+      "case",
+      "delete",
+      "do",
+      "else",
+      "in",
+      "of",
+      "return",
+      "throw",
+      "typeof",
+      "void",
+      "yield",
+    ]).has(word);
+  };
 
   for (let index = 0; index < text.length; index += 1) {
     const character = text[index];
@@ -50,6 +82,22 @@ function stripComments(text) {
         output += "\n";
       } else {
         output += " ";
+      }
+      continue;
+    }
+
+    if (state === "regex") {
+      output += character;
+      if (escaped) {
+        escaped = false;
+      } else if (character === "\\") {
+        escaped = true;
+      } else if (character === "[") {
+        inRegexClass = true;
+      } else if (character === "]") {
+        inRegexClass = false;
+      } else if (character === "/" && !inRegexClass) {
+        state = "code";
       }
       continue;
     }
@@ -80,6 +128,10 @@ function stripComments(text) {
       output += "  ";
       index += 1;
       state = "block-comment";
+    } else if (character === "/" && canStartRegex()) {
+      output += character;
+      state = "regex";
+      inRegexClass = false;
     } else {
       output += character;
     }
@@ -166,16 +218,104 @@ function matchesLegacyAssetPath(filePath, allowlist) {
   return null;
 }
 
-function internalPathReason(filePath, allowlist) {
-  const normalized = normalizePath(filePath);
-  const prefix = (allowlist.internalPaths ?? []).find((candidate) => {
-    const normalizedCandidate = normalizePath(candidate).replace(/\/$/, "");
-    return (
-      normalized === normalizedCandidate ||
-      normalized.startsWith(`${normalizedCandidate}/`)
-    );
-  });
-  return prefix ? `explicit internal compatibility path: ${prefix}` : null;
+function visibleContextPatterns(allowlist) {
+  if (!allowlist.visibleAttributeNames || !allowlist.legacyVisibleWords) {
+    return allowlist.visibleContextPatterns ?? [];
+  }
+
+  const attributes = allowlist.visibleAttributeNames
+    .map(escapeRegExp)
+    .join("|");
+  const words = allowlist.legacyVisibleWords.map(escapeRegExp).join("|");
+  const quotedValue = [
+    `"[^"\\n]*\\b(?:${words})\\b[^"\\n]*"`,
+    `'[^'\\n]*\\b(?:${words})\\b[^'\\n]*'`,
+    `\`[^\`\\n]*\\b(?:${words})\\b[^\`\\n]*\``,
+  ].join("|");
+  const quotedValueGroup = `(?:${quotedValue})`;
+  const expressionValue = `\\{\\s*${quotedValueGroup}\\s*\\}`;
+
+  return [
+    {
+      name: "VISIBLE_BRAND_JSX_ATTRIBUTE",
+      pattern: `<[^>\\n]*?\\b(?:${attributes})\\s*=\\s*(?:${quotedValueGroup}|${expressionValue})`,
+      reason: "legacy visible brand word in a user-facing JSX/HTML attribute",
+    },
+    {
+      name: "VISIBLE_BRAND_PROPERTY",
+      pattern: `[,{]\\s*(?:${attributes})\\s*:\\s*(?:${quotedValueGroup}|${expressionValue})`,
+      reason: "legacy visible brand word in a user-facing property",
+    },
+    {
+      name: "VISIBLE_JSX_TEXT",
+      pattern: `>[^<{\\n]*\\b(?:${words})\\b[^<{\\n]*<`,
+      reason: "legacy visible brand word in rendered text",
+    },
+  ];
+}
+
+function dynamicVisibleBrandHits(text, filePath, allowlist) {
+  if (!allowlist.visibleAttributeNames || !allowlist.legacyVisibleWords) {
+    return [];
+  }
+
+  const attributes = allowlist.visibleAttributeNames
+    .map(escapeRegExp)
+    .join("|");
+  const words = allowlist.legacyVisibleWords.map(escapeRegExp).join("|");
+  const doubleQuote = String.fromCharCode(34);
+  const singleQuote = String.fromCharCode(39);
+  const quotedValueGroup = [
+    "(?:",
+    `${doubleQuote}[^${doubleQuote}\\n]*\\b(?:${words})\\b[^${doubleQuote}\\n]*${doubleQuote}|`,
+    `${singleQuote}[^${singleQuote}\\n]*\\b(?:${words})\\b[^${singleQuote}\\n]*${singleQuote}`,
+    ")",
+  ].join("");
+  const bindingPattern = new RegExp(
+    `\\b(?:const|let|var)\\s+([A-Za-z_$][A-Za-z0-9_$]*)\\s*(?:\\:\\s*[^=;]+)?=\\s*${quotedValueGroup}`,
+    "g",
+  );
+  const hits = [];
+  const seen = new Set();
+
+  for (const binding of text.matchAll(bindingPattern)) {
+    const identifier = binding[1];
+    const escapedIdentifier = escapeRegExp(identifier);
+    const contextPatterns = [
+      new RegExp(
+        `<[^>\\n]*?\\b(?:${attributes})\\s*=\\s*\\{[^}\\n]*\\b${escapedIdentifier}\\b[^}\\n]*\\}`,
+        "g",
+      ),
+      new RegExp(
+        `[,{]\\s*(?:${attributes})\\s*:\\s*\\{[^}\\n]*\\b${escapedIdentifier}\\b[^}\\n]*\\}`,
+        "g",
+      ),
+      new RegExp(
+        `>[^<{\\n]*\\{[^}\\n]*\\b${escapedIdentifier}\\b[^}\\n]*\\}[^<{\\n]*<`,
+        "g",
+      ),
+    ];
+
+    for (const pattern of contextPatterns) {
+      for (const match of text.matchAll(pattern)) {
+        if (match.index === undefined) continue;
+        const key = `${match.index}:${match[0].length}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        hits.push({
+          file: filePath,
+          line: lineNumberAt(text, match.index),
+          match: match[0],
+          name: "VISIBLE_BRAND_BINDING",
+          reason: `legacy visible brand binding: ${identifier}`,
+          index: match.index,
+          length: match[0].length,
+        });
+      }
+    }
+  }
+
+  return hits;
 }
 
 export function scanText(source, filePath, allowlist) {
@@ -191,31 +331,42 @@ export function scanText(source, filePath, allowlist) {
   protectedHits.push(...patternHits);
 
   const protectedText = maskHits(sanitized, patternHits);
-  const internalReason = internalPathReason(normalizedFilePath, allowlist);
   const forbiddenHits = (allowlist.forbiddenPatterns ?? []).flatMap(
     (descriptor) =>
       findPatternHits(protectedText, normalizedFilePath, descriptor),
   );
-  const visibleContextHits = (allowlist.visibleContextPatterns ?? []).flatMap(
+  const visibleContextHits = visibleContextPatterns(allowlist).flatMap(
     (descriptor) =>
       findPatternHits(protectedText, normalizedFilePath, descriptor),
   );
+  const dynamicHits = dynamicVisibleBrandHits(
+    protectedText,
+    normalizedFilePath,
+    allowlist,
+  );
 
-  const forbidden = [...forbiddenHits, ...visibleContextHits].map((hit) => {
-    if (!internalReason) return hit;
-    return {
-      ...hit,
-      name: `INTERNAL_${hit.name}`,
-      reason: `${hit.reason}; ${internalReason}`,
-    };
-  });
+  const forbidden = [...forbiddenHits, ...visibleContextHits, ...dynamicHits]
+    .sort((left, right) => {
+      if (left.index !== right.index) return left.index - right.index;
+      return right.length - left.length;
+    })
+    .filter((hit, index, hits) => {
+      if (hit.index < 0) return true;
+      return !hits
+        .slice(0, index)
+        .some(
+          (previous) =>
+            previous.index >= 0 &&
+            hit.index < previous.index + previous.length &&
+            previous.index < hit.index + hit.length,
+        );
+    })
+    .sort((left, right) => left.index - right.index);
 
-  if (internalReason) {
-    protectedHits.push(...forbidden);
-    return { protected: protectedHits, forbidden: [] };
-  }
-
-  return { protected: protectedHits, forbidden };
+  return {
+    protected: protectedHits,
+    forbidden,
+  };
 }
 
 function isExcluded(relativePath, allowlist) {
@@ -266,7 +417,10 @@ export function scanRepository({ rootDirectory = REPOSITORY_ROOT, allowlist }) {
 
   for (const relativeRoot of allowlist.roots ?? []) {
     const absoluteRoot = path.join(rootDirectory, relativeRoot);
-    if (!fs.existsSync(absoluteRoot)) {
+    if (
+      !fs.existsSync(absoluteRoot) ||
+      !fs.statSync(absoluteRoot).isDirectory()
+    ) {
       result.missingRoots.push(relativeRoot);
       continue;
     }
@@ -302,7 +456,7 @@ export function formatReport(result) {
     lines.push(`Skipped binary files: ${result.skipped.length}`);
   }
   if (result.missingRoots.length > 0) {
-    lines.push(`Missing optional roots: ${result.missingRoots.join(", ")}`);
+    lines.push(`Missing required roots: ${result.missingRoots.join(", ")}`);
   }
   lines.push(`Forbidden visible-brand hits: ${result.forbidden.length}`);
   for (const hit of result.forbidden) lines.push(formatHit(hit));
@@ -312,6 +466,10 @@ export function formatReport(result) {
       : "FAIL: visible legacy branding requires an explicit migration or review.",
   );
   return lines.join("\n");
+}
+
+export function hasBlockingFindings(result) {
+  return result.missingRoots.length > 0 || result.forbidden.length > 0;
 }
 
 function loadAllowlist() {
@@ -329,5 +487,5 @@ if (isMainModule()) {
   const allowlist = loadAllowlist();
   const result = scanRepository({ allowlist });
   console.log(formatReport(result));
-  process.exitCode = result.forbidden.length === 0 ? 0 : 1;
+  process.exitCode = hasBlockingFindings(result) ? 1 : 0;
 }

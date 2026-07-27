@@ -4,7 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { scanRepository, scanText } from "./check-visible-zion-branding.mjs";
+import {
+  formatReport,
+  hasBlockingFindings,
+  scanRepository,
+  scanText,
+} from "./check-visible-zion-branding.mjs";
 
 const allowlist = {
   legacyAssetPaths: [
@@ -48,6 +53,30 @@ const allowlist = {
         "\\b(?:Buzz|buzz)\\s+(?:Agent|app|Desktop|Web|releases?|will|Bee|bee)\\b",
       reason: "legacy visible product label",
     },
+  ],
+  visibleAttributeNames: [
+    "aria-label",
+    "ariaLabel",
+    "alt",
+    "title",
+    "placeholder",
+    "label",
+    "description",
+    "heading",
+    "text",
+    "children",
+    "displayName",
+    "productName",
+  ],
+  legacyVisibleWords: [
+    "Buzz",
+    "buzz",
+    "BUZZ",
+    "Sion",
+    "sion",
+    "Bee",
+    "bee",
+    "BEE",
   ],
 };
 
@@ -103,6 +132,37 @@ test("flags visible legacy labels and preserves line evidence", () => {
   assert.match(result.forbidden[1].match, /Buzz app/);
 });
 
+test("flags visible brand words in accessibility attributes", () => {
+  const result = scanText(
+    [
+      '<img alt="Bee" />',
+      '<img ariaLabel="BUZZ" />',
+      '<div title={"Sion"} />',
+    ].join("\n"),
+    "desktop/src/fixture.tsx",
+    allowlist,
+  );
+
+  assert.equal(result.forbidden.length, 3);
+  assert.match(result.forbidden[0].match, /alt="Bee"/);
+  assert.match(result.forbidden[1].match, /ariaLabel="BUZZ"/);
+  assert.match(result.forbidden[2].match, /title=\{"Sion"\}/);
+});
+
+test("flags a legacy brand value rendered through a visible binding", () => {
+  const result = scanText(
+    ['const brand = "Buzz";', "<span aria-label={brand}>{brand}</span>"].join(
+      "\n",
+    ),
+    "desktop/src/fixture.tsx",
+    allowlist,
+  );
+
+  assert.equal(result.forbidden.length, 2);
+  assert.match(result.forbidden[0].match, /aria-label=\{brand\}/);
+  assert.match(result.forbidden[1].match, />\{brand\}</);
+});
+
 test("ignores comments and embedded base64 artwork while scanning visible code", () => {
   const result = scanText(
     [
@@ -115,6 +175,28 @@ test("ignores comments and embedded base64 artwork while scanning visible code",
   );
 
   assert.deepEqual(result.forbidden, []);
+});
+
+test("does not mistake slashes inside a regex literal for a comment", () => {
+  const result = scanText(
+    'const re = /[\\/\\/]/; const label = "Sion";',
+    "desktop/src/fixture.tsx",
+    allowlist,
+  );
+
+  assert.equal(result.forbidden.length, 1);
+  assert.equal(result.forbidden[0].match, "Sion");
+});
+
+test("does not broadly exempt visible branding under internal API paths", () => {
+  const result = scanText(
+    'const label = "Sion";',
+    "desktop/src/shared/api/fixture.ts",
+    allowlist,
+  );
+
+  assert.equal(result.forbidden.length, 1);
+  assert.deepEqual(result.protected, []);
 });
 
 test("reports a legacy alias path without scanning it as a replacement target", () => {
@@ -177,4 +259,17 @@ test("excludes test and fixture paths from the visible production scan", () => {
     result.forbidden.map(({ file, line, match }) => ({ file, line, match })),
     [{ file: "src/production.tsx", line: 1, match: "Sion" }],
   );
+});
+
+test("treats missing configured roots as a blocking scan failure", () => {
+  const result = scanRepository({
+    rootDirectory: fs.mkdtempSync(
+      path.join(os.tmpdir(), "zion-visible-brand-missing-root-"),
+    ),
+    allowlist: { ...allowlist, roots: ["missing"] },
+  });
+
+  assert.deepEqual(result.missingRoots, ["missing"]);
+  assert.equal(hasBlockingFindings(result), true);
+  assert.match(formatReport(result), /Missing required roots: missing/);
 });

@@ -91,8 +91,13 @@ build:
 build-release:
     cargo build --workspace --release
 
-# Run repo lint and formatting checks
-check: fmt-check clippy desktop-check desktop-tauri-fmt-check desktop-tauri-clippy web-check mobile-check
+# Run repo lint, formatting, and visible-brand checks
+check: visible-brand-check fmt-check clippy desktop-check desktop-tauri-fmt-check desktop-tauri-clippy web-check mobile-check
+
+# Fail closed if a product surface is missing from the visible-brand scan.
+visible-brand-check:
+    node scripts/check-visible-zion-branding.mjs
+    node --test scripts/check-visible-zion-branding.test.mjs
 
 # Format all Rust code
 fmt:

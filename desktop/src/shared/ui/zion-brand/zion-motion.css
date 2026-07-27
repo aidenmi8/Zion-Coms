@@ -1,0 +1,207 @@
+.zion-motion {
+  --zion-motion-duration: 1800ms;
+  --zion-motion-iteration-count: infinite;
+  --zion-motion-settle-duration: 0ms;
+  --zion-motion-stagger-duration: 0ms;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: fit-content;
+  block-size: fit-content;
+  color: currentColor;
+}
+
+.zion-motion__mark {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  transform-origin: center;
+  opacity: 1;
+  filter: drop-shadow(0 0 0.65rem rgb(185 154 255 / 0.18));
+}
+
+.zion-motion[data-playing="true"] .zion-motion__mark {
+  will-change: opacity, transform, filter;
+}
+
+.zion-motion[data-playing="false"] .zion-motion__mark {
+  animation: none;
+}
+
+.zion-motion--loader[data-playing="true"] .zion-motion__mark {
+  animation-duration: var(--zion-motion-duration);
+  animation-fill-mode: both;
+  animation-iteration-count: var(--zion-motion-iteration-count);
+  animation-name: zion-motion-loader-breathe;
+  animation-timing-function: ease-in-out;
+}
+
+.zion-motion--onboarding[data-playing="true"] .zion-motion__mark {
+  animation-duration: calc(
+    var(--zion-motion-duration) + var(--zion-motion-settle-duration)
+  );
+  animation-fill-mode: both;
+  animation-iteration-count: var(--zion-motion-iteration-count);
+  animation-name: zion-motion-onboarding-settle;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.zion-motion--liveness[data-playing="true"] .zion-motion__mark {
+  animation-duration: var(--zion-motion-duration);
+  animation-fill-mode: both;
+  animation-iteration-count: var(--zion-motion-iteration-count);
+  animation-name: zion-motion-liveness-pulse;
+  animation-timing-function: ease-in-out;
+}
+
+.zion-motion--pairing[data-playing="true"] .zion-motion__mark {
+  animation-duration: var(--zion-motion-duration);
+  animation-fill-mode: both;
+  animation-iteration-count: var(--zion-motion-iteration-count);
+  animation-name: zion-motion-pairing-pulse;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.zion-motion--agent-entrance[data-playing="true"] .zion-motion__mark {
+  animation-delay: var(--zion-motion-stagger-duration);
+  animation-duration: var(--zion-motion-duration);
+  animation-fill-mode: both;
+  animation-iteration-count: var(--zion-motion-iteration-count);
+  animation-name: zion-motion-agent-entrance;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.zion-motion--loader[data-playing="false"] .zion-motion__mark,
+.zion-motion--loader[data-loop="false"] .zion-motion__mark {
+  opacity: 0.92;
+  transform: scale(1);
+}
+
+.zion-motion--onboarding[data-playing="false"] .zion-motion__mark,
+.zion-motion--onboarding[data-loop="false"] .zion-motion__mark,
+.zion-motion--pairing[data-playing="false"] .zion-motion__mark,
+.zion-motion--pairing[data-loop="false"] .zion-motion__mark,
+.zion-motion--agent-entrance[data-playing="false"] .zion-motion__mark,
+.zion-motion--agent-entrance[data-loop="false"] .zion-motion__mark {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.zion-motion--liveness[data-playing="false"] .zion-motion__mark,
+.zion-motion--liveness[data-loop="false"] .zion-motion__mark {
+  opacity: 0.88;
+  transform: scale(1);
+}
+
+@keyframes zion-motion-loader-breathe {
+  0%,
+  100% {
+    opacity: 0.76;
+    transform: scale(0.965);
+    filter: drop-shadow(0 0 0.35rem rgb(185 154 255 / 0.08));
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 0.8rem rgb(185 154 255 / 0.22));
+  }
+}
+
+@keyframes zion-motion-onboarding-settle {
+  0% {
+    opacity: 0;
+    transform: translateY(0.9rem) scale(0.92);
+    filter: drop-shadow(0 0 0 rgb(185 154 255 / 0));
+  }
+
+  28% {
+    opacity: 1;
+    transform: translateY(-0.28rem) scale(1.015);
+    filter: drop-shadow(0 0 0.85rem rgb(185 154 255 / 0.2));
+  }
+
+  62% {
+    opacity: 1;
+    transform: translateY(0.08rem) scale(0.995);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 0.4rem rgb(185 154 255 / 0.12));
+  }
+}
+
+@keyframes zion-motion-liveness-pulse {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(0.94);
+    filter: drop-shadow(0 0 0.15rem rgb(185 154 255 / 0.05));
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 0.55rem rgb(185 154 255 / 0.18));
+  }
+}
+
+@keyframes zion-motion-pairing-pulse {
+  0% {
+    opacity: 0.86;
+    transform: scale(0.98);
+    filter: drop-shadow(0 0 0.1rem rgb(185 154 255 / 0.04));
+  }
+
+  38% {
+    opacity: 1;
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 0.8rem rgb(185 154 255 / 0.22));
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 0.45rem rgb(185 154 255 / 0.12));
+  }
+}
+
+@keyframes zion-motion-agent-entrance {
+  0% {
+    opacity: 0;
+    transform: translateY(0.7rem) scale(0.94);
+  }
+
+  55% {
+    opacity: 1;
+    transform: translateY(-0.12rem) scale(1.01);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zion-motion__mark {
+    animation: none;
+  }
+
+  .zion-motion--loader .zion-motion__mark,
+  .zion-motion--liveness .zion-motion__mark {
+    opacity: 0.9;
+    transform: scale(1);
+    filter: drop-shadow(0 0 0.25rem rgb(185 154 255 / 0.1));
+  }
+
+  .zion-motion--onboarding .zion-motion__mark,
+  .zion-motion--pairing .zion-motion__mark,
+  .zion-motion--agent-entrance .zion-motion__mark {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 0.35rem rgb(185 154 255 / 0.1));
+  }
+}

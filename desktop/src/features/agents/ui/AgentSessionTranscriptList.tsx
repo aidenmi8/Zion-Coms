@@ -23,7 +23,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Toggle } from "@/shared/ui/toggle";
 import { AnimatedCount } from "@/shared/ui/AnimatedCount";
-import { FuzzyLogo } from "@/shared/ui/buzz-logo/FuzzyLogo";
+import { ZionMotion } from "@/shared/ui/zion-brand/ZionMotion";
 import type { PromptSection, TranscriptItem } from "./agentSessionTypes";
 import { TurnLivenessIndicator } from "./TurnLivenessIndicator";
 import { PromptSectionList as PromptContextSections } from "./PromptSectionAccordion";
@@ -206,14 +206,19 @@ export function AgentSessionTranscriptList({
 
     return (
       <div className={scrollContainerClassNames}>
-        <div className="flex h-full min-h-40 flex-col items-center justify-center px-6 py-10 text-center">
+        <div
+          className="flex h-full min-h-40 flex-col items-center justify-center px-6 py-10 text-center"
+          role={isLoading ? "status" : undefined}
+        >
           {isLoading ? (
-            <FuzzyLogo
-              ariaLabel="Waiting for ACP activity"
-              className="mx-auto text-muted-foreground"
-              fuzz={false}
-              loop
-            />
+            <>
+              <span className="sr-only">Waiting for ACP activity</span>
+              <ZionMotion
+                className="mx-auto text-muted-foreground"
+                variant="liveness"
+                loop
+              />
+            </>
           ) : (
             <>
               <Radio className="mx-auto h-4 w-4 text-muted-foreground" />

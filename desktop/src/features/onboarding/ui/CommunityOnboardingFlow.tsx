@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Users } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 
 import {
   markCommunityOnboardingComplete,
@@ -23,14 +24,13 @@ import {
 } from "@/features/profile/ui/ProfileAvatarEditor";
 import { getProfile, updateProfile } from "@/shared/api/tauriProfiles";
 import { getIdentity, importIdentity } from "@/shared/api/tauriIdentity";
-import { listPersonas } from "@/shared/api/tauriPersonas";
 import { relayClient } from "@/shared/api/relayClient";
-import type { AgentPersona } from "@/shared/api/types";
 import { cn } from "@/shared/lib/cn";
 import { useSystemColorScheme } from "@/shared/theme/useSystemColorScheme";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
+import { ZION_MOTION_MANIFEST } from "@/shared/ui/zion-brand/brandAssetManifest";
 import { MembershipDenied } from "./MembershipDenied";
 import { StartupWindowDragRegion } from "@/shared/ui/StartupWindowDragRegion";
 import {
@@ -38,6 +38,7 @@ import {
   OnboardingChrome,
 } from "./OnboardingChrome";
 import { OnboardingFooter, OnboardingFooterProvider } from "./OnboardingFooter";
+import { STARTER_TEAM_NAMES, StarterTeamPresence } from "./StarterTeamPresence";
 
 function isRelayMembershipDeniedError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
@@ -49,12 +50,6 @@ function isRelayMembershipDeniedError(error: unknown): boolean {
   );
 }
 
-const STARTER_PERSONA_ANIMATIONS: Record<string, string> = {
-  Fizz: "/onboarding/starter-team/fizz.png",
-  Honey: "/onboarding/starter-team/honey.png",
-  Bumble: "/onboarding/starter-team/bumble.png",
-};
-
 /** Fade duration for the "entering" curtain over the mounting app. */
 const ENTERING_CURTAIN_FADE_MS = 500;
 /**
@@ -62,6 +57,10 @@ const ENTERING_CURTAIN_FADE_MS = 500;
  * fade anyway rather than stranding the user on the onboarding screen.
  */
 const ENTERING_CURTAIN_MAX_WAIT_MS = 8_000;
+const STARTER_TEAM_ENTRANCE = ZION_MOTION_MANIFEST["agent-entrance"];
+const STARTER_TEAM_SETTLE_MS =
+  STARTER_TEAM_ENTRANCE.durationMs +
+  STARTER_TEAM_ENTRANCE.staggerMs * (STARTER_TEAM_NAMES.length - 1);
 
 const NEUTRAL_EMOJI_PICKER_THEME_VARS = {
   "--buzz-emoji-picker-rgb-background":
@@ -151,14 +150,15 @@ export function CommunityOnboardingFlow({
   const { transaction, update, clear } = useCommunityOnboarding();
   const queryClient = useQueryClient();
   const systemColorScheme = useSystemColorScheme();
+  const shouldReduceMotion = useReducedMotion();
   const [displayName, setDisplayName] = React.useState("");
   const [avatarUrl, setAvatarUrl] = React.useState("");
   const avatarPresentation = useAvatarPresentation(avatarUrl);
   const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false);
   const [isAvatarEditorOpen, setIsAvatarEditorOpen] = React.useState(false);
-  const [starterPersonas, setStarterPersonas] = React.useState<AgentPersona[]>(
-    [],
-  );
+  const [starterTeamPhase, setStarterTeamPhase] = React.useState<
+    "entering" | "settled" | "reduced-motion"
+  >(() => (shouldReduceMotion ? "reduced-motion" : "settled"));
   const [isPending, setIsPending] = React.useState(false);
   const [starterChannelFailureCount, setStarterChannelFailureCount] =
     React.useState(0);
@@ -172,28 +172,6 @@ export function CommunityOnboardingFlow({
   const avatarEditorContentRef = React.useRef<HTMLDivElement | null>(null);
   const [avatarEditorDialogHeight, setAvatarEditorDialogHeight] =
     React.useState<number | null>(null);
-
-  // Also fetch on "entering": the curtain is a fresh mount of this component,
-  // so the team-intro fetch from the pre-curtain instance isn't in this state.
-  const isTeamIntroVisible =
-    transaction?.stage === "team-intro" ||
-    transaction?.stage === "finalizing" ||
-    transaction?.stage === "entering";
-  React.useEffect(() => {
-    if (!isTeamIntroVisible) return;
-    void listPersonas()
-      .then((personas) =>
-        setStarterPersonas(
-          ["Fizz", "Honey", "Bumble"].flatMap((name) => {
-            const persona = personas.find(
-              (candidate) => candidate.displayName === name,
-            );
-            return persona ? [persona] : [];
-          }),
-        ),
-      )
-      .catch(() => setStarterPersonas([]));
-  }, [isTeamIntroVisible]);
 
   useClaimInvite();
 
@@ -287,6 +265,22 @@ export function CommunityOnboardingFlow({
     transaction?.stage === "team-intro" ||
     transaction?.stage === "finalizing" ||
     transaction?.stage === "entering";
+
+  React.useEffect(() => {
+    if (!isTeamStage) return;
+    if (shouldReduceMotion) {
+      setStarterTeamPhase("reduced-motion");
+      return;
+    }
+
+    setStarterTeamPhase("entering");
+    const timer = window.setTimeout(
+      () => setStarterTeamPhase("settled"),
+      STARTER_TEAM_SETTLE_MS,
+    );
+
+    return () => window.clearTimeout(timer);
+  }, [isTeamStage, shouldReduceMotion]);
 
   // Seed display name and avatar from the relay profile when the profile step
   // is shown. This covers the case where the skip raced or was bypassed (e.g.,
@@ -623,38 +617,28 @@ export function CommunityOnboardingFlow({
                 Your team will help you get started using Zion.
               </p>
               <div className="flex w-full flex-1 items-center justify-center py-10">
-                {starterPersonas.length > 0 ? (
-                  <div className="flex flex-wrap justify-center gap-8">
-                    {starterPersonas.map((persona) => {
-                      const animationUrl =
-                        STARTER_PERSONA_ANIMATIONS[persona.displayName];
-                      return (
-                        <div
-                          className="flex w-40 flex-col items-center gap-3"
-                          key={persona.id}
-                        >
-                          {animationUrl ? (
-                            <img
-                              alt={`${persona.displayName} animated character`}
-                              className="h-40 w-40 object-contain"
-                              data-testid={`starter-persona-${persona.displayName.toLowerCase()}`}
-                              src={animationUrl}
-                            />
-                          ) : (
-                            <ProfileAvatar
-                              avatarUrl={persona.avatarUrl}
-                              className="h-28 w-28 text-3xl"
-                              label={persona.displayName}
-                            />
-                          )}
-                          <span className="font-mono text-xs font-medium uppercase tracking-[0.15em]">
-                            {persona.displayName}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : null}
+                <div className="flex flex-wrap justify-center gap-8">
+                  {STARTER_TEAM_NAMES.map((name, index) => (
+                    <div
+                      className="flex w-40 flex-col items-center gap-3"
+                      data-testid={`starter-persona-${name.toLowerCase()}`}
+                      key={name}
+                      style={
+                        { "--stagger-index": index } as React.CSSProperties
+                      }
+                    >
+                      <div className="h-40 w-40">
+                        <StarterTeamPresence
+                          name={name}
+                          phase={starterTeamPhase}
+                        />
+                      </div>
+                      <span className="font-mono text-xs font-medium uppercase tracking-[0.15em]">
+                        {name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
               {transaction.error ? (
                 <p className="text-sm text-destructive">

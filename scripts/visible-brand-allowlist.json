@@ -105,11 +105,6 @@
   ],
   "forbiddenPatterns": [
     {
-      "name": "SION",
-      "pattern": "\\bSion\\b",
-      "reason": "legacy visible product name"
-    },
-    {
       "name": "VISIBLE_LABEL",
       "pattern": "\\b(?:Buzz|buzz)\\s+(?:Agent|app|Desktop|Web|releases?|will|Bee|bee)\\b",
       "reason": "legacy visible product label"

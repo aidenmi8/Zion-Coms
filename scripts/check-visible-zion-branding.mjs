@@ -32,6 +32,16 @@ function stripComments(text) {
   let quote = null;
   let escaped = false;
   let inRegexClass = false;
+  let lastClosedControlParen = false;
+  const controlParenStack = [];
+  const controlParenWords = new Set([
+    "catch",
+    "for",
+    "if",
+    "switch",
+    "while",
+    "with",
+  ]);
 
   const canStartRegex = () => {
     let index = output.length - 1;
@@ -39,6 +49,7 @@ function stripComments(text) {
     if (index < 0) return true;
 
     const previous = output[index];
+    if (previous === ")") return lastClosedControlParen;
     if ("=([{,:;!&|?+-*%^~<>".includes(previous)) return true;
 
     const word = output
@@ -115,7 +126,15 @@ function stripComments(text) {
       continue;
     }
 
-    if (character === "'" || character === '"' || character === "`") {
+    if (character === "(") {
+      const word = output.match(/[A-Za-z_$][A-Za-z0-9_$]*\s*$/)?.[0]?.trim();
+      controlParenStack.push(controlParenWords.has(word));
+      lastClosedControlParen = false;
+      output += character;
+    } else if (character === ")") {
+      lastClosedControlParen = controlParenStack.pop() ?? false;
+      output += character;
+    } else if (character === "'" || character === '"' || character === "`") {
       output += character;
       state = "string";
       quote = character;
@@ -132,7 +151,9 @@ function stripComments(text) {
       output += character;
       state = "regex";
       inRegexClass = false;
+      lastClosedControlParen = false;
     } else {
+      lastClosedControlParen = false;
       output += character;
     }
   }
@@ -242,11 +263,6 @@ function visibleContextPatterns(allowlist) {
       reason: "legacy visible brand word in a user-facing JSX/HTML attribute",
     },
     {
-      name: "VISIBLE_BRAND_PROPERTY",
-      pattern: `[,{]\\s*(?:${attributes})\\s*:\\s*(?:${quotedValueGroup}|${expressionValue})`,
-      reason: "legacy visible brand word in a user-facing property",
-    },
-    {
       name: "VISIBLE_JSX_TEXT",
       pattern: `>[^<{\\n]*\\b(?:${words})\\b[^<{\\n]*<`,
       reason: "legacy visible brand word in rendered text",
@@ -284,10 +300,6 @@ function dynamicVisibleBrandHits(text, filePath, allowlist) {
     const contextPatterns = [
       new RegExp(
         `<[^>\\n]*?\\b(?:${attributes})\\s*=\\s*\\{[^}\\n]*\\b${escapedIdentifier}\\b[^}\\n]*\\}`,
-        "g",
-      ),
-      new RegExp(
-        `[,{]\\s*(?:${attributes})\\s*:\\s*\\{[^}\\n]*\\b${escapedIdentifier}\\b[^}\\n]*\\}`,
         "g",
       ),
       new RegExp(

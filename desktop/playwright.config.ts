@@ -74,6 +74,7 @@ export default defineConfig({
         "**/workspace-rail.spec.ts",
         "**/community-rail.spec.ts",
         "**/boot-splash.spec.ts",
+        "**/zion-brand-motion.spec.ts",
         "**/thread-reply-anchor-roleplay.spec.ts",
         "**/threadpane-ultrawide.spec.ts",
         "**/thread-focus-mode.spec.ts",

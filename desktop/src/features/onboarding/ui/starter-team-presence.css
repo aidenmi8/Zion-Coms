@@ -1,0 +1,193 @@
+.starter-team-presence {
+  --starter-team-stagger-ms: 320ms;
+  align-items: center;
+  aspect-ratio: 1;
+  block-size: 100%;
+  display: grid;
+  inline-size: 100%;
+  isolation: isolate;
+  justify-items: center;
+  position: relative;
+}
+
+.starter-team-presence__backdrop,
+.starter-team-presence__orbit,
+.starter-team-presence__ring,
+.starter-team-presence__core {
+  transition:
+    opacity 220ms ease-out,
+    transform 220ms ease-out;
+}
+
+.starter-team-presence__backdrop {
+  background:
+    radial-gradient(
+      circle at 50% 28%,
+      var(--starter-presence-glow),
+      transparent 62%
+    ),
+    var(--starter-presence-shell);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 9999px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 1.25rem 3rem rgb(8 10 18 / 0.34);
+  inset: 0.75rem;
+  position: absolute;
+}
+
+.starter-team-presence__orbit {
+  background: var(--starter-presence-accent);
+  block-size: 0.8rem;
+  border-radius: 9999px;
+  box-shadow: 0 0 0.9rem var(--starter-presence-glow);
+  inline-size: 0.8rem;
+  opacity: 0.82;
+  position: absolute;
+}
+
+.starter-team-presence__orbit--a {
+  inset: auto;
+  left: var(--starter-presence-orbit-a-left);
+  top: var(--starter-presence-orbit-a-top);
+  translate: -50% -50%;
+}
+
+.starter-team-presence__orbit--b {
+  inset: auto;
+  left: var(--starter-presence-orbit-b-left);
+  top: var(--starter-presence-orbit-b-top);
+  translate: -50% -50%;
+}
+
+.starter-team-presence__ring {
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 9999px;
+  position: absolute;
+}
+
+.starter-team-presence__ring--inner {
+  inset: 1.9rem;
+}
+
+.starter-team-presence__ring--outer {
+  inset: 1.2rem;
+  opacity: 0.55;
+}
+
+.starter-team-presence__core {
+  color: var(--starter-presence-accent);
+  inline-size: 3.4rem;
+  position: relative;
+  z-index: 1;
+}
+
+.starter-team-presence[data-phase="entering"] {
+  animation: starter-team-presence-enter 900ms cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+  animation-delay: calc(
+    var(--stagger-index, 0) *
+    var(--starter-team-stagger-ms)
+  );
+}
+
+.starter-team-presence[data-phase="entering"] .starter-team-presence__backdrop {
+  animation: starter-team-presence-settle 900ms cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+  animation-delay: calc(
+    var(--stagger-index, 0) *
+    var(--starter-team-stagger-ms)
+  );
+}
+
+.starter-team-presence[data-phase="entering"] .starter-team-presence__orbit {
+  animation: starter-team-presence-orbit 900ms cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+  animation-delay: calc(
+    var(--stagger-index, 0) *
+    var(--starter-team-stagger-ms)
+  );
+}
+
+.starter-team-presence[data-phase="settled"],
+.starter-team-presence[data-phase="reduced-motion"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.starter-team-presence[data-phase="settled"] .starter-team-presence__backdrop,
+.starter-team-presence[data-phase="reduced-motion"]
+  .starter-team-presence__backdrop {
+  transform: translateY(0) rotate(var(--starter-presence-tilt)) scale(1);
+}
+
+.starter-team-presence[data-phase="settled"] .starter-team-presence__orbit,
+.starter-team-presence[data-phase="reduced-motion"]
+  .starter-team-presence__orbit {
+  opacity: 0.82;
+  transform: scale(1);
+}
+
+@keyframes starter-team-presence-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.92);
+  }
+
+  55% {
+    opacity: 1;
+    transform: translateY(-0.18rem) scale(1.01);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes starter-team-presence-settle {
+  0% {
+    opacity: 0.3;
+    transform: translateY(0.8rem)
+      rotate(calc(var(--starter-presence-tilt) * 0.4)) scale(0.9);
+  }
+
+  45% {
+    opacity: 1;
+    transform: translateY(-0.18rem) rotate(var(--starter-presence-tilt))
+      scale(1.02);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(var(--starter-presence-tilt)) scale(1);
+  }
+}
+
+@keyframes starter-team-presence-orbit {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+
+  55% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+
+  100% {
+    opacity: 0.82;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starter-team-presence,
+  .starter-team-presence__backdrop,
+  .starter-team-presence__orbit,
+  .starter-team-presence__ring,
+  .starter-team-presence__core {
+    animation: none;
+    transition: none;
+  }
+}

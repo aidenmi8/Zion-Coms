@@ -1,0 +1,137 @@
+.zion-brand-motion {
+  --zion-brand-motion-duration: 1800ms;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 4rem;
+  block-size: 4rem;
+  color: #f3efff;
+}
+
+.zion-brand-motion__mark {
+  position: absolute;
+  top: -72%;
+  left: -110%;
+  display: block;
+  inline-size: 320%;
+  block-size: 320%;
+  max-inline-size: none;
+  max-block-size: none;
+  object-fit: contain;
+  filter: drop-shadow(0 0 0.7rem rgb(185 154 255 / 0.18));
+}
+
+.zion-brand-motion--light-surface .zion-brand-motion__mark {
+  filter: drop-shadow(0 0 0.45rem rgb(72 47 106 / 0.18));
+}
+
+html.dark .zion-brand-motion--theme-aware .zion-brand-motion__mark {
+  filter: invert(1) drop-shadow(0 0 0.7rem rgb(185 154 255 / 0.18));
+}
+
+.zion-brand-motion[data-playing="true"] .zion-brand-motion__mark {
+  animation-duration: var(--zion-brand-motion-duration);
+  animation-fill-mode: both;
+  animation-iteration-count: var(--zion-brand-motion-iteration-count, infinite);
+  animation-timing-function: ease-in-out;
+}
+
+.zion-brand-motion--loader[data-playing="true"] .zion-brand-motion__mark,
+.zion-brand-motion--liveness[data-playing="true"] .zion-brand-motion__mark {
+  animation-name: zion-web-breathe;
+}
+
+.zion-brand-motion--onboarding[data-playing="true"] .zion-brand-motion__mark,
+.zion-brand-motion--agent-entrance[data-playing="true"]
+  .zion-brand-motion__mark {
+  animation-name: zion-web-settle;
+  animation-iteration-count: 1;
+}
+
+.zion-brand-motion--pairing[data-playing="true"] .zion-brand-motion__mark {
+  animation-name: zion-web-pairing;
+  animation-iteration-count: 1;
+}
+
+.zion-brand-motion[data-playing="true"][data-loop="false"]
+  .zion-brand-motion__mark {
+  animation-iteration-count: 1;
+}
+
+.zion-brand-motion[data-playing="true"][data-loop="true"]
+  .zion-brand-motion__mark {
+  animation-iteration-count: infinite;
+}
+
+.zion-brand-motion[data-playing="false"] .zion-brand-motion__mark {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes zion-web-breathe {
+  0%,
+  100% {
+    opacity: 0.78;
+    transform: scale(0.97);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zion-web-settle {
+  0% {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.92);
+  }
+
+  65% {
+    opacity: 1;
+    transform: translateY(-0.12rem) scale(1.01);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes zion-web-pairing {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+
+  45% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zion-brand-motion[data-playing="true"] .zion-brand-motion__mark,
+  .zion-brand-motion[data-playing="false"] .zion-brand-motion__mark {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: drop-shadow(0 0 0.25rem rgb(185 154 255 / 0.1));
+  }
+
+  .zion-brand-motion--light-surface .zion-brand-motion__mark {
+    filter: drop-shadow(0 0 0.25rem rgb(72 47 106 / 0.12));
+  }
+
+  html.dark .zion-brand-motion--theme-aware .zion-brand-motion__mark {
+    filter: invert(1) drop-shadow(0 0 0.25rem rgb(185 154 255 / 0.12));
+  }
+}

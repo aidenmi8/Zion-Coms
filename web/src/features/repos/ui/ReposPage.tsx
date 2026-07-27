@@ -2,7 +2,7 @@ import { BookMarked, GitBranch } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 
-import buzzAppIcon from "@/assets/app-icon@3x.png";
+import { ZionBrandMotion } from "@/shared/ui/zion-brand/ZionBrandMotion";
 import { Input } from "@/shared/ui/input";
 import { mockRepos } from "../mock-repos";
 import { useRepos } from "../use-repos";
@@ -47,14 +47,14 @@ function SearchEmptyState() {
 
 function CommunityEmptyState() {
   return (
-    <div className="flex flex-1 items-center justify-center bg-[#F3F3F3] px-4 py-16 text-center dark:bg-[#171717]">
+    <div className="flex flex-1 items-center justify-center bg-[#f4f0ff] px-4 py-16 text-center dark:bg-[#0b0812]">
       <div className="flex w-full max-w-xl flex-col items-center px-6 py-10 sm:px-12 sm:py-12">
-        <div
-          className="h-16 w-16 overflow-hidden bg-black"
-          style={{ borderRadius: "22.37%" }}
-        >
-          <img alt="Zion" className="h-full w-full" src={buzzAppIcon} />
-        </div>
+        <ZionBrandMotion
+          ariaLabel="Zion"
+          className="zion-brand-motion--light-surface zion-brand-motion--theme-aware h-20 w-20"
+          decorative={false}
+          variant="onboarding"
+        />
         <h1 className="mt-6 text-2xl font-semibold tracking-tight text-black dark:text-white">
           This community is empty
         </h1>
@@ -62,7 +62,7 @@ function CommunityEmptyState() {
           Repositories pushed to this community will show up here. Open this
           community in the Zion desktop app to start pushing code.
         </p>
-        <ConnectButton className="mt-6" />
+        <ConnectButton className="mt-6 bg-[#b99aff] text-[#0b0812] hover:bg-[#c8b1ff]" />
       </div>
     </div>
   );
@@ -125,7 +125,7 @@ export function ReposPage() {
 
   if (isLoading) {
     return (
-      <div className="flex w-full flex-1 gap-8 bg-[#F3F3F3] px-4 py-8 dark:bg-[#171717]">
+      <div className="flex w-full flex-1 gap-8 bg-[#f4f0ff] px-4 py-8 dark:bg-[#0b0812]">
         <div className="min-w-0 flex-1">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-black dark:text-white">
             <BookMarked className="h-4 w-4" /> Repositories

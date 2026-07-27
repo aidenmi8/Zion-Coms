@@ -3,28 +3,36 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:buzz/features/pairing/pairing_page.dart';
 import 'package:buzz/features/pairing/pairing_provider.dart';
+import 'package:buzz/shared/brand/zion_brand_motion.dart';
+import 'package:buzz/shared/brand/zion_brand_tokens.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../helpers/widget_helpers.dart';
 
 void main() {
   group('PairingPage', () {
-    testWidgets('renders branding, scan button, divider, and text field', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        WidgetHelpers.testable(child: const PairingPage()),
-      );
+    testWidgets(
+      'renders the static welcome treatment and unchanged hint text',
+      (tester) async {
+        await tester.pumpWidget(
+          WidgetHelpers.testable(child: const PairingPage()),
+        );
 
-      expect(
-        find.image(const AssetImage('assets/images/buzz-icon.png')),
-        findsOneWidget,
-      );
-      expect(find.text('Welcome to Zion'), findsOneWidget);
-      expect(find.text('Scan QR Code'), findsOneWidget);
-      expect(find.text('or paste pairing code'), findsOneWidget);
-      expect(find.text('Connect'), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
-    });
+        final motion = tester.widget<ZionBrandMotion>(
+          find.byType(ZionBrandMotion),
+        );
+
+        expect(motion.variant, ZionBrandMotionVariants.onboarding);
+        expect(motion.playing, isFalse);
+        expect(find.byType(SvgPicture), findsOneWidget);
+        expect(find.text('Welcome to Zion'), findsOneWidget);
+        expect(find.text('Scan QR Code'), findsOneWidget);
+        expect(find.text('or paste pairing code'), findsOneWidget);
+        expect(find.text('Connect'), findsOneWidget);
+        expect(find.text('nostrpair://... or buzz://...'), findsOneWidget);
+        expect(find.byType(TextField), findsOneWidget);
+      },
+    );
 
     testWidgets('connect button is below text field, not beside it', (
       tester,
@@ -72,7 +80,7 @@ void main() {
       expect(find.text('Invalid pairing code: bad input'), findsOneWidget);
     });
 
-    testWidgets('shows spinner when connecting', (tester) async {
+    testWidgets('uses the pairing pulse when connecting', (tester) async {
       await tester.pumpWidget(
         WidgetHelpers.testable(
           overrides: [
@@ -83,10 +91,71 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      // Connect text should be replaced by spinner.
-      expect(find.text('Connect'), findsNothing);
+      final motion = tester.widget<ZionBrandMotion>(
+        find.byType(ZionBrandMotion),
+      );
+
+      expect(motion.variant, ZionBrandMotionVariants.pairing);
+      expect(motion.playing, isTrue);
+      expect(find.text('Connecting…'), findsOneWidget);
     });
+
+    testWidgets('uses the loader motion while transferring', (tester) async {
+      await tester.pumpWidget(
+        WidgetHelpers.testable(
+          overrides: [
+            pairingProvider.overrideWith(() => _LoadingPairingNotifier()),
+          ],
+          child: const PairingPage(),
+        ),
+      );
+      await tester.pump();
+
+      final motion = tester.widget<ZionBrandMotion>(
+        find.byType(ZionBrandMotion),
+      );
+
+      expect(motion.variant, ZionBrandMotionVariants.loader);
+      expect(motion.playing, isTrue);
+      expect(find.text('Syncing…'), findsOneWidget);
+    });
+
+    testWidgets(
+      'parent status region owns semantics and motion stays decorative',
+      (tester) async {
+        await tester.pumpWidget(
+          WidgetHelpers.testable(
+            overrides: [
+              pairingProvider.overrideWith(() => _ConnectingPairingNotifier()),
+            ],
+            child: const PairingPage(),
+          ),
+        );
+        await tester.pump();
+
+        final statusRegion = tester.widget<Semantics>(
+          find.byKey(const ValueKey('pairing-brand-status-region')),
+        );
+        final motion = tester.widget<ZionBrandMotion>(
+          find.byType(ZionBrandMotion),
+        );
+
+        expect(statusRegion.properties.label, 'Zion pairing in progress');
+        expect(statusRegion.properties.liveRegion, isTrue);
+        expect(motion.label, isNull);
+        expect(
+          find.descendant(
+            of: find.byType(ZionBrandMotion),
+            matching: find.byType(ExcludeSemantics),
+          ),
+          findsWidgets,
+        );
+        expect(
+          find.bySemanticsLabel('Zion pairing in progress'),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('text field and buttons disabled when connecting', (
       tester,
@@ -133,6 +202,25 @@ class _ConnectingPairingNotifier extends Notifier<PairingState>
     implements PairingNotifier {
   @override
   PairingState build() => const PairingState(status: PairingStatus.connecting);
+
+  @override
+  Future<void> pair(String rawInput) async {}
+
+  @override
+  void reset() {}
+
+  @override
+  void confirmSas() {}
+
+  @override
+  void denySas() {}
+}
+
+class _LoadingPairingNotifier extends Notifier<PairingState>
+    implements PairingNotifier {
+  @override
+  PairingState build() =>
+      const PairingState(status: PairingStatus.transferring);
 
   @override
   Future<void> pair(String rawInput) async {}

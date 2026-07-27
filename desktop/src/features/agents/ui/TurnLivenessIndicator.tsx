@@ -17,12 +17,12 @@ export function TurnLivenessIndicator({ className }: { className?: string }) {
     return (
       <div
         aria-label="Agent turn in progress"
-        className={cn("opacity-25", className)}
+        className={cn("text-muted-foreground opacity-70", className)}
         data-testid="turn-liveness-indicator"
         role="status"
       >
         <ZionMotion
-          className="text-foreground"
+          className="w-4!"
           variant="liveness"
           playing={!shouldReduceMotion}
         />
@@ -33,7 +33,10 @@ export function TurnLivenessIndicator({ className }: { className?: string }) {
   return (
     <div
       aria-label="Agent turn in progress"
-      className={cn("flex items-center gap-1.5 opacity-25", className)}
+      className={cn(
+        "flex items-center gap-1 text-muted-foreground opacity-70",
+        className,
+      )}
       data-testid="turn-liveness-indicator"
       role="status"
     >
@@ -53,7 +56,7 @@ export function TurnLivenessIndicator({ className }: { className?: string }) {
           }}
         >
           <ZionMotion
-            className="w-5! text-foreground"
+            className="w-4!"
             variant="liveness"
             playing={!shouldReduceMotion}
           />

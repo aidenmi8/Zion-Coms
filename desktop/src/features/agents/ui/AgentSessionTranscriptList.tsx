@@ -213,7 +213,7 @@ export function AgentSessionTranscriptList({
           {isLoading ? (
             <ZionMotion
               ariaLabel="Waiting for ACP activity"
-              className="mx-auto text-muted-foreground"
+              className="mx-auto w-12! text-muted-foreground"
               variant="liveness"
               loop
             />

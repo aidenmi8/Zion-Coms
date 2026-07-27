@@ -63,7 +63,6 @@ import {
   listenForDeepLinks,
 } from "@/shared/deep-link";
 import { cn } from "@/shared/lib/cn";
-import { ZionMark } from "@/shared/ui/zion-brand/ZionMark";
 import { ZionMotion } from "@/shared/ui/zion-brand/ZionMotion";
 import { StartupWindowDragRegion } from "@/shared/ui/StartupWindowDragRegion";
 
@@ -128,8 +127,8 @@ function useBootSplashHold(): BootSplashPhase {
   return phase;
 }
 
-// The static Zion mark sizes the box and paints on the first frame. The shared
-// motion layer is layered above it and respects reduced-motion preferences.
+// The inline Zion motion mark paints on the first frame and respects
+// reduced-motion preferences without layering duplicate artwork.
 function BrandLoader({
   ariaLabel,
   className,
@@ -141,10 +140,9 @@ function BrandLoader({
 }) {
   return (
     <div className={cn("relative", tintClassName, className)}>
-      <ZionMark className="block h-auto w-full" />
       <ZionMotion
         ariaLabel={ariaLabel}
-        className="absolute inset-0 h-full! w-full! motion-reduce:[&_.zion-motion__mark]:animate-none"
+        className="h-auto! w-full! motion-reduce:[&_.zion-motion__mark]:animate-none"
         loop
         variant="loader"
       />

@@ -31,6 +31,9 @@ test("boot splash overlay holds with the Zion motion mark, then dismisses", asyn
   const motion = overlay.locator('[data-brand-surface="zion-motion"]');
   await expect(motion).toHaveAttribute("data-zion-variant", "loader");
   await expect(motion).toHaveAttribute("data-playing", "true");
+  await expect(overlay.locator('[data-brand-surface="zion-mark"]')).toHaveCount(
+    1,
+  );
 
   // The app mounts and loads beneath the overlay — boot is not delayed.
   await expect(page.getByTestId("home-inbox-list")).toBeVisible();

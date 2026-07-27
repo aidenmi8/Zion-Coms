@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { frameAtTime } from "./brandAssetManifest.ts";
 import { ZionBrandField } from "./ZionBrandField.tsx";
+import { ZionMark } from "./ZionMark.tsx";
 import {
   resolveMotionElapsedMs,
   resolveMotionRenderAsset,
@@ -176,6 +177,23 @@ test("CSS defines reduced-motion fallback and all five Zion motion variants", ()
   assert.match(css, /\.zion-motion--agent-entrance/);
 });
 
+test("ZionMark renders a transparent current-color vector instead of a raster image", () => {
+  const html = renderToStaticMarkup(
+    React.createElement(ZionMark, {
+      ariaLabel: "Zion",
+      decorative: false,
+    }),
+  );
+
+  assert.match(html, /^<svg\b/);
+  assert.match(html, /role="img"/);
+  assert.match(html, /aria-label="Zion"/);
+  assert.match(html, /fill="currentColor"/);
+  assert.equal((html.match(/<path\b/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /<(?:image|img)\b/);
+  assert.doesNotMatch(html, /\b(?:href|src)=/);
+});
+
 test("status markup keeps the visual mark decorative and exposes the label once", () => {
   const html = renderToStaticMarkup(
     React.createElement(
@@ -194,7 +212,8 @@ test("status markup keeps the visual mark decorative and exposes the label once"
   assert.match(html, /data-zion-variant="pairing"/);
   assert.match(html, /data-playing="false"/);
   assert.match(html, /data-loop="false"/);
-  assert.match(html, /alt=""/);
+  assert.match(html, /aria-hidden="true"/);
+  assert.doesNotMatch(html, /<img\b/);
   assert.equal((html.match(/Waiting for Zion/g) ?? []).length, 1);
 });
 

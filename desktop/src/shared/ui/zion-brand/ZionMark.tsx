@@ -1,5 +1,4 @@
 import { cn } from "@/shared/lib/cn";
-import { ZION_BRAND_ASSETS } from "./brandAssetManifest";
 
 export type ZionMarkProps = {
   ariaLabel?: string;
@@ -14,12 +13,19 @@ export function ZionMark({
   decorative = true,
 }: ZionMarkProps) {
   return (
-    <img
+    <svg
+      aria-label={decorative ? undefined : ariaLabel}
       aria-hidden={decorative ? true : undefined}
-      alt={decorative ? "" : ariaLabel}
       className={cn("zion-mark", className)}
       data-brand-surface="zion-mark"
-      src={ZION_BRAND_ASSETS.mark.canonicalPath}
-    />
+      focusable="false"
+      role={decorative ? undefined : "img"}
+      viewBox="0 0 64 64"
+    >
+      <g fill="currentColor">
+        <path d="M16 30 32 12h20L36 30H16Z" />
+        <path d="M12 52 28 34h20L32 52H12Z" />
+      </g>
+    </svg>
   );
 }

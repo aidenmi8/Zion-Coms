@@ -31,12 +31,13 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
-    # Probe /_readiness over /dev/tcp because the runtime image has bash but no curl/wget/socat.
+    # Keep the response read in Bash so a stalled probe cannot leak a child
+    # process after Docker marks the health check as timed out.
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "bash -ec 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /_readiness HTTP/1.1\\r\\nHost: 127.0.0.1\\r\\nConnection: close\\r\\n\\r\\n\" >&3; grep -q \"200 OK\" <&3'",
+          "bash -ec 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /_readiness HTTP/1.1\\r\\nHost: 127.0.0.1\\r\\nConnection: close\\r\\n\\r\\n\" >&3; IFS= read -r -t 2 status <&3; [[ \"$$status\" == *\"200 OK\"* ]]'",
         ]
       interval: 10s
       timeout: 3s

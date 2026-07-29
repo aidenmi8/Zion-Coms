@@ -139,9 +139,9 @@ fi
 grep -q 'WorktreeOverrides' "$release_xcconfig" \
   && fail "Release.xcconfig must not include WorktreeOverrides.xcconfig" \
   || pass "Release.xcconfig does not include WorktreeOverrides"
-grep -q '^BUNDLE_IDENTIFIER = com\.buzz\.buzzMobile$' "$release_xcconfig" \
+grep -q '^BUNDLE_IDENTIFIER = do\.agente\.zion$' "$release_xcconfig" \
   && pass "Release.xcconfig keeps the production bundle identifier" \
-  || fail "Release.xcconfig must keep BUNDLE_IDENTIFIER = com.buzz.buzzMobile"
+  || fail "Release.xcconfig must keep BUNDLE_IDENTIFIER = do.agente.zion"
 grep -q '^APP_DISPLAY_NAME = Zion$' "$release_xcconfig" \
   && pass "Release.xcconfig keeps the production display name" \
   || fail "Release.xcconfig must keep APP_DISPLAY_NAME = Zion"

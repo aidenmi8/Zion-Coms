@@ -11,6 +11,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import ModuleType
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -1444,6 +1445,304 @@ class WorkflowSafetyTests(unittest.TestCase):
             "validate --repo .",
             self.justfile,
         )
+
+
+class ProjectProfileTests(unittest.TestCase):
+    """Every supported Apple profile validates with repository-owned policy."""
+
+    CASES = (
+        (
+            "native-xcode/config.json",
+            MIT_LICENSE,
+            ["ios"],
+            ["native-xcode"],
+            "signing-boundaries",
+        ),
+        (
+            "flutter-ios/config.json",
+            (REPO_ROOT / "LICENSE").read_text(encoding="utf-8"),
+            ["ios"],
+            ["flutter-ios"],
+            "mobile-privacy-permissions",
+        ),
+        (
+            "tauri-macos/config.json",
+            (REPO_ROOT / "LICENSE").read_text(encoding="utf-8"),
+            ["macos"],
+            ["tauri-macos"],
+            "sidecar-artifacts",
+        ),
+        (
+            "swiftpm-macos/config.json",
+            MIT_LICENSE,
+            ["macos"],
+            ["swiftpm-macos"],
+            "package-resources",
+        ),
+    )
+
+    def setUp(self) -> None:
+        self.tool = load_tool()
+
+    def test_all_supported_profiles_validate_without_core_changes(self) -> None:
+        for relative, license_text, targets, profiles, contract in self.CASES:
+            with self.subTest(profile=relative):
+                config = load_fixture(f"projects/{relative}")
+                with tempfile.TemporaryDirectory() as directory:
+                    repo = Path(directory)
+                    (repo / "LICENSE").write_text(
+                        license_text, encoding="utf-8"
+                    )
+
+                    self.tool.validate_config(repo, config)
+
+                self.assertEqual(targets, config["execution"]["target_platforms"])
+                self.assertEqual(
+                    profiles, config["execution"]["project_profiles"]
+                )
+                self.assertIn(contract, config["protected_contracts"])
+                self.assertTrue(config["commands"]["authorized"])
+                self.assertTrue(config["commands"]["prohibited"])
+                self.assertTrue(config["project_metadata"])
+
+    def test_windows_linux_and_unknown_profile_fail_closed(self) -> None:
+        config = load_fixture("projects/native-xcode/config.json")
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            (repo / "LICENSE").write_text(MIT_LICENSE, encoding="utf-8")
+            execution = copy.deepcopy(config["execution"])
+            execution["target_platforms"] = ["linux"]
+            config["execution"] = execution
+            with self.assertRaisesRegex(self.tool.IntakeError, "target platform"):
+                self.tool.validate_config(repo, config)
+
+            execution["target_platforms"] = ["ios"]
+            execution["project_profiles"] = ["electron"]
+            with self.assertRaisesRegex(self.tool.IntakeError, "project profile"):
+                self.tool.validate_config(repo, config)
+
+    def test_skill_git_host_guard_rejects_linux(self) -> None:
+        with mock.patch.object(self.tool.platform, "system", return_value="Linux"):
+            with self.assertRaisesRegex(self.tool.IntakeError, "macOS Codex host"):
+                self.tool.require_macos()
+
+    def test_pure_validation_remains_available_on_hosted_linux_ci(self) -> None:
+        config = load_fixture("projects/swiftpm-macos/config.json")
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            (repo / "LICENSE").write_text(MIT_LICENSE, encoding="utf-8")
+            with mock.patch.object(
+                self.tool.platform, "system", return_value="Linux"
+            ):
+                self.tool.validate_config(repo, config)
+
+
+class EndToEndSimulationTests(unittest.TestCase):
+    """A fresh non-Zion fork completes the packaged local workflow."""
+
+    def setUp(self) -> None:
+        self.tool = load_tool()
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp_dir.name)
+        self.upstream = self.root / "upstream"
+        self.fork = self.root / "fork"
+        self.upstream.mkdir()
+        self.git(self.upstream, "init", "-q", "-b", "main")
+        self.git(self.upstream, "config", "user.name", "E2E Upstream")
+        self.git(
+            self.upstream,
+            "config",
+            "user.email",
+            "upstream@example.test",
+        )
+        (self.upstream / "LICENSE").write_text(MIT_LICENSE, encoding="utf-8")
+        self.git(self.upstream, "add", "LICENSE")
+        self.git(self.upstream, "commit", "-q", "-m", "base")
+        self.base = self.git(self.upstream, "rev-parse", "HEAD")
+        self.first = self.commit_upstream(
+            "Sources/AppFeature.swift",
+            "struct AppFeature {}\n",
+            "Add app feature (#41)",
+        )
+        self.second = self.commit_upstream(
+            "Sources/OptionalTelemetry.swift",
+            "struct OptionalTelemetry {}\n",
+            "Add optional telemetry (#42)",
+        )
+        subprocess.run(
+            ["git", "clone", "-q", str(self.upstream), str(self.fork)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.git(self.fork, "config", "user.name", "E2E Fork")
+        self.git(self.fork, "config", "user.email", "fork@example.test")
+        self.git(self.fork, "checkout", "-q", "-B", "main", self.base)
+        self.git(self.fork, "remote", "add", "upstream", str(self.upstream))
+        self.git(self.fork, "fetch", "-q", "--no-tags", "upstream", "main")
+
+    def tearDown(self) -> None:
+        self.temp_dir.cleanup()
+
+    def git(self, repo: Path, *args: str) -> str:
+        result = subprocess.run(
+            ["git", "-C", str(repo), *args],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+
+    def commit_upstream(self, name: str, content: str, message: str) -> str:
+        path = self.upstream / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        self.git(self.upstream, "add", name)
+        self.git(self.upstream, "commit", "-q", "-m", message)
+        return self.git(self.upstream, "rev-parse", "HEAD")
+
+    def settings(self) -> dict[str, object]:
+        return {
+            "compatibility_review": "",
+            "fork_main_branch": "main",
+            "fork_repository": "example/apple-fork",
+            "fork_spdx": "MIT",
+            "license_files": ["LICENSE"],
+            "notice_files": [],
+            "project_profiles": ["native-xcode"],
+            "reviewed_sha": self.base,
+            "target_platforms": ["ios"],
+            "upstream_branch": "main",
+            "upstream_remote": "upstream",
+            "upstream_repository": "example/apple-upstream",
+            "upstream_spdx": "MIT",
+        }
+
+    def make_reviewed_batch(
+        self, report: dict[str, object]
+    ) -> dict[str, object]:
+        commits = report["commits"]
+        topics = report["topics"]
+        entries = []
+        for index, commit in enumerate(commits):
+            accepted = index == 0
+            entries.append(
+                {
+                    "areas": ["ios"],
+                    "blocked_by_rejected": [],
+                    "decision": "accept" if accepted else "reject",
+                    "delivery": "included" if accepted else "not_applicable",
+                    "dependencies": [],
+                    "dependency_resolution": None,
+                    "integration_method": "adapt" if accepted else None,
+                    "rationale": (
+                        "The fork wants this behavior with local adaptation."
+                        if accepted
+                        else "The fork intentionally omits optional telemetry."
+                    ),
+                    "revisit": None,
+                    "risk": "low",
+                    "security_candidate": False,
+                    "security_reasons": [],
+                    "title": commit["subject"],
+                    "topic_id": commit["topic_id"],
+                    "tracking": {
+                        "fork_commits": [],
+                        "implementation_plan": None,
+                        "issue": None,
+                        "local_backlog": None,
+                        "pull_request": None,
+                    },
+                    "upstream_sha": commit["sha"],
+                    "verification": (
+                        ["synthetic focused test"] if accepted else []
+                    ),
+                }
+            )
+        return {
+            "batch_id": "synthetic-intake",
+            "entries": entries,
+            "kind": "normal",
+            "pinned_upstream_sha": report["pinned_upstream_sha"],
+            "previous_reviewed_sha": report["reviewed_through"],
+            "reclassifications": [],
+            "schema_version": 1,
+            "status": "reviewing",
+            "topics": topics,
+        }
+
+    def test_packaged_skill_completes_fresh_local_intake(self) -> None:
+        initialized = self.tool.initialize_project(
+            self.fork, self.settings(), apply=True
+        )
+        self.assertTrue(initialized["applied"])
+        self.git(self.fork, "add", ".github", ".upstream-intake")
+        self.git(self.fork, "commit", "-q", "-m", "initialize intake")
+        vendored = self.fork / ".upstream-intake/tools/upstream_intake.py"
+
+        discovery = subprocess.run(
+            [
+                "python3",
+                str(vendored),
+                "discover",
+                "--repo",
+                str(self.fork),
+                "--upstream-ref",
+                "upstream/main",
+                "--format",
+                "json",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        report = json.loads(discovery.stdout)
+        self.assertEqual([self.first, self.second], [
+            commit["sha"] for commit in report["commits"]
+        ])
+
+        batch = self.make_reviewed_batch(report)
+        write_json(
+            self.fork
+            / ".upstream-intake/batches/open/synthetic-intake.json",
+            batch,
+        )
+        state_path = self.fork / ".upstream-intake/state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["last_discovered"] = report["pinned_upstream_sha"]
+        state["open_batches"] = ["synthetic-intake"]
+        write_json(state_path, state)
+
+        validated = subprocess.run(
+            ["python3", str(vendored), "validate", "--repo", str(self.fork)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertTrue(json.loads(validated.stdout)["ok"])
+        rendered = subprocess.run(
+            [
+                "python3",
+                str(vendored),
+                "render",
+                "--repo",
+                str(self.fork),
+                "--batch",
+                ".upstream-intake/batches/open/synthetic-intake.json",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn("Accept: **1**", rendered.stdout)
+        self.assertIn("Reject: **1**", rendered.stdout)
+        audited = subprocess.run(
+            ["python3", str(vendored), "audit", "--repo", str(self.fork)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertTrue(json.loads(audited.stdout)["ok"])
 
 
 if __name__ == "__main__":

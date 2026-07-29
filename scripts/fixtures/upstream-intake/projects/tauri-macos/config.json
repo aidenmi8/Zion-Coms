@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "example/tauri-upstream",
+    "remote": "upstream",
+    "branch": "main"
+  },
+  "fork": {
+    "repository": "example/tauri-fork",
+    "main_branch": "main"
+  },
+  "execution": {
+    "host_os": "macos",
+    "target_platforms": [
+      "macos"
+    ],
+    "project_profiles": [
+      "tauri-macos"
+    ]
+  },
+  "licensing": {
+    "upstream_spdx": "Apache-2.0",
+    "fork_spdx": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "notice_files": [],
+    "compatibility_review": ""
+  },
+  "batch_limits": {
+    "max_commits": 15,
+    "max_changed_files": 180
+  },
+  "project_metadata": {
+    "frontend_manifest": "package.json",
+    "tauri_config": "src-tauri/tauri.conf.json",
+    "bundle_identifiers": [
+      "com.example.tauri"
+    ],
+    "sidecars": [
+      "agent",
+      "relay"
+    ]
+  },
+  "protected_contracts": [
+    "macos-usage-descriptions",
+    "bundle-identifiers",
+    "sidecar-artifacts",
+    "dmg-branding"
+  ],
+  "checks": {
+    "always": [
+      "git diff --check",
+      "pnpm check",
+      "cargo test --manifest-path src-tauri/Cargo.toml"
+    ]
+  },
+  "commands": {
+    "authorized": [
+      "pnpm check",
+      "cargo test --manifest-path src-tauri/Cargo.toml"
+    ],
+    "prohibited": [
+      "codesign",
+      "notarytool",
+      "open /Applications",
+      "git push"
+    ]
+  }
+}

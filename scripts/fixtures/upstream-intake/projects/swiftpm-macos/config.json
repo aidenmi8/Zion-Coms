@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "example/swiftpm-upstream",
+    "remote": "upstream",
+    "branch": "main"
+  },
+  "fork": {
+    "repository": "example/swiftpm-fork",
+    "main_branch": "main"
+  },
+  "execution": {
+    "host_os": "macos",
+    "target_platforms": [
+      "macos"
+    ],
+    "project_profiles": [
+      "swiftpm-macos"
+    ]
+  },
+  "licensing": {
+    "upstream_spdx": "MIT",
+    "fork_spdx": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "notice_files": [],
+    "compatibility_review": ""
+  },
+  "batch_limits": {
+    "max_commits": 10,
+    "max_changed_files": 120
+  },
+  "project_metadata": {
+    "manifest": "Package.swift",
+    "products": [
+      "ExampleAppCore"
+    ],
+    "resources": [
+      "Sources/ExampleAppCore/Resources"
+    ],
+    "bundle_identifiers": [
+      "com.example.swiftpm"
+    ]
+  },
+  "protected_contracts": [
+    "package-products",
+    "package-resources",
+    "bundle-identifiers",
+    "privacy-and-signing"
+  ],
+  "checks": {
+    "always": [
+      "git diff --check",
+      "swift test",
+      "swift build"
+    ]
+  },
+  "commands": {
+    "authorized": [
+      "swift test",
+      "swift build"
+    ],
+    "prohibited": [
+      "swift package publish",
+      "codesign",
+      "git push"
+    ]
+  }
+}

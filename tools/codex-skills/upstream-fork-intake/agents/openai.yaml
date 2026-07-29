@@ -1,0 +1,4 @@
+interface:
+  display_name: "Upstream Fork Intake"
+  short_description: "Review and adapt upstream changes safely"
+  default_prompt: "Use $upstream-fork-intake to review this Apple app fork read-only first and prepare one fully classified local intake batch."

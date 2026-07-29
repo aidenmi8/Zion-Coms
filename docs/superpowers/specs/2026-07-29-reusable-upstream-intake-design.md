@@ -14,11 +14,13 @@ The default delivery unit is one batch pull request, prepared and tested
 locally before it is pushed. The batch may be split only across hard review,
 risk, release, or rollback boundaries.
 
-Implementation is deliberately staged. Zion-Coms first receives the minimum
-ledger, validator, report-only discovery, and one real mixed intake batch. The
-personal skill and expanded Apple project profiles are extracted only after the
-repository process has survived two or three real batches without changing its
-core state model.
+Implementation and activation are deliberately separated. The complete
+repository process, portable personal skill package, Apple project profiles,
+templates, and validation suite are built and tested locally now. They remain
+on an isolated branch until activation is approved. Applying the system later
+means merging the checked-in repository process, installing the already-tested
+skill package into the user's Codex profile, and enabling it per project; it
+does not mean designing or implementing the system again.
 
 The process separates three concerns:
 
@@ -62,10 +64,10 @@ with report-only discovery and locally prepared, fork-owned intake changes.
 - Automatically deploying servers, installing desktop applications, or
   publishing mobile builds.
 - Requiring Linear, Jira, GitHub Issues, or another specific tracker.
-- Creating a plugin or hosted service before a local skill and repository
+- Creating a plugin or hosted service before the local skill and repository
   ledger prove insufficient.
-- Requiring the complete personal skill or full Apple profile matrix for the
-  first Zion-Coms intake batch.
+- Installing or activating the locally built skill in every project as part of
+  this implementation branch.
 - Running the skill from Windows or Linux Codex hosts.
 - Providing Windows or Linux application build, packaging, signing, or release
   profiles.
@@ -531,8 +533,8 @@ deferred.
 
 Upstream CI is supporting evidence; fork CI is authoritative.
 
-The MVP adds a normal repository CI job for the ledger validator before any
-personal skill is required. The validator checks:
+The repository implementation adds a normal CI job for the ledger validator.
+The validator checks:
 
 - JSON parsing and schema version.
 - Pinned range completeness and uniqueness.
@@ -559,12 +561,10 @@ Path-aware jobs may reduce cost, but required global contract tests must never
 be skipped. Remote CI runs at least once in a clean hosted environment even
 when all local gates passed.
 
-The first Zion-Coms batches use its existing `just` gates, visible-brand
-scanner, platform-brand contract, mobile checks, admin checks, and relevant
-integration tests. A complete Apple profile matrix is not required for the MVP.
-
-After the process is proven, Apple-platform checks can be selected from the
-repository profile:
+Zion-Coms batches use its existing `just` gates, visible-brand scanner,
+platform-brand contract, mobile checks, admin checks, and relevant integration
+tests. The portable implementation includes the complete supported Apple
+profile matrix. Each repository selects only the profiles it actually uses:
 
 - Native Swift or Objective-C apps use their configured Xcode workspace,
   project, scheme, simulator or device, signing boundary, and test plan.
@@ -573,9 +573,9 @@ repository profile:
   signing, and packaging contracts.
 - SwiftPM macOS components use their configured package build and test gates.
 
-The later skill must prefer enabled Apple build and simulator tooling when
-repository instructions require it. It must never invent schemes, bundle IDs,
-signing settings, device destinations, or prohibited build commands.
+The skill must prefer enabled Apple build and simulator tooling when repository
+instructions require it. It must never invent schemes, bundle IDs, signing
+settings, device destinations, or prohibited build commands.
 
 No CI workflow may automatically merge, deploy, publish, migrate, or install
 artifacts as part of intake.
@@ -669,14 +669,18 @@ rejected, or deferred based on product intent; if accepted for immediate
 implementation, it should be split only when the hard-boundary rules require
 it.
 
-The MVP must remove merge, push, and PR creation from the existing
+The local implementation must remove merge, push, and PR creation from the existing
 `.github/workflows/upstream-sync.yml` before its next scheduled run. The
-replacement remains report-only until the ledger and validator complete one
-real mixed batch.
+replacement remains report-only after activation; repository state changes
+still require a reviewed local batch.
 
-## MVP Rollout Before Skill Extraction
+## Complete Local Build and Staged Activation
 
-### Phase 1: establish protected contracts
+Stages 1 through 4 are implemented and validated now on the isolated branch.
+Stage 5 is the later application step. This makes activation a bounded copy,
+merge, and configuration operation rather than a second development project.
+
+### Stage 1: establish protected contracts
 
 - Inventory the existing Zion visible-brand, platform-brand, identifier, route,
   sidecar, mobile, admin, and release contracts.
@@ -684,47 +688,64 @@ real mixed batch.
 - Record Zion-Coms as Apache-2.0 and identify applicable attribution files.
 - Establish a clean baseline for the existing repository checks.
 
-### Phase 2: add the minimum ledger loop
+### Stage 2: build the repository engine
 
 - Check in configuration, state, and open/archive batch directories.
-- Add the repo-local JSON validator and focused unit fixtures.
+- Add the repo-local discovery, validation, rendering, and audit commands.
+- Add focused fixtures for every required state and failure mode.
 - Add validation as a normal required CI job.
 - Rewrite the scheduled sync as report-only discovery with no write permission,
   branch creation, merge, push, or PR creation.
-- Generate the first pinned topic report without modifying product code.
+- Generate a pinned dry-run topic report without modifying product code.
+- Verify archived-batch immutability, security fast-lane routing, rejected
+  dependencies, batch caps, and license declarations.
 
-### Phase 3: run a real mixed batch
+### Stage 3: build the portable skill package
 
-- Review by upstream PR or topic while recording all SHAs.
-- Include at least one representative combination of take, adapt, reject,
-  defer, or accept plus queued when the upstream range supports it.
-- Implement accepted work locally with provenance.
-- Run focused and full repository gates.
-- Publish one draft batch PR, splitting only at a hard boundary.
-- Merge only after ledger, contract, and product review.
+- Initialize the complete `upstream-fork-intake` skill package under the
+  source-controlled tooling directory on the isolated branch.
+- Include the mandatory workflow, deterministic Python tool, ledger schema,
+  review checklist, Apple platform routing, project template, and agent
+  metadata.
+- Keep mutable project state outside the skill in each repository's
+  `.upstream-intake/` directory.
+- Include native Xcode, Flutter iOS, Tauri macOS, and SwiftPM profile support
+  now, while requiring each repository to configure only the profiles it uses.
+- Do not install the skill into the user's personal Codex profile during this
+  stage.
 
-### Phase 4: prove repetition
+### Stage 4: validate the complete distribution
 
-- Run two or three real batches using the same state model.
-- Record every manual workaround or schema ambiguity.
-- Change the schema only when real use proves it necessary.
-- Confirm batch caps, rejected-dependency handling, security prioritization,
-  and archive rules are understandable without chat history.
+- Run repository-unit fixtures for no-change, mixed-decision, force-push,
+  missing-commit, invalid-transition, deferred-without-trigger,
+  accepted-without-method, rejected-dependency, archive mutation, security
+  routing, batch-cap, and license cases.
+- Run the repo-local and portable skill validators against the same fixtures and
+  require equivalent decisions.
+- Run a non-mutating dry run against Zion-Coms.
+- Run synthetic forward tests for native Xcode, Flutter iOS, Tauri macOS, and
+  SwiftPM repositories with different license declarations and contracts.
+- Run the skill creator's structural validator and a negative non-macOS test.
+- Run focused repository checks followed by the full applicable local gate.
+- Confirm a fresh Codex session can operate the process using only the
+  repository state and packaged skill resources.
 
-### Phase 5: extract the personal skill
+### Stage 5: apply and activate later
 
-- Initialize the skill only after the first four phases pass.
-- Move the stable sequence and validated templates into the skill.
-- Keep mutable repository state in each project's `.upstream-intake/`.
-- Add Apple project profiles only for repeated native Xcode, Flutter iOS,
-  Tauri macOS, or SwiftPM differences observed in real batches.
-- Validate and forward-test the skill before using it in another project.
+- Review and merge or cherry-pick the isolated implementation branch.
+- Install the exact validated skill package into the user's Codex skill
+  directory.
+- Instantiate the project template in each selected repository.
+- Declare that repository's real license, upstream, platforms, profiles,
+  protected contracts, authorized commands, and prohibited commands.
+- Run discovery and validation in dry-run mode before enabling its schedule.
+- Process the first real upstream batch locally and publish only after explicit
+  approval.
 
-The MVP intentionally does not require the final personal skill, a plugin,
-cross-project automation, a complete Apple profile matrix, or a central
-dashboard.
+No push, PR, merge, deployment, release, application install, or other-project
+activation is part of stages 1 through 4.
 
-## Later Personal Codex Skill
+## Portable Personal Codex Skill
 
 ### Why a skill
 
@@ -737,17 +758,26 @@ A plugin should be considered later only if the process needs a central
 cross-repository dashboard, a GitHub App, organization-wide credentials,
 automatic tracker synchronization, or a remote policy service.
 
-### Skill location and ownership
+### Skill source, installation, and ownership
 
-The default installation target on the user's Mac is:
+The canonical, reviewable source package is built locally on the isolated
+branch at:
+
+```text
+tools/codex-skills/upstream-fork-intake/
+```
+
+The later installation target on the user's Mac is:
 
 ```text
 ${CODEX_HOME:-$HOME/.codex}/skills/upstream-fork-intake/
 ```
 
-That makes the workflow available to Codex across projects and conversations.
-The skill must never store repository-specific state. It reads the checked-in
-`.upstream-intake/` directory of the active repository.
+The source package is structurally and behaviorally validated before
+installation. Activation copies that exact package into the personal skill
+directory and verifies it again. The skill must never store
+repository-specific state. It reads the checked-in `.upstream-intake/`
+directory of the active repository.
 
 Installing the skill once makes it available to other local Codex tasks using
 the same profile. The skill folder is also the portable distribution unit for
@@ -866,7 +896,7 @@ The skill implementation must be validated with:
 - Hosted CI failure: keep the PR draft and revise locally.
 - Release failure: roll back the release without rewriting the intake decision.
 
-## Porting to Another Project After Proof
+## Applying to Another Project
 
 1. Install or invoke the personal `upstream-fork-intake` skill.
 2. Add `.upstream-intake/config.json`.
@@ -892,7 +922,7 @@ additional configured checks.
 
 ## Acceptance Criteria
 
-### MVP process
+### Complete local implementation
 
 - Another Codex session can determine the exact upstream review state using
   only repository files and Git history.
@@ -914,14 +944,24 @@ additional configured checks.
 - Fork contracts run in CI.
 - Source intake cannot deploy or publish automatically.
 - The existing blind merge workflow is report-only.
-- At least one real mixed Zion-Coms batch completes successfully.
-
-### Later personal skill
-
-- Two or three real batches complete without changing the core state model.
+- The repo-local and portable validators agree on all shared fixtures.
+- A synthetic mixed batch proves take, adapt, reject, defer, included, and
+  queued invariants without changing product code.
 - The personal skill runs from the user's Mac and contains no Zion-specific
   mutable state.
 - iOS and macOS repositories can supply different architecture, toolchain,
   design, branding, signing, and test profiles without changing the skill core.
 - The skill stops clearly when invoked from an unsupported host.
 - A dry run can demonstrate the complete process without modifying the fork.
+- The complete skill package and project template are source-controlled and
+  structurally validated before personal installation.
+
+### Activation readiness
+
+- Applying the package requires configuration and validation, not new process
+  design or tool implementation.
+- Zion-Coms declares Apache-2.0; another project may declare MIT or its actual
+  license without changing the skill core.
+- The first real batch remains a separately reviewed product decision.
+- Push, PR, merge, release, deployment, and application installation remain
+  explicit user-authorized actions.

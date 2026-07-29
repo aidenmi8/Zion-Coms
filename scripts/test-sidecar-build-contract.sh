@@ -33,7 +33,7 @@ for pair in \
 done
 
 grep -Fq '[[ -s "$SRC_DIR/' "$bundler" || fail "bundler does not reject zero-byte sidecars"
-grep -Fq 'chmod +x' "$bundler" || fail "bundler does not ensure sidecars are executable"
+grep -Fq 'chmod 755 "$destination"' "$bundler" || fail "bundler does not set an executable sidecar mode"
 grep -Fq -- '--debug' "$bundler" || fail "bundler has no debug profile"
 
 echo "sidecar build contract passed"

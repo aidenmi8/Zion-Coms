@@ -181,6 +181,9 @@ test("focus and split preserve reading context and interaction ownership", async
     .toBe(true);
   await expect(channel).toHaveAttribute("inert", "");
 
+  await expect(
+    body.getByTestId("message-thread-replies").getByTestId("message-row"),
+  ).toHaveCount(48);
   await body.evaluate((element) => {
     element.scrollTop = element.scrollHeight * 0.4;
     element.dispatchEvent(new Event("scroll", { bubbles: true }));

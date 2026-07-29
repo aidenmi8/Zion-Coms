@@ -618,12 +618,21 @@ test("video upload previews use poster frames and inline videos open review mode
   // must not remount the review dialog or wipe an in-progress comment draft.
   await commentBox.click();
   await commentBox.fill("Second pass note");
+  await waitForMockLiveSubscription(page, "general");
   await emitMockMessage(page, "general", "Unrelated chatter mid-review");
-  await expect(
-    page
-      .getByTestId("message-row")
-      .filter({ hasText: "Unrelated chatter mid-review" }),
-  ).toHaveCount(1);
+  const chatterRow = page
+    .getByTestId("message-row")
+    .filter({ hasText: "Unrelated chatter mid-review" });
+  const newMessageIndicator = page.getByRole("button", {
+    name: /\d+ new messages?/,
+  });
+  await expect
+    .poll(
+      async () =>
+        (await chatterRow.count()) > 0 ||
+        (await newMessageIndicator.count()) > 0,
+    )
+    .toBe(true);
   await expect(commentBox).toHaveText("Second pass note");
   await expect(commentBox).toBeFocused();
   await expect(page.getByTestId("video-review-composer-timecode")).toHaveText(

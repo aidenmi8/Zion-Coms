@@ -98,6 +98,8 @@ check: visible-brand-check fmt-check clippy desktop-check desktop-tauri-fmt-chec
 visible-brand-check:
     node scripts/check-visible-zion-branding.mjs
     node --test scripts/check-visible-zion-branding.test.mjs
+    node scripts/check-zion-platform-brand-contract.mjs
+    node --test scripts/check-zion-platform-brand-contract.test.mjs
 
 # Format all Rust code
 fmt:
@@ -609,11 +611,12 @@ mobile-check:
 mobile-test:
     unset GIT_DIR GIT_WORK_TREE; cd {{mobile_dir}} && flutter test
 
-# Compile an unsigned Android debug APK
+# Compile an unsigned Android debug APK (worktree-aware debug identity)
 mobile-build-android:
+    ./scripts/mobile-worktree-overrides.sh
     unset GIT_DIR GIT_WORK_TREE; cd {{mobile_dir}} && flutter build apk --debug --no-pub
 
-# Run the mobile app on iOS simulator
+# Run the mobile app on iOS simulator (worktree-aware debug identity)
 mobile-dev:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -621,9 +624,14 @@ mobile-dev:
         open -a Simulator
         sleep 3
     fi
+    ./scripts/mobile-worktree-overrides.sh
     cd {{mobile_dir}}
     unset GIT_DIR GIT_WORK_TREE
     flutter run
+
+# Uninstall stale worktree-suffixed Buzz debug installs (production apps kept)
+mobile-clean:
+    ./scripts/mobile-worktree-clean.sh
 
 # ─── Database ─────────────────────────────────────────────────────────────────
 

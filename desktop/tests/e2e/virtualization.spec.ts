@@ -193,12 +193,13 @@ test.describe("list virtualization", () => {
     // reproduce Chromium/WebKit's native wheel → scroll callback ordering. The
     // old boundary rollback moved the viewport back down before the fetch
     // committed; keep that pre-prepend reversal below the same 5px frame bar.
-    // A 300ms relay delay leaves the input boundary and prepend commit as two
-    // distinct phases so this assertion cannot accidentally measure only the
-    // later anchor correction.
+    // A one-second relay delay leaves the input boundary and prepend commit as
+    // two distinct phases even when the full Playwright project is CPU-bound,
+    // so this assertion cannot accidentally measure only the later anchor
+    // correction.
     await installMockBridge(page, {
       deepHistoryMessageCount: 1_800,
-      channelWindowDelayMs: 300,
+      channelWindowDelayMs: 1_000,
     });
     await page.goto("/#/channels/feedf00d-0000-4000-8000-000000000007");
     const timeline = page.getByTestId("message-timeline");
@@ -241,33 +242,91 @@ test.describe("list virtualization", () => {
     // variable-height rows and repeated front insertions exercise the full
     // index-shift path rather than allowing a single lucky pass.
     for (let pageIndex = 0; pageIndex < 15; pageIndex += 1) {
-      // Leave the threshold first so Virtua emits a fresh start-edge crossing;
-      // initial positioning can briefly report offset 0 while mounting.
-      await timeline.evaluate((element) => {
-        element.scrollTop = 4000;
-      });
-      await page.waitForTimeout(300);
-      await timeline.evaluate((element) => {
-        element.scrollTop = 180;
-      });
-      await page.waitForTimeout(150);
+      // Leave the threshold first, then re-enter it with native wheel input so
+      // Virtua emits a fresh start-edge crossing. Raw scrollTop writes can be
+      // re-asserted by a still-settling virtualizer under parallel CI load,
+      // which made the old fixed sleeps occasionally begin this proof at
+      // scrollTop 5,000+ instead of the intended boundary.
+      await timeline.hover();
+      for (let attempt = 0; attempt < 32; attempt += 1) {
+        const scrollTop = await timeline.evaluate(
+          (element) => element.scrollTop,
+        );
+        if (scrollTop > 1_000) break;
+        await page.mouse.wheel(0, 2_000);
+        await page.waitForTimeout(25);
+      }
+      await expect
+        .poll(() => timeline.evaluate((element) => element.scrollTop))
+        .toBeGreaterThan(1_000);
+      for (let attempt = 0; attempt < 32; attempt += 1) {
+        const scrollTop = await timeline.evaluate(
+          (element) => element.scrollTop,
+        );
+        if (scrollTop <= 350) break;
+        await page.mouse.wheel(0, -2_000);
+        await page.waitForTimeout(25);
+      }
+      await expect
+        .poll(() => timeline.evaluate((element) => element.scrollTop))
+        .toBeLessThanOrEqual(350);
+      await expect(
+        page.getByTestId("message-timeline-fetching-older"),
+      ).toBeVisible({ timeout: 2_000 });
       const before = await sampleVisibleAnchor();
+      const ctrlWheelPromise =
+        pageIndex === 0
+          ? timeline.evaluate(
+              (scroller) =>
+                new Promise<boolean>((resolve) => {
+                  const s = scroller as HTMLElement;
+                  const observer = new MutationObserver(() => {
+                    observer.disconnect();
+                    // Ctrl+wheel is browser zoom, not reader scroll intent. Fire
+                    // it synchronously with the prepend DOM commit, before the
+                    // ResizeObserver measurement batch reconciles estimated rows.
+                    s.dispatchEvent(
+                      new WheelEvent("wheel", { ctrlKey: true, deltaY: -100 }),
+                    );
+                    resolve(true);
+                  });
+                  observer.observe(s.firstElementChild ?? s, {
+                    childList: true,
+                    subtree: true,
+                  });
+                }),
+            )
+          : Promise.resolve(false);
       const wheelTracePromise = timeline.evaluate(async (scroller) => {
         const s = scroller as HTMLElement;
         let previousScrollTop = s.scrollTop;
         let maxBoundaryRollback = 0;
         let minScrollTop = s.scrollTop;
-        const deadline = performance.now() + 120;
+        let wheelCount = 0;
+        let stableFrames = 0;
+        const onWheel = (event: WheelEvent) => {
+          if (event.ctrlKey) return;
+          wheelCount += 1;
+          stableFrames = 0;
+        };
+        s.addEventListener("wheel", onWheel, { passive: true });
+        const deadline = performance.now() + 10_000;
         while (performance.now() < deadline) {
           maxBoundaryRollback = Math.max(
             maxBoundaryRollback,
             s.scrollTop - previousScrollTop,
           );
+          stableFrames =
+            Math.abs(s.scrollTop - previousScrollTop) < 0.5
+              ? stableFrames + 1
+              : 0;
           previousScrollTop = s.scrollTop;
           minScrollTop = Math.min(minScrollTop, s.scrollTop);
+          if (wheelCount >= 4 && stableFrames >= 2) break;
           await new Promise((resolve) => requestAnimationFrame(resolve));
         }
-        return { maxBoundaryRollback, minScrollTop };
+        s.removeEventListener("wheel", onWheel);
+        return { maxBoundaryRollback, minScrollTop, wheelCount };
       });
       const box = await timeline.boundingBox();
       if (!box) throw new Error("timeline has no bounding box");
@@ -277,6 +336,7 @@ test.describe("list virtualization", () => {
         await page.waitForTimeout(12);
       }
       const wheelTrace = await wheelTracePromise;
+      expect(wheelTrace.wheelCount).toBe(4);
       expect(wheelTrace.minScrollTop).toBeLessThanOrEqual(350);
       expect(wheelTrace.maxBoundaryRollback).toBeLessThan(5);
       // Linux Chromium delivers CDP wheel input with more latency than macOS,
@@ -300,6 +360,12 @@ test.describe("list virtualization", () => {
         async (scroller, { anchorId, anchorTop, oldHeight }) => {
           const s = scroller as HTMLElement;
           let maxDrift = 0;
+          let maxDriftSample: {
+            anchorTop: number;
+            rowTop: number;
+            scrollHeight: number;
+            scrollTop: number;
+          } | null = null;
           let sawPrepend = false;
           let sawAnchorAfterPrepend = false;
           let finalDrift = 0;
@@ -316,7 +382,15 @@ test.describe("list virtualization", () => {
                 row.getBoundingClientRect().top - s.getBoundingClientRect().top;
               const drift = Math.abs(top - anchorTop);
               if (sawPrepend) {
-                maxDrift = Math.max(maxDrift, drift);
+                if (drift > maxDrift) {
+                  maxDrift = drift;
+                  maxDriftSample = {
+                    anchorTop,
+                    rowTop: top,
+                    scrollHeight: s.scrollHeight,
+                    scrollTop: s.scrollTop,
+                  };
+                }
                 sawAnchorAfterPrepend = true;
                 stableFrames =
                   Math.abs(drift - finalDrift) < 0.5 ? stableFrames + 1 : 0;
@@ -326,7 +400,12 @@ test.describe("list virtualization", () => {
             if (sawAnchorAfterPrepend && stableFrames >= 8) break;
             await new Promise((resolve) => requestAnimationFrame(resolve));
           }
-          return { maxDrift, sawPrepend };
+          return {
+            maxDrift,
+            maxDriftSample,
+            sawPrepend,
+            startHeight: oldHeight,
+          };
         },
         {
           anchorId: committedAnchor.id,
@@ -335,7 +414,17 @@ test.describe("list virtualization", () => {
         },
       );
       expect(motion.sawPrepend).toBe(true);
-      expect(motion.maxDrift).toBeLessThan(5);
+      if (pageIndex === 0) expect(await ctrlWheelPromise).toBe(true);
+      expect(
+        motion.maxDrift,
+        JSON.stringify({
+          pageIndex,
+          anchorId: committedAnchor.id,
+          before,
+          committedAnchor,
+          motion,
+        }),
+      ).toBeLessThan(5);
 
       await expect
         .poll(
@@ -357,26 +446,39 @@ test.describe("list virtualization", () => {
         await timeline.evaluate((element) => element.clientHeight),
       );
 
-      // Leave the boundary with real downward wheel input while this prepend's
-      // three-second semantic-anchor watcher is still alive. The watcher belongs
-      // only to the completed prepend: it must not reinterpret this deliberate
-      // reader movement as row drift and pull the viewport back toward its stale
-      // baseline before the next upward load.
+      // Leave the boundary with real downward wheel input after this prepend.
+      // That reader intent retires Virtua's active prepend reconciliation, so
+      // later row measurements must not pull the viewport back toward the
+      // completed prepend before the next upward load.
       const exitTracePromise = timeline.evaluate(async (scroller) => {
         const s = scroller as HTMLElement;
         const startScrollTop = s.scrollTop;
         let previousScrollTop = startScrollTop;
         let maxForwardTravel = 0;
         let maxRollback = 0;
-        const deadline = performance.now() + 400;
+        let wheelCount = 0;
+        let stableFrames = 0;
+        const onWheel = (event: WheelEvent) => {
+          if (event.ctrlKey) return;
+          wheelCount += 1;
+          stableFrames = 0;
+        };
+        s.addEventListener("wheel", onWheel, { passive: true });
+        const deadline = performance.now() + 10_000;
         while (performance.now() < deadline) {
           const travel = s.scrollTop - startScrollTop;
           maxForwardTravel = Math.max(maxForwardTravel, travel);
           maxRollback = Math.max(maxRollback, previousScrollTop - s.scrollTop);
+          stableFrames =
+            Math.abs(s.scrollTop - previousScrollTop) < 0.5
+              ? stableFrames + 1
+              : 0;
           previousScrollTop = s.scrollTop;
+          if (wheelCount >= 3 && stableFrames >= 2) break;
           await new Promise((resolve) => requestAnimationFrame(resolve));
         }
-        return { maxForwardTravel, maxRollback };
+        s.removeEventListener("wheel", onWheel);
+        return { maxForwardTravel, maxRollback, wheelCount };
       });
       const exitBox = await timeline.boundingBox();
       if (!exitBox) throw new Error("timeline has no bounding box");
@@ -389,6 +491,7 @@ test.describe("list virtualization", () => {
         await page.waitForTimeout(12);
       }
       const exitTrace = await exitTracePromise;
+      expect(exitTrace.wheelCount).toBe(3);
       expect(exitTrace.maxForwardTravel).toBeGreaterThan(200);
       expect(exitTrace.maxRollback).toBeLessThan(5);
 
@@ -667,6 +770,10 @@ test("offscreen rich-row resize preserves the viewport-center anchor", async ({
 
   const result = await timeline.evaluate(async (element) => {
     const scroller = element as HTMLDivElement;
+    // Retire bottom-follow intent the same way real reader input does before
+    // moving into detached history. A raw scrollTop assignment alone is not
+    // user intent and would correctly leave bottom following armed.
+    scroller.dispatchEvent(new WheelEvent("wheel", { deltaY: -1 }));
     scroller.scrollTop = scroller.scrollHeight / 2;
     scroller.dispatchEvent(new Event("scroll", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 250));

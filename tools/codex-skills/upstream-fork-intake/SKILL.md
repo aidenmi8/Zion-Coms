@@ -1,29 +1,69 @@
 ---
 name: upstream-fork-intake
-description: Review upstream changes for an iOS or macOS fork, classify each pinned commit as accept, reject, or defer, and prepare a contract-preserving local intake batch. Use for upstream sync reviews, fork maintenance, selective patch intake, rebrands, and Apple app repositories that must not merge upstream blindly.
+description: Use when maintaining an iOS or macOS fork, reviewing upstream commits or PRs, selectively taking or adapting patches, preserving a rebrand or compatibility contract, or replacing blind upstream merges.
 ---
 
 # Upstream Fork Intake
 
-Use this skill to turn an upstream range into an explicit, locally validated
-decision ledger. Start read-only. Do not push, merge, release, deploy, install,
-or modify product code unless the user separately authorizes that action.
+## Core rule
 
-## Initial workflow
+Treat upstream as evidence, not authority. Account for every pinned commit,
+preserve the fork contract, and keep discovery, implementation, publication,
+and delivery as separate authorizations.
 
-1. Read the repository's `AGENTS.md` and local policy.
-2. Confirm Git status, worktrees, remotes, branches, and immutable SHAs.
-3. Validate `.upstream-intake/config.json`.
-4. Discover the configured range without changing repository state.
-5. Review every topic and record every SHA once.
-6. Validate the local batch before proposing publication.
+## Preflight
 
-Run the deterministic tool from `scripts/upstream_intake.py`. The complete
-ledger, review, and Apple-platform procedures live in:
+Read `AGENTS.md` and repository policy first. Run:
 
-- `references/ledger-schema.md`
-- `references/review-checklist.md`
-- `references/apple-platform-checks.md`
+```bash
+git status --short --branch
+git worktree list
+git remote -v
+```
 
-Project activation uses the templates under `assets/project-template/`, but
-initialization is dry-run by default.
+Confirm a clean isolated worktree, configured upstream/fork refs, immutable full
+SHAs, and the repository-specific license. Skill-driven Git and initialization
+require a macOS host; pure `validate` may run in hosted CI.
+
+## Workflow
+
+1. Read `references/ledger-schema.md` before editing configuration, state, or
+   batches. Validate the repository.
+2. Perform read-only discovery. Fetch only when repository policy authorizes
+   it; never switch, merge, cherry-pick, rebase, or update durable state during
+   discovery.
+3. Read `references/review-checklist.md` before classifying an upstream topic.
+   Record every SHA exactly once:
+
+   | Product decision | Integration | Delivery |
+   |---|---|---|
+   | `accept` | `take` or `adapt` | `included` or `queued` |
+   | `reject` | null | `not_applicable` |
+   | `defer` | null | `not_applicable` plus revisit trigger |
+
+   Use `accept + queued` for a wanted large feature tracked for later. Put
+   high/critical candidates in a dedicated security batch. Work blocked by a
+   rejected dependency cannot use `take`; included work must use a verified
+   `adapt` without that dependency.
+4. Build one local batch PR by default. Split only at a security, licensing,
+   migration, generated-code, dependency, or other hard boundary. Product code
+   changes still require the user's authorization.
+5. Read `references/apple-platform-checks.md` before running platform-specific
+   commands. Run configured focused checks, then the repository's full local
+   gates. Render and audit the ledger.
+6. Report exact pins, decisions, adaptations, evidence, and remaining queued
+   work. Do not automatically push, open a PR, merge, deploy, release, install,
+   or activate this skill in another project.
+
+Use `scripts/upstream_intake.py --help` for deterministic commands.
+`assets/project-template/` is fail-closed; render it only with `init-project`,
+which is dry-run unless `--apply` is explicit.
+
+## Common mistakes
+
+| Mistake | Correct action |
+|---|---|
+| Blind merge because conflicts are few | Review and classify the pinned range |
+| Reimplement without provenance | Keep upstream SHA and method in the ledger |
+| Treat `defer` as implementation backlog | Use `accept + queued` when the decision is yes |
+| Copy one license policy to every fork | Validate each repository's declared files |

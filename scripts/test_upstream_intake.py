@@ -160,6 +160,119 @@ class SkillDistributionTests(unittest.TestCase):
         agent_text = agent_path.read_text(encoding="utf-8")
         self.assertIn("$upstream-fork-intake", agent_text)
 
+    def test_skill_routes_every_mandatory_workflow_boundary(self) -> None:
+        text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        normalized = " ".join(text.split())
+        description = next(
+            line for line in text.splitlines() if line.startswith("description:")
+        )
+        self.assertTrue(description.startswith("description: Use when"))
+        required = (
+            "Read `AGENTS.md`",
+            "git status --short --branch",
+            "git worktree list",
+            "git remote -v",
+            "read-only discovery",
+            "immutable full SHAs",
+            "`accept`",
+            "`reject`",
+            "`defer`",
+            "`take`",
+            "`adapt`",
+            "`accept + queued`",
+            "security batch",
+            "rejected dependency",
+            "repository-specific license",
+            "one local batch PR",
+            "hard boundary",
+            "Do not automatically push",
+            "macOS host",
+        )
+        for phrase in required:
+            self.assertIn(phrase, normalized)
+        self.assertLess(len(text.split()), 500)
+
+    def test_skill_routes_directly_to_all_heavy_references(self) -> None:
+        text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        normalized = " ".join(text.split())
+        for reference in (
+            "references/ledger-schema.md",
+            "references/review-checklist.md",
+            "references/apple-platform-checks.md",
+        ):
+            self.assertIn(reference, text)
+        self.assertIn(
+            "before editing configuration, state, or batches", normalized
+        )
+        self.assertIn("before classifying an upstream topic", normalized)
+        self.assertIn(
+            "before running platform-specific commands", normalized
+        )
+
+    def test_references_cover_schema_review_and_all_apple_profiles(self) -> None:
+        ledger = (
+            SKILL_ROOT / "references/ledger-schema.md"
+        ).read_text(encoding="utf-8")
+        review = (
+            SKILL_ROOT / "references/review-checklist.md"
+        ).read_text(encoding="utf-8")
+        apple = (
+            SKILL_ROOT / "references/apple-platform-checks.md"
+        ).read_text(encoding="utf-8")
+
+        for phrase in (
+            "Exit codes",
+            "Archive immutability",
+            "Reclassification",
+            "accept + queued",
+            "adapt_without_dependency",
+        ):
+            self.assertIn(phrase, ledger)
+        for phrase in (
+            "Dependency graph",
+            "Security fast lane",
+            "Licensing and attribution",
+            "Compatibility contracts",
+            "Batch boundary",
+            "Release separation",
+        ):
+            self.assertIn(phrase, review)
+        for profile in (
+            "native-xcode",
+            "flutter-ios",
+            "tauri-macos",
+            "swiftpm-macos",
+        ):
+            self.assertIn(profile, apple)
+        for phrase in (
+            "signing",
+            "privacy",
+            "accessibility",
+            "reduced motion",
+            "bundle identifier",
+            "prohibited commands",
+        ):
+            self.assertIn(phrase, apple.casefold())
+
+    def test_generic_templates_fail_closed_until_initializer_renders_them(
+        self,
+    ) -> None:
+        template_root = SKILL_ROOT / "assets/project-template"
+        config = (
+            template_root / ".upstream-intake/config.json"
+        ).read_text(encoding="utf-8")
+        state = (
+            template_root / ".upstream-intake/state.json"
+        ).read_text(encoding="utf-8")
+        workflow = (
+            template_root / ".github/workflows/upstream-sync.yml"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("__REQUIRED__", config)
+        self.assertIn("__REQUIRED__", state)
+        self.assertIn("__REQUIRED__", workflow)
+        self.assertFalse((SKILL_ROOT / "README.md").exists())
+
 
 class ConfigurationTests(unittest.TestCase):
     """Repository policy is explicit, portable, and license-aware."""

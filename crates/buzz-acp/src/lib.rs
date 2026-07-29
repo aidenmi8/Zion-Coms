@@ -3605,6 +3605,19 @@ mod agent_draft_prompt_tests {
         assert!(prompt.contains("single-quoted shell strings preserve `\\n` literally"));
         assert!(prompt.contains("buzz messages send ... --content -"));
     }
+
+    #[test]
+    fn shared_base_prompt_prioritizes_simple_human_replies() {
+        let prompt = include_str!("base_prompt.md");
+        assert!(prompt.contains("Answer simple human questions before any optional investigation."));
+        assert!(prompt.contains("Do not read feed/history/memory"));
+    }
+
+    #[test]
+    fn shared_base_prompt_uses_host_network_for_magicdns_relay_commands() {
+        let prompt = include_str!("base_prompt.md");
+        assert!(prompt.contains("host-network execution on the first attempt"));
+    }
 }
 
 fn default_heartbeat_prompt() -> String {

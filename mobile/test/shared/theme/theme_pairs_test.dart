@@ -145,14 +145,14 @@ void main() {
       expect(resolved.dark, generateColorScheme(findTheme('github-dark')!));
     });
 
-    test('dark mode falls back to the default pair when pick is unpaired', () {
+    test('dark mode falls back to the Zion default when pick is unpaired', () {
       // 'snazzy-light' is light and has no dark counterpart.
       final resolved = resolveSchemes('snazzy-light', ThemeMode.dark);
 
       expect(resolved.forcedMode, ThemeMode.dark);
       expect(resolved.dark.brightness, Brightness.dark);
-      expect(resolved.darkTheme?.name, buzzDarkThemeName);
-      expect(resolved.dark, generateColorScheme(findTheme(buzzDarkThemeName)!));
+      expect(resolved.darkTheme?.name, defaultSchemeName);
+      expect(resolved.dark, generateColorScheme(findTheme(defaultSchemeName)!));
     });
 
     test('light mode falls back to the default pair when pick is unpaired', () {
@@ -164,14 +164,16 @@ void main() {
       expect(resolved.light, generateColorScheme(findTheme(buzzThemeName)!));
     });
 
-    test('an unknown scheme name falls back to the default theme', () {
-      final resolved = resolveSchemes('not-a-theme', ThemeMode.light);
+    test(
+      'an unknown scheme name falls back to a light theme in light mode',
+      () {
+        final resolved = resolveSchemes('not-a-theme', ThemeMode.light);
+        final expected = themeGroups().light.first;
 
-      expect(
-        resolved.light,
-        generateColorScheme(findTheme(defaultSchemeName)!),
-      );
-    });
+        expect(resolved.lightTheme?.name, expected.name);
+        expect(resolved.light, generateColorScheme(expected));
+      },
+    );
   });
 
   group('schemeForAppearanceMode', () {
@@ -225,8 +227,12 @@ void main() {
       );
     });
 
-    test('a null selection resolves to the default theme', () {
-      expect(effectiveTheme(null, ThemeMode.light)?.name, defaultSchemeName);
+    test('a null selection honors the requested brightness', () {
+      expect(
+        effectiveTheme(null, ThemeMode.light)?.name,
+        themeGroups().light.first.name,
+      );
+      expect(effectiveTheme(null, ThemeMode.dark)?.name, defaultSchemeName);
     });
   });
 

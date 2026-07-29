@@ -2,6 +2,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../shared/crypto/nip_oa.dart';
 import '../../../shared/relay/relay.dart';
+import '../../../shared/watch/watch_agent_candidates.dart';
+import '../../profile/presence_cache_provider.dart';
 import '../../profile/user_cache_provider.dart';
 import '../../profile/user_profile.dart';
 import '../channel.dart';
@@ -161,4 +163,67 @@ final mentionCandidatesProvider = Provider.family
       );
 
       return rankMentionCandidates(candidates, args.query);
+    });
+
+/// Registered relay agents projected into the shared watch-candidate boundary.
+final watchAgentDirectoryInputsProvider =
+    Provider<List<WatchAgentDirectoryInput>>((ref) {
+      final agents =
+          ref.watch(agentDirectoryProvider).asData?.value ??
+          const <AgentDirectoryEntry>[];
+      final owners = ref.watch(agentOwnersProvider).asData?.value ?? const {};
+      final channels =
+          ref.watch(channelsProvider).asData?.value ?? const <Channel>[];
+      final userCache = ref.watch(userCacheProvider);
+      final currentPubkey = ref.watch(currentPubkeyProvider)?.toLowerCase();
+      final sharedChannelIds = {
+        for (final channel in channels)
+          if (channel.isMember && !channel.isArchived) channel.id,
+      };
+
+      return [
+        for (final agent in agents)
+          WatchAgentDirectoryInput(
+            pubkey: agent.pubkey,
+            displayName:
+                userCache[agent.pubkey]?.displayName?.trim().isNotEmpty == true
+                ? userCache[agent.pubkey]!.displayName!.trim()
+                : agent.displayName?.trim().isNotEmpty == true
+                ? agent.displayName!.trim()
+                : '${agent.pubkey.substring(0, 8)}…',
+            isRegistered: true,
+            canInvoke:
+                owners[agent.pubkey]?.toLowerCase() == currentPubkey ||
+                agentIsSharedWithUser(agent, sharedChannelIds, currentPubkey),
+            channelIds: agent.channelIds,
+          ),
+      ];
+    });
+
+/// Live presence projected with the relay's 90-second expiry boundary.
+final watchAgentPresenceInputsProvider =
+    Provider<Map<String, WatchAgentPresence>>((ref) {
+      final agents = ref.watch(watchAgentDirectoryInputsProvider);
+      ref.read(presenceCacheProvider.notifier).track([
+        for (final agent in agents) agent.pubkey,
+      ]);
+      final statuses = ref.watch(presenceCacheProvider);
+      final expirations = ref
+          .read(presenceCacheProvider.notifier)
+          .expiresAtByPubkey;
+      final presence = <String, WatchAgentPresence>{};
+      for (final agent in agents) {
+        final status = statuses[agent.pubkey];
+        final expiresAt = expirations[agent.pubkey];
+        if (status == null || expiresAt == null) continue;
+        presence[agent.pubkey] = WatchAgentPresence(
+          status: switch (status) {
+            'online' => WatchAgentPresenceStatus.online,
+            'away' => WatchAgentPresenceStatus.away,
+            _ => WatchAgentPresenceStatus.offline,
+          },
+          expiresAt: expiresAt,
+        );
+      }
+      return Map.unmodifiable(presence);
     });

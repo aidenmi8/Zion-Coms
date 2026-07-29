@@ -500,6 +500,8 @@ pub const KIND_WORKFLOW_TRIGGER: u32 = 46020;
 pub const KIND_APPROVAL_GRANT: u32 = 46030;
 /// Deny pending approval.
 pub const KIND_APPROVAL_DENY: u32 = 46031;
+/// Delegate a pending approval to another eligible agent.
+pub const KIND_APPROVAL_PASS: u32 = 46032;
 /// A workflow was triggered by a matching event.
 pub const KIND_WORKFLOW_TRIGGERED: u32 = 46001;
 /// A workflow step began execution.
@@ -520,6 +522,8 @@ pub const KIND_WORKFLOW_APPROVAL_REQUESTED: u32 = 46010;
 pub const KIND_WORKFLOW_APPROVAL_GRANTED: u32 = 46011;
 /// A pending workflow approval was denied.
 pub const KIND_WORKFLOW_APPROVAL_DENIED: u32 = 46012;
+/// A pending workflow approval was delegated to another agent.
+pub const KIND_WORKFLOW_APPROVAL_DELEGATED: u32 = 46013;
 
 // User groups (47000–47999)
 
@@ -664,6 +668,7 @@ pub const ALL_KINDS: &[u32] = &[
     KIND_WORKFLOW_TRIGGER,
     KIND_APPROVAL_GRANT,
     KIND_APPROVAL_DENY,
+    KIND_APPROVAL_PASS,
     KIND_WORKFLOW_TRIGGERED,
     KIND_WORKFLOW_STEP_STARTED,
     KIND_WORKFLOW_STEP_COMPLETED,
@@ -674,6 +679,7 @@ pub const ALL_KINDS: &[u32] = &[
     KIND_WORKFLOW_APPROVAL_REQUESTED,
     KIND_WORKFLOW_APPROVAL_GRANTED,
     KIND_WORKFLOW_APPROVAL_DENIED,
+    KIND_WORKFLOW_APPROVAL_DELEGATED,
     KIND_AUDIT_ENTRY,
     KIND_HUDDLE_STARTED,
     KIND_HUDDLE_PARTICIPANT_JOINED,
@@ -712,10 +718,10 @@ pub const fn is_parameterized_replaceable(kind: u32) -> bool {
     kind >= PARAM_REPLACEABLE_KIND_MIN && kind <= PARAM_REPLACEABLE_KIND_MAX
 }
 
-/// Returns `true` if `kind` is a workflow execution event (46001–46012).
+/// Returns `true` if `kind` is a workflow execution event (46001–46013).
 /// These must not trigger workflows (prevents infinite loops).
 pub const fn is_workflow_execution_kind(kind: u32) -> bool {
-    kind >= KIND_WORKFLOW_TRIGGERED && kind <= KIND_WORKFLOW_APPROVAL_DENIED
+    kind >= KIND_WORKFLOW_TRIGGERED && kind <= KIND_WORKFLOW_APPROVAL_DELEGATED
 }
 
 /// Returns `true` if `kind` is a NIP-43 relay membership admin command (9030–9032)
@@ -750,6 +756,7 @@ pub const fn is_command_kind(kind: u32) -> bool {
             | KIND_WORKFLOW_TRIGGER
             | KIND_APPROVAL_GRANT
             | KIND_APPROVAL_DENY
+            | KIND_APPROVAL_PASS
     )
 }
 
@@ -856,6 +863,18 @@ mod tests {
                 "kind {kind} is both replaceable and parameterized replaceable"
             );
         }
+    }
+
+    #[test]
+    fn approval_pass_is_executed_as_a_transactional_command() {
+        assert!(is_command_kind(KIND_APPROVAL_PASS));
+        assert!(!is_workflow_execution_kind(KIND_APPROVAL_PASS));
+    }
+
+    #[test]
+    fn delegated_approval_lifecycle_cannot_retrigger_workflows() {
+        assert!(is_workflow_execution_kind(KIND_WORKFLOW_APPROVAL_DELEGATED));
+        assert!(!is_command_kind(KIND_WORKFLOW_APPROVAL_DELEGATED));
     }
 
     // ── persona_event_is_shared / is_unshared_persona_event ──────────────

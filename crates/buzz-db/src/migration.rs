@@ -560,7 +560,7 @@ mod tests {
         let mut migrations: Vec<_> = MIGRATOR.iter().collect();
         migrations.sort_by_key(|migration| migration.version);
 
-        assert_eq!(migrations.len(), 25);
+        assert_eq!(migrations.len(), 26);
         assert_eq!(migrations[0].version, 1);
         assert_eq!(&*migrations[0].description, "initial schema");
         assert!(migrations[0]
@@ -904,6 +904,62 @@ mod tests {
             desired_schema.contains("CREATE TABLE join_policy_acceptances"),
             "desired-state schema must include join-policy evidence used by invite claims",
         );
+
+        // Zion Watch approval delegation and mention wakes are an additive
+        // brownfield migration: approval history gains a terminal delegated
+        // state and the gated matcher admits direct mention events.
+        assert_eq!(migrations[25].version, 26);
+        let zion_watch = migrations[25].sql.as_str();
+        assert!(
+            zion_watch.contains("ALTER TYPE approval_status ADD VALUE IF NOT EXISTS 'delegated'")
+        );
+        assert!(zion_watch.contains("delegated_to_pubkey BYTEA"));
+        assert!(zion_watch.contains("delegated_at TIMESTAMPTZ"));
+        assert!(zion_watch.contains("request_event_id BYTEA"));
+        assert!(zion_watch.contains("NEW.kind IN (7, 9, 1059, 40002, 40007, 46010)"));
+    }
+
+    #[tokio::test]
+    #[ignore = "requires Postgres"]
+    async fn zion_watch_migration_exposes_delegation_and_mention_wakes() {
+        let pool = connect_test_pool().await;
+        reset_public_schema(&pool).await;
+        run_migrations(&pool).await.expect("apply migrations");
+
+        let statuses: Vec<String> = sqlx::query_scalar(
+            "SELECT enumlabel FROM pg_enum \
+             JOIN pg_type ON pg_type.oid = pg_enum.enumtypid \
+             WHERE typname = 'approval_status' ORDER BY enumsortorder",
+        )
+        .fetch_all(&pool)
+        .await
+        .expect("read approval statuses");
+        assert_eq!(
+            statuses,
+            vec!["pending", "granted", "denied", "expired", "delegated"]
+        );
+
+        let columns: Vec<String> = sqlx::query_scalar(
+            "SELECT column_name FROM information_schema.columns \
+             WHERE table_schema = 'public' AND table_name = 'workflow_approvals' \
+               AND column_name IN ('delegated_to_pubkey', 'delegated_at', 'request_event_id') \
+             ORDER BY column_name",
+        )
+        .fetch_all(&pool)
+        .await
+        .expect("read approval columns");
+        assert_eq!(
+            columns,
+            vec!["delegated_at", "delegated_to_pubkey", "request_event_id"]
+        );
+
+        let trigger_body: String = sqlx::query_scalar(
+            "SELECT pg_get_functiondef('enqueue_push_match_job()'::regprocedure)",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("read push matcher trigger");
+        assert!(trigger_body.contains("NEW.kind IN (7, 9, 1059, 40002, 40007, 46010)"));
     }
 
     #[test]

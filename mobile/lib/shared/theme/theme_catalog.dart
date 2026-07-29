@@ -537,6 +537,14 @@ const themeCatalog = <ThemeColors>[
     added: Color(0xFF1E754F),
     deleted: Color(0xFFAB5959),
   ),
+  ThemeColors(
+    name: 'zion-orbit',
+    bg: Color(0xFF100A18),
+    fg: Color(0xFFF3EDFF),
+    comment: Color(0xFFB8A7CC),
+    added: Color(0xFFC4B5FD),
+    deleted: Color(0xFFFF9BB0),
+  ),
 ];
 
 /// Lookup a theme by name. Returns null if not found.

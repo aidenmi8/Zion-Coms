@@ -35,7 +35,7 @@ pub mod error;
 pub mod executor;
 pub mod schema;
 
-pub use action_sink::{ActionSink, ActionSinkError};
+pub use action_sink::{ActionSink, ActionSinkError, ApprovalReceipt, ApprovalRequest};
 pub use error::{PartialProgress, WorkflowError};
 pub use executor::ExecutionResult;
 pub use schema::{ActionDef, Step, TriggerDef, WorkflowDef};
@@ -68,6 +68,14 @@ impl Default for WorkflowConfig {
             max_concurrent: 100,
             default_timeout_secs: 300,
         }
+    }
+}
+
+fn successful_run_status(result: &ExecutionResult) -> RunStatus {
+    if result.approval_request_event_id.is_some() {
+        RunStatus::WaitingApproval
+    } else {
+        RunStatus::Completed
     }
 }
 
@@ -221,34 +229,33 @@ impl WorkflowEngine {
 
         match result {
             Ok(result) => {
+                let run_status = successful_run_status(&result);
                 let mut full_trace = prefix;
                 full_trace.extend(result.trace);
                 let trace_json = serde_json::Value::Array(full_trace);
                 let step_count = result.step_index as i32;
 
-                if result.approval_token.is_some() {
-                    // Approval gates are not yet implemented (WF-08).
-                    // Fail explicitly rather than creating unreachable WaitingApproval rows.
-                    tracing::warn!(
+                if run_status == RunStatus::WaitingApproval {
+                    tracing::info!(
                         run_id = %run_id,
                         step_index = result.step_index,
-                        "Workflow hit approval gate — not yet implemented, marking as failed"
+                        "Workflow run is waiting for approval"
                     );
                     if let Err(e) = self
                         .db
                         .update_workflow_run(
                             community_id,
                             run_id,
-                            RunStatus::Failed,
+                            RunStatus::WaitingApproval,
                             step_count,
                             &trace_json,
-                            Some("approval gates not yet implemented — see WF-08"),
+                            None,
                         )
                         .await
                     {
                         tracing::error!(
                             run_id = %run_id,
-                            "Failed to update run to Failed (approval gate): {e}"
+                            "Failed to refresh WaitingApproval run state: {e}"
                         );
                     }
                 } else {
@@ -301,7 +308,7 @@ impl WorkflowEngine {
     /// Called from the event handler post-store hook for every stored event.
     ///
     /// Checks whether any workflow in the event's channel has a matching trigger.
-    /// Workflow execution events (kinds 46001–46012) are excluded to prevent loops.
+    /// Workflow execution events (kinds 46001–46013) are excluded to prevent loops.
     ///
     /// `community_id` is the server-resolved community the event was stored
     /// under — `StoredEvent` does not carry it, and the same channel UUID can
@@ -1333,6 +1340,33 @@ mod tests {
     }
 
     #[test]
+    fn successful_approval_execution_maps_to_waiting_run_status() {
+        let result = ExecutionResult {
+            approval_request_event_id: Some("ab".repeat(32)),
+            step_index: 2,
+            step_outputs: HashMap::new(),
+            trace: vec![serde_json::json!({
+                "step_id":"gate",
+                "status":"waiting_approval"
+            })],
+        };
+
+        assert_eq!(successful_run_status(&result), RunStatus::WaitingApproval);
+    }
+
+    #[test]
+    fn successful_normal_execution_maps_to_completed_run_status() {
+        let result = ExecutionResult {
+            approval_request_event_id: None,
+            step_index: 2,
+            step_outputs: HashMap::new(),
+            trace: vec![],
+        };
+
+        assert_eq!(successful_run_status(&result), RunStatus::Completed);
+    }
+
+    #[test]
     fn parse_yaml_roundtrip() {
         let yaml = r#"
 name: "Test Workflow"
@@ -1455,7 +1489,7 @@ steps:
 
     #[test]
     fn workflow_execution_kinds_do_not_match_any_trigger() {
-        // Workflow execution events (46001–46012) must never match triggers
+        // Workflow execution events (46001–46013) must never match triggers
         // to prevent infinite loops. The on_event() method filters these out
         // before calling trigger_matches_event, but verify the function itself
         // also returns false for these kinds.
@@ -1463,7 +1497,7 @@ steps:
         let react_trigger = TriggerDef::ReactionAdded { emoji: None };
 
         for kind in buzz_core::kind::KIND_WORKFLOW_TRIGGERED
-            ..=buzz_core::kind::KIND_WORKFLOW_APPROVAL_DENIED
+            ..=buzz_core::kind::KIND_WORKFLOW_APPROVAL_DELEGATED
         {
             assert!(
                 !trigger_matches_event(&msg_trigger, kind),

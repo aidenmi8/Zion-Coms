@@ -54,7 +54,7 @@ async fn backfill_push_match_jobs(
         "INSERT INTO push_match_queue (community_id, event_id) \
          SELECT community_id, id FROM events \
          WHERE community_id = $1 \
-           AND kind IN (7, 9, 1059, 40007, 46010) \
+           AND kind IN (7, 9, 1059, 40002, 40007, 46010) \
            AND deleted_at IS NULL \
            AND received_at > now() - make_interval(secs => $2) \
          ON CONFLICT DO NOTHING",

@@ -22,6 +22,13 @@ abstract final class EventKind {
   static const userStatus = 30315;
   static const dmVisibility = 30622;
   static const streamMessageV2 = 40002;
+  static const workflowApprovalRequested = 46010;
+  static const workflowApprovalGranted = 46011;
+  static const workflowApprovalDenied = 46012;
+  static const workflowApprovalDelegated = 46013;
+  static const workflowApprovalGrantCommand = 46030;
+  static const workflowApprovalDenyCommand = 46031;
+  static const workflowApprovalPassCommand = 46032;
   static const channelThreadSummary = 39005;
   static const channelWindowBounds = 39006;
   static const streamMessageEdit = 40003;

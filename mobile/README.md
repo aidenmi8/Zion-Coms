@@ -63,6 +63,17 @@ flutter test
 
 Or from the repo root: `just mobile-check` and `just mobile-test`.
 
+## Apple Watch companion
+
+Zion Watch is a deliberately focused queue for approvals, direct messages, and
+mentions. The iPhone remains the authenticated relay client: it builds the
+snapshot, signs approval commands, and sends only credential-free data to the
+watch.
+
+Use the [Zion Watch verification
+runbook](../docs/testing/zion-watch-runbook.md) for source, paired-simulator,
+signed-iPhone, APNs, App Attest, background, Focus, and physical-Watch evidence.
+
 ## Android release signing
 
 Android release builds fail unless all upload-key inputs are supplied through the

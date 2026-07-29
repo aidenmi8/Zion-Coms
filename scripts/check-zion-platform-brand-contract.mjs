@@ -15,6 +15,7 @@ const REQUIRED_FILES = [
   "mobile/android/app/src/main/AndroidManifest.xml",
   "mobile/ios/Flutter/Debug.xcconfig",
   "mobile/ios/Flutter/Release.xcconfig",
+  "mobile/ios/Flutter/Watch.xcconfig",
   "mobile/ios/Runner/Info.plist",
   "mobile/lib/app.dart",
   "scripts/mobile-worktree-overrides.sh",
@@ -239,8 +240,8 @@ export function validatePlatformBrandSources(sources) {
   ]) {
     mustContain(
       xcconfig,
-      "BUNDLE_IDENTIFIER = com.buzz.buzzMobile",
-      "iOS bundle identifier compatibility changed",
+      "BUNDLE_IDENTIFIER = do.agente.zion",
+      "owned Zion iOS bundle identifier changed",
     );
     mustContain(
       xcconfig,
@@ -253,6 +254,11 @@ export function validatePlatformBrandSources(sources) {
       "iOS display name restored visible Buzz branding",
     );
   }
+  mustContain(
+    "mobile/ios/Flutter/Watch.xcconfig",
+    "BUNDLE_IDENTIFIER = do.agente.zion",
+    "Zion Watch companion bundle identifier changed",
+  );
 
   const iosInfo = "mobile/ios/Runner/Info.plist";
   mustContain(

@@ -110,7 +110,7 @@ class _MessageSkeletonRow extends StatelessWidget {
       [232],
       [288, 216],
     ];
-    final availableWidth = MediaQuery.sizeOf(context).width - 88;
+    final availableWidth = max(0.0, MediaQuery.sizeOf(context).width - 88);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

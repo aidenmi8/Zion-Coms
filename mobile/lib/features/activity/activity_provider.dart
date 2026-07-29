@@ -76,7 +76,12 @@ class ActivityNotifier extends AsyncNotifier<HomeFeedResponse> {
       // Workflow approvals addressed to me.
       session.fetchHistory(
         NostrFilter(
-          kinds: const [46010, 46011, 46012],
+          kinds: const [
+            EventKind.workflowApprovalRequested,
+            EventKind.workflowApprovalGranted,
+            EventKind.workflowApprovalDenied,
+            EventKind.workflowApprovalDelegated,
+          ],
           tags: {
             '#p': [myPk],
           },

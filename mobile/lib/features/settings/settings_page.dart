@@ -5,10 +5,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:nostr/nostr.dart' as nostr;
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../app/push_companion_provider.dart';
 import '../../shared/auth/auth.dart';
+import '../../shared/branding/sentra_branding.dart';
 import '../../shared/clipboard_utils.dart';
 import '../../shared/relay/relay.dart';
 import '../../shared/theme/theme.dart';
+import '../../shared/watch/push_lease_coordinator.dart';
 import '../../shared/widgets/app_list.dart';
 import '../../shared/widgets/app_list_card.dart';
 import '../../shared/widgets/frosted_app_bar.dart';
@@ -44,6 +47,10 @@ class SettingsPage extends HookConsumerWidget {
                 const _AppearanceSection(),
                 const _ConnectionSection(),
                 const _RemoveCommunitySection(),
+                const AppListCard(
+                  label: 'Notifications & Watch',
+                  children: [_PushCompanionRow()],
+                ),
               ],
             ),
           ),
@@ -51,6 +58,58 @@ class SettingsPage extends HookConsumerWidget {
             _VersionFooter(version: packageInfo.data!.version),
         ],
       ),
+    );
+  }
+}
+
+class _PushCompanionRow extends ConsumerWidget {
+  const _PushCompanionRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(pushCompanionControllerProvider);
+    final status = switch (state.status) {
+      PushCompanionStatus.off => 'Off',
+      PushCompanionStatus.enabling => 'Enabling',
+      PushCompanionStatus.active => 'Active',
+      PushCompanionStatus.needsAttention => 'Needs Attention',
+      PushCompanionStatus.unsupported => 'Unsupported',
+    };
+    final subtitle = switch (state.status) {
+      PushCompanionStatus.off =>
+        'Receive agent messages and approval requests on Apple Watch.',
+      PushCompanionStatus.enabling =>
+        'Requesting notification access and securing this iPhone.',
+      PushCompanionStatus.active =>
+        'Alerts are active. Apple Watch uses this iPhone’s focused queue.',
+      PushCompanionStatus.needsAttention =>
+        state.message ?? 'Allow notifications in iOS Settings → Zion.',
+      PushCompanionStatus.unsupported =>
+        'Requires a supported iPhone with App Attest.',
+    };
+    final canEnable =
+        state.status == PushCompanionStatus.off ||
+        state.status == PushCompanionStatus.needsAttention;
+
+    return AppListRow(
+      icon: LucideIcons.watch,
+      title: 'Apple Watch companion',
+      subtitle: subtitle,
+      subtitleMaxLines: 3,
+      trailing: Text(
+        status,
+        style: context.textTheme.bodySmall?.copyWith(
+          color: state.status == PushCompanionStatus.needsAttention
+              ? context.colors.error
+              : context.colors.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      onTap: canEnable
+          ? () async {
+              await ref.read(pushCompanionControllerProvider.notifier).enable();
+            }
+          : null,
     );
   }
 }
@@ -66,13 +125,25 @@ class _VersionFooter extends StatelessWidget {
       top: false,
       child: Padding(
         padding: const EdgeInsets.only(bottom: Grid.xs, top: Grid.xxs),
-        child: Center(
-          child: Text(
-            'v$version',
-            style: context.textTheme.bodySmall?.copyWith(
-              color: context.colors.onSurfaceVariant.withValues(alpha: 0.6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Semantics(
+              label: 'Sentra',
+              image: true,
+              child: Image.asset(
+                sentraWordmarkAssetFor(context.colors.brightness),
+                height: 36,
+              ),
             ),
-          ),
+            const SizedBox(height: Grid.xxs),
+            Text(
+              'Zion · v$version',
+              style: context.textTheme.bodySmall?.copyWith(
+                color: context.colors.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -38,6 +38,42 @@ test("restoring an Android Buzz label fails closed", () => {
   );
 });
 
+test("restoring the upstream iOS bundle identifier fails closed", () => {
+  const sources = loadPlatformBrandSources(repositoryRoot);
+  const xcconfigPath = "mobile/ios/Flutter/Release.xcconfig";
+  sources[xcconfigPath] = sources[xcconfigPath].replace(
+    "BUNDLE_IDENTIFIER = do.agente.zion",
+    "BUNDLE_IDENTIFIER = com.buzz.buzzMobile",
+  );
+
+  const failures = validatePlatformBrandSources(sources);
+  assert.ok(
+    failures.some(
+      (failure) =>
+        failure.includes(xcconfigPath) &&
+        failure.includes("owned Zion iOS bundle identifier"),
+    ),
+  );
+});
+
+test("changing the Zion Watch companion bundle identifier fails closed", () => {
+  const sources = loadPlatformBrandSources(repositoryRoot);
+  const xcconfigPath = "mobile/ios/Flutter/Watch.xcconfig";
+  sources[xcconfigPath] = sources[xcconfigPath].replace(
+    "BUNDLE_IDENTIFIER = do.agente.zion",
+    "BUNDLE_IDENTIFIER = example.invalid",
+  );
+
+  const failures = validatePlatformBrandSources(sources);
+  assert.ok(
+    failures.some(
+      (failure) =>
+        failure.includes(xcconfigPath) &&
+        failure.includes("Zion Watch companion bundle identifier"),
+    ),
+  );
+});
+
 test("restoring a legacy production bee component fails closed", () => {
   const sources = loadPlatformBrandSources(repositoryRoot);
   sources["mobile/lib/fixture.dart"] =

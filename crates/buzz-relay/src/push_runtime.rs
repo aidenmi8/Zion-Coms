@@ -28,12 +28,36 @@ const IDLE_POLL_CEILING: Duration = Duration::from_secs(2);
 /// made claims slower exactly when a backlog needed them fastest.
 const REAP_INTERVAL: Duration = Duration::from_secs(30);
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum WakeClass {
+    Default,
+    TimeSensitive,
+}
+
+impl WakeClass {
+    fn from_lease_class(class: &str) -> Self {
+        match class {
+            "time_sensitive" | "urgent" => Self::TimeSensitive,
+            _ => Self::Default,
+        }
+    }
+
+    const fn as_str(self) -> &'static str {
+        match self {
+            Self::Default => "default",
+            Self::TimeSensitive => "time_sensitive",
+        }
+    }
+}
+
 #[derive(Serialize)]
 struct DeliveryRequest<'a> {
     v: u8,
     endpoint_grant: &'a str,
     request_id: uuid::Uuid,
     expires_at: i64,
+    wake_class: WakeClass,
 }
 
 #[derive(Deserialize)]
@@ -279,7 +303,7 @@ fn match_job(
             installation_id: lease.installation_id.clone(),
             lease_generation: lease.generation,
             event_id: job.event.event.id.as_bytes().to_vec(),
-            class: class.to_string(),
+            class: WakeClass::from_lease_class(class).as_str().to_owned(),
             expires_at,
         });
     }
@@ -421,7 +445,12 @@ async fn deliver_one(
     let Some(url) = state.config.push_gateway_delivery_url.as_ref() else {
         return;
     };
-    let body = delivery_body(&outcome.endpoint_grant, outcome.id, outcome.expires_at);
+    let body = delivery_body(
+        &outcome.endpoint_grant,
+        outcome.id,
+        outcome.expires_at,
+        WakeClass::from_lease_class(&outcome.class),
+    );
     let auth = match nip98_header(&state.relay_keypair, url.as_str(), &body) {
         Ok(auth) => auth,
         Err(e) => {
@@ -504,12 +533,18 @@ async fn deliver_one(
     }
 }
 
-fn delivery_body(endpoint_grant: &str, request_id: uuid::Uuid, expires_at: i64) -> Vec<u8> {
+fn delivery_body(
+    endpoint_grant: &str,
+    request_id: uuid::Uuid,
+    expires_at: i64,
+    wake_class: WakeClass,
+) -> Vec<u8> {
     serde_json::to_vec(&DeliveryRequest {
         v: 1,
         endpoint_grant,
         request_id,
         expires_at,
+        wake_class,
     })
     .expect("closed delivery body")
 }
@@ -568,8 +603,7 @@ fn class_rank(class: &str) -> u8 {
     match class {
         "silent" => 0,
         "default" => 1,
-        "time_sensitive" => 2,
-        "urgent" => 3,
+        "time_sensitive" | "urgent" => 2,
         _ => 0,
     }
 }
@@ -642,7 +676,12 @@ mod tests {
         let keys = nostr::Keys::generate();
         let request_id = uuid::Uuid::new_v4();
         for _ in 0..2 {
-            let body = delivery_body("opaque-grant", request_id, Utc::now().timestamp() + 60);
+            let body = delivery_body(
+                "opaque-grant",
+                request_id,
+                Utc::now().timestamp() + 60,
+                WakeClass::Default,
+            );
             let auth = nip98_header(&keys, url.as_str(), &body).unwrap();
             let response = send_gateway_request(&http, &url, body, auth).await.unwrap();
             assert!(response.status().is_success());
@@ -652,5 +691,7 @@ mod tests {
         assert_eq!(bodies.len(), 2);
         assert_eq!(bodies[0]["request_id"], request_id.to_string());
         assert_eq!(bodies[1]["request_id"], request_id.to_string());
+        assert_eq!(bodies[0]["wake_class"], WakeClass::Default.as_str());
+        assert_eq!(bodies[1]["wake_class"], WakeClass::Default.as_str());
     }
 }

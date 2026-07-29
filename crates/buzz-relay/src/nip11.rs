@@ -181,14 +181,15 @@ pub async fn relay_info_handler(
 }
 
 fn push_descriptor(
-    push_configured: bool,
+    gateway_delivery_url: Option<&url::Url>,
     relay_url: &str,
     executor_key_id: &str,
     relay_keypair: &nostr::Keys,
     tenant_host: Option<&str>,
 ) -> Option<serde_json::Value> {
     let host = tenant_host?;
-    push_configured.then_some(())?;
+    let gateway_delivery_url = gateway_delivery_url?;
+    let gateway_origin = gateway_delivery_url.origin().ascii_serialization();
     let scheme = if relay_url.starts_with("wss://") {
         "wss"
     } else {
@@ -196,6 +197,7 @@ fn push_descriptor(
     };
     Some(serde_json::json!({
         "origin": format!("{scheme}://{host}"),
+        "gateway_origin": gateway_origin,
         "keys": [{
             "id": executor_key_id,
             "pubkey": relay_keypair.public_key().to_hex(),
@@ -206,9 +208,10 @@ fn push_descriptor(
             {"id": "buzz-ios-sandbox", "transport": "apns"}
         ],
         "push_kinds": crate::handlers::push_lease::PUSH_KINDS,
-        "urgent_kinds": crate::handlers::push_lease::URGENT_KINDS,
+        "time_sensitive_kinds": crate::handlers::push_lease::TIME_SENSITIVE_KINDS,
+        "wake_classes": ["default", "time_sensitive"],
         "h_grammar": "uuid-v4-lowercase",
-        "class_support": {"apns": ["silent", "default", "time_sensitive"]},
+        "class_support": {"apns": ["default", "time_sensitive"]},
         "limitation": {
             "max_lease_ttl": 2592000,
             "max_leases_per_pubkey": 16,
@@ -251,7 +254,7 @@ pub(crate) async fn nip11_document(state: &crate::state::AppState, raw_host: &st
         None
     };
     if let Some(push) = push_descriptor(
-        state.config.push_gateway_delivery_url.is_some(),
+        state.config.push_gateway_delivery_url.as_ref(),
         &state.config.relay_url,
         &state.config.push_executor_key_id,
         &state.relay_keypair,
@@ -341,16 +344,34 @@ mod tests {
     #[test]
     fn push_descriptor_is_gated_by_gateway_configuration_and_tenant_binding() {
         let keys = nostr::Keys::generate();
+        let gateway: url::Url = "https://push.example/v1/deliveries/apns"
+            .parse()
+            .expect("gateway URL");
         assert!(
-            push_descriptor(false, "ws://relay", "key", &keys, Some("tenant.example")).is_none()
+            push_descriptor(None, "ws://relay", "key", &keys, Some("tenant.example")).is_none()
         );
-        assert!(push_descriptor(true, "ws://relay", "key", &keys, None).is_none());
-        let descriptor = push_descriptor(true, "ws://relay", "key", &keys, Some("tenant.example"))
-            .expect("configured push descriptor");
+        assert!(push_descriptor(Some(&gateway), "ws://relay", "key", &keys, None).is_none());
+        let descriptor = push_descriptor(
+            Some(&gateway),
+            "ws://relay",
+            "key",
+            &keys,
+            Some("tenant.example"),
+        )
+        .expect("configured push descriptor");
         assert_eq!(descriptor["origin"], "ws://tenant.example");
+        assert_eq!(descriptor["gateway_origin"], "https://push.example");
         assert_eq!(
             descriptor["push_kinds"],
             serde_json::json!(crate::handlers::push_lease::PUSH_KINDS)
+        );
+        assert_eq!(
+            descriptor["time_sensitive_kinds"],
+            serde_json::json!(crate::handlers::push_lease::TIME_SENSITIVE_KINDS)
+        );
+        assert_eq!(
+            descriptor["wake_classes"],
+            serde_json::json!(["default", "time_sensitive"])
         );
     }
 

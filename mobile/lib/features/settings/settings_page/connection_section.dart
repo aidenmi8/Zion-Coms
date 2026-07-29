@@ -87,12 +87,21 @@ void _confirmRemoveCommunity(BuildContext context, WidgetRef ref) {
           child: const Text('Cancel'),
         ),
         FilledButton(
-          onPressed: () {
+          onPressed: () async {
             Navigator.of(ctx).pop(); // close dialog
+            try {
+              await ref
+                  .read(pushCompanionControllerProvider.notifier)
+                  .disableForSignOut();
+            } on Object {
+              // Expiring leases remain the protocol backstop when a relay or
+              // gateway is unavailable during removal.
+            }
             // Pop all pushed routes back to root so MaterialApp.home rebuilds
             // to PairingPage when auth state changes.
+            if (!context.mounted) return;
             Navigator.of(context).popUntil((route) => route.isFirst);
-            ref.read(authProvider.notifier).signOut();
+            await ref.read(authProvider.notifier).signOut();
           },
           style: FilledButton.styleFrom(backgroundColor: ctx.colors.error),
           child: const Text('Remove'),

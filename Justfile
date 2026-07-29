@@ -92,7 +92,7 @@ build-release:
     cargo build --workspace --release
 
 # Run repo lint, formatting, and visible-brand checks
-check: visible-brand-check fmt-check clippy desktop-check desktop-tauri-fmt-check desktop-tauri-clippy web-check mobile-check
+check: visible-brand-check compose-healthcheck-test fmt-check clippy desktop-check desktop-tauri-fmt-check desktop-tauri-clippy web-check mobile-check
 
 # Fail closed if a product surface is missing from the visible-brand scan.
 visible-brand-check:
@@ -100,6 +100,10 @@ visible-brand-check:
     node --test scripts/check-visible-zion-branding.test.mjs
     node scripts/check-zion-platform-brand-contract.mjs
     node --test scripts/check-zion-platform-brand-contract.test.mjs
+
+# Verify a stalled relay readiness response cannot leave a health-check process behind.
+compose-healthcheck-test:
+    bash scripts/test-compose-healthcheck.sh
 
 # Format all Rust code
 fmt:

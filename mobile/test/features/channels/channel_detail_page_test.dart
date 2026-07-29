@@ -1844,6 +1844,30 @@ void main() {
       expect(find.byIcon(LucideIcons.hash), findsAtLeastNWidgets(1));
     });
 
+    testWidgets('fits a stream channel title and description', (tester) async {
+      final channel = Channel(
+        id: _channelId,
+        name: 'CUST-MOVI-R TECH',
+        channelType: 'stream',
+        visibility: 'open',
+        description: 'MOVI-R technical communications',
+        createdBy: 'abc',
+        createdAt: DateTime(2025),
+        memberCount: 3,
+        isMember: true,
+      );
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
+          child: _buildTestable(messages: [], channel: channel),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('shows lock icon for private channel', (tester) async {
       final privateChannel = Channel(
         id: _channelId,

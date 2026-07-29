@@ -302,6 +302,7 @@ class _FloatingTabDestination extends StatelessWidget {
       button: true,
       selected: selected,
       label: destination.label,
+      excludeSemantics: true,
       child: Tooltip(
         message: destination.label,
         excludeFromSemantics: true,
@@ -311,25 +312,50 @@ class _FloatingTabDestination extends StatelessWidget {
           borderRadius: BorderRadius.circular(HomePage._selectedTabRadius),
           child: InkWell(
             onTap: onTap,
+            splashFactory: NoSplash.splashFactory,
             overlayColor: const WidgetStatePropertyAll<Color>(
               Colors.transparent,
             ),
             borderRadius: BorderRadius.circular(HomePage._selectedTabRadius),
-            child: Center(
-              child: AnimatedSwitcher(
-                duration: reducedMotion
-                    ? Duration.zero
-                    : HomePage._tabIconWeightDuration,
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeOutCubic,
-                transitionBuilder: (child, animation) =>
-                    FadeTransition(opacity: animation, child: child),
-                child: Icon(
-                  icon,
-                  key: ValueKey('${destination.label}-$icon'),
-                  color: foregroundColor,
-                  size: HomePage._tabIconSize,
-                ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Grid.xxs,
+                vertical: Grid.half,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedSwitcher(
+                    duration: reducedMotion
+                        ? Duration.zero
+                        : HomePage._tabIconWeightDuration,
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeOutCubic,
+                    transitionBuilder: (child, animation) =>
+                        FadeTransition(opacity: animation, child: child),
+                    child: Icon(
+                      icon,
+                      key: ValueKey('${destination.label}-$icon'),
+                      color: foregroundColor,
+                      size: HomePage._tabIconSize,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    destination.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textScaler: TextScaler.noScaling,
+                    style: context.textTheme.labelSmall?.copyWith(
+                      color: foregroundColor,
+                      fontSize: 10.5,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                      height: 1.15,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

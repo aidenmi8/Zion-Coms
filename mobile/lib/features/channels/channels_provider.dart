@@ -747,6 +747,15 @@ final channelsProvider = AsyncNotifierProvider<ChannelsNotifier, List<Channel>>(
   ChannelsNotifier.new,
 );
 
+/// Active-community channel metadata keyed for the phone-owned watch mapper.
+final watchChannelIndexProvider = Provider<Map<String, Channel>>((ref) {
+  final channels =
+      ref.watch(channelsProvider).asData?.value ?? const <Channel>[];
+  return Map.unmodifiable({
+    for (final channel in channels) channel.id: channel,
+  });
+});
+
 String? _observedUnreadRootId(NostrEvent event) =>
     _isBroadcastReply(event) ? null : event.threadReference.rootId;
 

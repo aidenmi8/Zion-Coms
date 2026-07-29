@@ -1,32 +1,28 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:buzz/features/pairing/pairing_page.dart';
 import 'package:buzz/features/pairing/pairing_provider.dart';
 import 'package:buzz/shared/brand/zion_brand_motion.dart';
 import 'package:buzz/shared/brand/zion_brand_tokens.dart';
+import 'package:buzz/shared/branding/sentra_liquid_orbit.dart';
 import 'package:buzz/shared/theme/theme.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../helpers/widget_helpers.dart';
 
 void main() {
   group('PairingPage', () {
-    testWidgets('renders branding and progressive pairing actions', (
+    testWidgets('renders Zion liquid-orbit branding and progressive actions', (
       tester,
     ) async {
       await tester.pumpWidget(
         WidgetHelpers.testable(child: const PairingPage()),
       );
 
-      final motion = tester.widget<ZionBrandMotion>(
-        find.byType(ZionBrandMotion),
-      );
-
-      expect(motion.variant, ZionBrandMotionVariants.onboarding);
-      expect(motion.playing, isFalse);
-      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.byType(SentraLiquidOrbit), findsOneWidget);
+      expect(find.byType(ZionBrandMotion), findsNothing);
+      expect(find.bySemanticsLabel('Zion welcome mark'), findsOneWidget);
       expect(find.text('Welcome to Zion'), findsOneWidget);
       expect(find.text('Scan a QR code'), findsOneWidget);
       expect(find.text('Use pairing code'), findsOneWidget);
@@ -116,7 +112,6 @@ void main() {
         find.widgetWithText(FilledButton, 'Connect'),
       );
 
-      // The connect button should be below the text field.
       expect(connectButton.dy, greaterThan(textField.dy));
     });
 
@@ -131,7 +126,6 @@ void main() {
       );
       final textField = tester.getSize(find.byType(TextField));
 
-      // Button width should be close to the text field width (both full-width).
       expect(connectButton.width, closeTo(textField.width, 2.0));
     });
 

@@ -1,5 +1,5 @@
-import 'package:buzz/features/home/home_page.dart';
 import 'package:buzz/features/channels/channels_page.dart';
+import 'package:buzz/features/home/home_page.dart';
 import 'package:buzz/shared/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,27 +8,33 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  Future<Widget> buildHome() async {
+  Future<Widget> buildHome({double textScale = 1}) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     return ProviderScope(
       overrides: [savedPrefsProvider.overrideWithValue(prefs)],
       child: MaterialApp(
         theme: AppTheme.light(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         home: const HomePage(settingsPageBuilder: _buildSettingsPage),
       ),
     );
   }
 
-  testWidgets('shows icon-only navigation and an aligned quick action', (
+  testWidgets('shows labeled navigation and an aligned quick action', (
     tester,
   ) async {
     await tester.pumpWidget(await buildHome());
     await tester.pump();
 
-    expect(find.text('Home'), findsNothing);
-    expect(find.text('Activity'), findsNothing);
-    expect(find.text('Search'), findsNothing);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Activity'), findsOneWidget);
+    expect(find.text('Search'), findsOneWidget);
     expect(find.bySemanticsLabel('Home'), findsOneWidget);
     expect(find.bySemanticsLabel('Activity'), findsOneWidget);
     expect(find.bySemanticsLabel('Search'), findsOneWidget);
@@ -56,6 +62,18 @@ void main() {
       quickActionRect.center.dy,
       closeTo(homeDestinationRect.center.dy, 0.01),
     );
+  });
+
+  testWidgets('keeps floating navigation labels inside the bar at 130%', (
+    tester,
+  ) async {
+    await tester.pumpWidget(await buildHome(textScale: 1.3));
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    for (final label in ['Home', 'Activity', 'Search']) {
+      expect(find.text(label), findsOneWidget);
+    }
   });
 
   testWidgets('gives selection haptics only when the tab changes', (

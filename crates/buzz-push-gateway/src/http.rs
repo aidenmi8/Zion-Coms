@@ -649,6 +649,7 @@ async fn deliver(State(s): State<AppState>, headers: HeaderMap, body: Bytes) -> 
     let attempt = DeliveryAttempt {
         request_id: r.request_id,
         expires_at: r.expires_at,
+        wake_class: r.wake_class,
     };
     let transport = Arc::clone(&s.transport);
     let authority_store = Arc::clone(&s.authority);

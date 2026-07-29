@@ -22,9 +22,17 @@ use std::time::Duration;
 
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use buzz_core::CommunityId;
+use buzz_db::workflow::{
+    create_actionable_approval, create_workflow, create_workflow_run, get_approval,
+    get_workflow_run, update_workflow_run, ActionableApprovalParams, ApprovalStatus, RunStatus,
+};
+use buzz_sdk::builders::{build_workflow_approval, build_workflow_approval_pass};
 use buzz_test_client::{BuzzTestClient, RelayMessage, TestClientError};
+use chrono::{Duration as ChronoDuration, Utc};
 use nostr::{Alphabet, EventBuilder, Filter, Keys, Kind, SingleLetterTag, Tag};
 use sha2::{Digest, Sha256};
+use sqlx::PgPool;
 use uuid::Uuid;
 
 fn relay_url() -> String {
@@ -199,6 +207,111 @@ async fn create_test_channel(keys: &Keys) -> String {
     );
 
     channel_uuid.to_string()
+}
+
+struct ApprovalFixture {
+    pool: PgPool,
+    community_id: CommunityId,
+    channel_id: Uuid,
+    workflow_id: Uuid,
+    run_id: Uuid,
+    raw_token: String,
+    digest_hex: String,
+    request: nostr::Event,
+}
+
+fn relay_host() -> String {
+    let parsed = url::Url::parse(&relay_url()).expect("valid relay URL");
+    let host = parsed.host_str().expect("relay URL has a host");
+    parsed
+        .port()
+        .map(|port| format!("{host}:{port}"))
+        .unwrap_or_else(|| host.to_string())
+}
+
+async fn seed_actionable_approval(actor: &Keys, message: &str) -> ApprovalFixture {
+    let channel_id = Uuid::parse_str(&create_test_channel(actor).await).expect("channel UUID");
+    let pool = e2e_db_pool().await;
+    let community_id = CommunityId::from_uuid(ensure_test_community(&relay_host()).await);
+    let actor_bytes = actor.public_key().to_bytes();
+    buzz_db::user::ensure_user(&pool, community_id, &actor_bytes)
+        .await
+        .expect("ensure approver user");
+
+    let definition = format!(
+        r#"{{"name":"watch approval e2e","trigger":{{"on":"message_posted"}},"steps":[{{"id":"gate","action":"request_approval","from":"{}","message":"{}"}}]}}"#,
+        actor.public_key().to_hex(),
+        message
+    );
+    let workflow_id = create_workflow(
+        &pool,
+        community_id,
+        Some(channel_id),
+        &actor_bytes,
+        "watch approval e2e",
+        &definition,
+        &Sha256::digest(definition.as_bytes()),
+    )
+    .await
+    .expect("create workflow");
+    let run_id = create_workflow_run(&pool, community_id, workflow_id, None, None)
+        .await
+        .expect("create workflow run");
+    update_workflow_run(
+        &pool,
+        community_id,
+        run_id,
+        RunStatus::Running,
+        0,
+        &serde_json::json!([]),
+        None,
+    )
+    .await
+    .expect("start workflow run");
+
+    let raw_token = Uuid::new_v4().to_string();
+    let digest_hex = sha256_hex(raw_token.as_bytes());
+    let expires_at = Utc::now() + ChronoDuration::hours(1);
+    let request = EventBuilder::new(Kind::Custom(46_010), message)
+        .tags([
+            Tag::parse(["d", &digest_hex]).expect("approval digest tag"),
+            Tag::parse(["p", &actor.public_key().to_hex()]).expect("approver tag"),
+            Tag::parse(["h", &channel_id.to_string()]).expect("channel tag"),
+            Tag::parse(["expiration", &expires_at.timestamp().to_string()])
+                .expect("expiration tag"),
+        ])
+        .sign_with_keys(&Keys::generate())
+        .expect("sign approval request");
+
+    create_actionable_approval(
+        &pool,
+        ActionableApprovalParams {
+            community_id,
+            raw_token: &raw_token,
+            workflow_id,
+            run_id,
+            step_id: "gate",
+            step_index: 0,
+            approver_spec: &actor.public_key().to_hex(),
+            expires_at,
+            request_event: &request,
+            channel_id: Some(channel_id),
+            execution_trace: &serde_json::json!([]),
+        },
+    )
+    .await
+    .expect("persist actionable approval");
+
+    ApprovalFixture {
+        pool,
+        community_id,
+        channel_id,
+        workflow_id,
+        run_id,
+        raw_token,
+        digest_hex,
+        request,
+    }
 }
 
 #[tokio::test]
@@ -2474,6 +2587,298 @@ async fn test_reply_ingest_pushes_live_thread_summary() {
     assert_eq!(content["reply_count"], 0, "reply counted down: {content}");
 
     client.disconnect().await.expect("disconnect");
+}
+
+#[tokio::test]
+#[ignore = "requires a running relay, Postgres, and Redis"]
+async fn test_watch_approval_request_is_scoped_to_exact_approver_and_can_be_granted() {
+    let url = relay_url();
+    let actor = Keys::generate();
+    let outsider = Keys::generate();
+    let fixture = seed_actionable_approval(&actor, "Ship the watch release?").await;
+    let mut actor_client = BuzzTestClient::connect(&url, &actor)
+        .await
+        .expect("connect approver");
+    let mut outsider_client = BuzzTestClient::connect(&url, &outsider)
+        .await
+        .expect("connect outsider");
+
+    let actor_sid = sub_id("watch-approval-actor");
+    let actor_filter = Filter::new()
+        .kind(Kind::Custom(46_010))
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::P),
+            actor.public_key().to_hex(),
+        )
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::H),
+            fixture.channel_id.to_string(),
+        );
+    actor_client
+        .subscribe(&actor_sid, vec![actor_filter])
+        .await
+        .expect("subscribe approver");
+    let actor_events = actor_client
+        .collect_until_eose(&actor_sid, Duration::from_secs(5))
+        .await
+        .expect("collect approver requests");
+    assert_eq!(
+        actor_events
+            .iter()
+            .filter(|event| event.id == fixture.request.id)
+            .count(),
+        1,
+        "the exact approver must see one actionable request"
+    );
+
+    let outsider_sid = sub_id("watch-approval-outsider");
+    let outsider_filter = Filter::new()
+        .kind(Kind::Custom(46_010))
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::P),
+            outsider.public_key().to_hex(),
+        )
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::H),
+            fixture.channel_id.to_string(),
+        );
+    outsider_client
+        .subscribe(&outsider_sid, vec![outsider_filter])
+        .await
+        .expect("subscribe outsider");
+    let outsider_events = outsider_client
+        .collect_until_eose(&outsider_sid, Duration::from_secs(5))
+        .await
+        .expect("collect outsider requests");
+    assert!(
+        outsider_events
+            .iter()
+            .all(|event| event.id != fixture.request.id),
+        "an unrelated user must not receive the approval request"
+    );
+
+    let grant = build_workflow_approval(&fixture.digest_hex, true, "Approved from Watch")
+        .expect("build grant")
+        .sign_with_keys(&actor)
+        .expect("sign grant");
+    let response = actor_client.send_event(grant).await.expect("send grant");
+    assert!(response.accepted, "grant rejected: {}", response.message);
+
+    let approval = get_approval(&fixture.pool, fixture.community_id, &fixture.raw_token)
+        .await
+        .expect("load granted approval");
+    assert_eq!(approval.status, ApprovalStatus::Granted);
+    assert_eq!(approval.workflow_id, fixture.workflow_id);
+
+    actor_client
+        .disconnect()
+        .await
+        .expect("disconnect approver");
+    outsider_client
+        .disconnect()
+        .await
+        .expect("disconnect outsider");
+}
+
+#[tokio::test]
+#[ignore = "requires a running relay, Postgres, and Redis"]
+async fn test_watch_approval_can_be_denied_and_cancels_the_original_run() {
+    let url = relay_url();
+    let actor = Keys::generate();
+    let fixture = seed_actionable_approval(&actor, "Delete the stale environment?").await;
+    let mut client = BuzzTestClient::connect(&url, &actor)
+        .await
+        .expect("connect approver");
+
+    let deny = build_workflow_approval(&fixture.digest_hex, false, "Not from my wrist")
+        .expect("build denial")
+        .sign_with_keys(&actor)
+        .expect("sign denial");
+    let response = client.send_event(deny).await.expect("send denial");
+    assert!(response.accepted, "denial rejected: {}", response.message);
+
+    let approval = get_approval(&fixture.pool, fixture.community_id, &fixture.raw_token)
+        .await
+        .expect("load denied approval");
+    assert_eq!(approval.status, ApprovalStatus::Denied);
+    let run = get_workflow_run(&fixture.pool, fixture.community_id, fixture.run_id)
+        .await
+        .expect("load cancelled run");
+    assert_eq!(run.status, RunStatus::Cancelled);
+
+    let lifecycle_sid = sub_id("watch-denied-lifecycle");
+    let lifecycle_filter = Filter::new()
+        .kind(Kind::Custom(46_012))
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::P),
+            actor.public_key().to_hex(),
+        )
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::E),
+            fixture.request.id.to_hex(),
+        );
+    client
+        .subscribe(&lifecycle_sid, vec![lifecycle_filter])
+        .await
+        .expect("subscribe denied lifecycle");
+    let lifecycle = client
+        .collect_until_eose(&lifecycle_sid, Duration::from_secs(5))
+        .await
+        .expect("collect denied lifecycle");
+    assert_eq!(lifecycle.len(), 1, "one denial lifecycle is persisted");
+
+    client.disconnect().await.expect("disconnect approver");
+}
+
+#[tokio::test]
+#[ignore = "requires a running relay, Postgres, and Redis"]
+async fn test_watch_approval_pass_is_atomic_and_creates_one_targeted_thread_reply() {
+    let url = relay_url();
+    let actor = Keys::generate();
+    let target = Keys::generate();
+    let fixture = seed_actionable_approval(&actor, "Investigate the failed rollout").await;
+    let mut actor_client = BuzzTestClient::connect(&url, &actor)
+        .await
+        .expect("connect approver");
+    let mut target_client = BuzzTestClient::connect(&url, &target)
+        .await
+        .expect("connect target agent");
+
+    let (added, message) = add_member_ws(
+        &mut actor_client,
+        &fixture.channel_id.to_string(),
+        &target.public_key().to_hex(),
+        &actor,
+    )
+    .await;
+    assert!(added, "target membership rejected: {message}");
+
+    let actor_bytes = actor.public_key().to_bytes();
+    let target_bytes = target.public_key().to_bytes();
+    buzz_db::user::ensure_user(&fixture.pool, fixture.community_id, &actor_bytes)
+        .await
+        .expect("ensure agent owner");
+    buzz_db::user::ensure_user(&fixture.pool, fixture.community_id, &target_bytes)
+        .await
+        .expect("ensure target agent");
+    sqlx::query(
+        "UPDATE users \
+         SET agent_type = 'managed', agent_owner_pubkey = $1, \
+             channel_add_policy = 'owner_only' \
+         WHERE community_id = $2 AND pubkey = $3",
+    )
+    .bind(actor_bytes.as_slice())
+    .bind(fixture.community_id.as_uuid())
+    .bind(target_bytes.as_slice())
+    .execute(&fixture.pool)
+    .await
+    .expect("register target agent");
+
+    let presence = EventBuilder::new(Kind::Custom(20_001), "online")
+        .sign_with_keys(&target)
+        .expect("sign target presence");
+    let response = target_client
+        .send_event(presence)
+        .await
+        .expect("publish target presence");
+    assert!(
+        response.accepted,
+        "target presence rejected: {}",
+        response.message
+    );
+
+    let pass = build_workflow_approval_pass(
+        &fixture.digest_hex,
+        &target.public_key().to_hex(),
+        &fixture.request.id.to_hex(),
+        fixture.channel_id,
+        "Please take this",
+    )
+    .expect("build pass")
+    .sign_with_keys(&actor)
+    .expect("sign pass");
+    let response = actor_client.send_event(pass).await.expect("send pass");
+    assert!(response.accepted, "pass rejected: {}", response.message);
+
+    let approval = get_approval(&fixture.pool, fixture.community_id, &fixture.raw_token)
+        .await
+        .expect("load delegated approval");
+    assert_eq!(approval.status, ApprovalStatus::Delegated);
+    assert_eq!(
+        approval.delegated_to_pubkey.as_deref(),
+        Some(target_bytes.as_slice())
+    );
+    let run = get_workflow_run(&fixture.pool, fixture.community_id, fixture.run_id)
+        .await
+        .expect("load original run");
+    assert_eq!(run.status, RunStatus::Cancelled);
+
+    let task_sid = sub_id("watch-delegated-task");
+    let task_filter = Filter::new()
+        .kind(Kind::Custom(9))
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::P),
+            target.public_key().to_hex(),
+        )
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::H),
+            fixture.channel_id.to_string(),
+        )
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::E),
+            fixture.request.id.to_hex(),
+        );
+    target_client
+        .subscribe(&task_sid, vec![task_filter])
+        .await
+        .expect("subscribe delegated task");
+    let tasks = target_client
+        .collect_until_eose(&task_sid, Duration::from_secs(5))
+        .await
+        .expect("collect delegated task");
+    assert_eq!(tasks.len(), 1, "exactly one targeted task reply is stored");
+
+    let lifecycle_sid = sub_id("watch-delegated-lifecycle");
+    let lifecycle_filter = Filter::new()
+        .kind(Kind::Custom(46_013))
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::P),
+            actor.public_key().to_hex(),
+        )
+        .custom_tag(
+            SingleLetterTag::lowercase(Alphabet::E),
+            fixture.request.id.to_hex(),
+        );
+    actor_client
+        .subscribe(&lifecycle_sid, vec![lifecycle_filter])
+        .await
+        .expect("subscribe delegated lifecycle");
+    let lifecycle = actor_client
+        .collect_until_eose(&lifecycle_sid, Duration::from_secs(5))
+        .await
+        .expect("collect delegated lifecycle");
+    assert_eq!(
+        lifecycle.len(),
+        1,
+        "one delegated lifecycle event is stored"
+    );
+
+    let metadata = buzz_db::thread::get_thread_metadata_by_event(
+        &fixture.pool,
+        fixture.community_id,
+        fixture.request.id.as_bytes(),
+    )
+    .await
+    .expect("load request thread")
+    .expect("request thread metadata");
+    assert_eq!(metadata.reply_count, 1);
+    assert_eq!(metadata.descendant_count, 1);
+
+    actor_client
+        .disconnect()
+        .await
+        .expect("disconnect approver");
+    target_client.disconnect().await.expect("disconnect target");
 }
 
 /// Read a member's authoritative role from the relay-signed kind:39002 member

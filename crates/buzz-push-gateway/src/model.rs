@@ -5,8 +5,10 @@ use serde::{Deserialize, Serialize};
 pub const MAX_REQUEST_BYTES: usize = 8 * 1024;
 pub const MAX_GRANT_BYTES: usize = 4096;
 pub const MAX_ENDPOINT_HEX_BYTES: usize = 512;
-pub const APNS_RECONNECT_PAYLOAD: &[u8] =
-    br#"{"aps":{"alert":{"body":"Reconnect to your relay now"},"mutable-content":1}}"#;
+pub const APNS_DEFAULT_PAYLOAD: &[u8] =
+    br#"{"aps":{"alert":{"body":"Zion needs attention"},"sound":"default"}}"#;
+pub const APNS_TIME_SENSITIVE_PAYLOAD: &[u8] =
+    br#"{"aps":{"alert":{"body":"Zion needs attention"},"sound":"default","interruption-level":"time-sensitive"}}"#;
 pub const WIRE_VERSION: u8 = 1;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -24,8 +26,18 @@ impl AppProfile {
     }
 }
 
+/// Closed relay-to-gateway wake class.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WakeClass {
+    /// Ordinary generic alert.
+    Default,
+    /// Approval-only generic Time Sensitive alert.
+    TimeSensitive,
+}
+
 /// Relay request. It deliberately has no application-payload field:
-/// the gateway emits one compiled-in APNs reconnect payload for every delivery.
+/// the gateway selects one of two compiled-in generic APNs payloads.
 /// `endpoint_grant` is opaque authenticated ciphertext minted by the gateway
 /// sealing key and persisted with the relay-owned lease.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,6 +47,7 @@ pub struct DeliveryRequest {
     pub endpoint_grant: String,
     pub request_id: uuid::Uuid,
     pub expires_at: i64,
+    pub wake_class: WakeClass,
 }
 
 /// Opaque delivery capability plaintext. It contains no APNs token: the random
@@ -167,4 +180,34 @@ pub enum DeliveryResponse {
 #[derive(Debug, Clone, Serialize)]
 pub struct ErrorBody {
     pub error: &'static str,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn delivery_request_accepts_only_closed_wake_classes() {
+        for (raw, expected) in [
+            (
+                r#"{"v":1,"endpoint_grant":"grant","request_id":"00000000-0000-0000-0000-000000000000","expires_at":10,"wake_class":"default"}"#,
+                WakeClass::Default,
+            ),
+            (
+                r#"{"v":1,"endpoint_grant":"grant","request_id":"00000000-0000-0000-0000-000000000000","expires_at":10,"wake_class":"time_sensitive"}"#,
+                WakeClass::TimeSensitive,
+            ),
+        ] {
+            let request: DeliveryRequest = serde_json::from_str(raw).expect("closed request");
+            assert_eq!(request.wake_class, expected);
+        }
+        assert!(serde_json::from_str::<DeliveryRequest>(
+            r#"{"v":1,"endpoint_grant":"grant","request_id":"00000000-0000-0000-0000-000000000000","expires_at":10,"wake_class":"critical"}"#
+        )
+        .is_err());
+        assert!(serde_json::from_str::<DeliveryRequest>(
+            r#"{"v":1,"endpoint_grant":"grant","request_id":"00000000-0000-0000-0000-000000000000","expires_at":10,"wake_class":"default","payload":{"aps":{}}}"#
+        )
+        .is_err());
+    }
 }

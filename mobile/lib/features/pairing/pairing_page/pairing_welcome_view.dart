@@ -51,20 +51,25 @@ class _PairingWelcomeView extends StatelessWidget {
                   container: true,
                   label: brandState.label,
                   liveRegion: brandState.liveRegion,
-                  child: Container(
-                    width: 136,
-                    height: 136,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0x4DFFFFFF),
-                    ),
-                    child: ZionBrandMotion(
-                      variant: brandState.variant,
-                      playing: brandState.playing,
-                      loop: brandState.loop,
-                      size: ZionBrandTokens.heroMotionSize,
-                    ),
+                  child: ExcludeSemantics(
+                    child:
+                        brandState.variant == ZionBrandMotionVariants.onboarding
+                        ? const SentraLiquidOrbit(wordmarkHeight: 64)
+                        : Container(
+                            width: 136,
+                            height: 136,
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0x4DFFFFFF),
+                            ),
+                            child: ZionBrandMotion(
+                              variant: brandState.variant,
+                              playing: brandState.playing,
+                              loop: brandState.loop,
+                              size: ZionBrandTokens.heroMotionSize,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: Grid.sm),

@@ -50,6 +50,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/images/sentra-wordmark-black.png
+    - assets/images/sentra-wordmark-white.png
     - assets/images/zion-icon.png
     - assets/images/zion-mark.svg
     - assets/images/sentra-lockup-light.svg

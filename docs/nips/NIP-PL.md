@@ -19,9 +19,9 @@ Push Leases
 
 This NIP defines the **push lease**: a stored, installation-scoped, expiring authorization asking a **push executor** (usually the user's relay) to keep a constrained Nostr filter active after the client's socket closes, and to *wake* a specific application installation through a platform push transport (APNs, FCM, optionally UnifiedPush) when the filter matches.
 
-The push payload is a **wake signal** authored entirely by the configured transport service: a fixed reconnect instruction, never relay-supplied bytes, event ids, event content, URLs, ciphertext, or extensible custom data. On wake, the client reconnects and fetches authoritative events over normal `REQ`. Push delivery is lossy and best-effort — duplicates and omissions are both possible; the relay remains the single source of truth. Platform transports are execution profiles for the lease, not the protocol's content plane.
+The push payload is a **wake signal** authored entirely by the configured transport service: one of a closed set of generic alerts, never relay-supplied bytes, event ids, event content, URLs, ciphertext, or extensible custom data. On wake, the client reconnects and fetches authoritative events over normal `REQ`. Push delivery is lossy and best-effort — duplicates and omissions are both possible; the relay remains the single source of truth. Platform transports are execution profiles for the lease, not the protocol's content plane.
 
-A lease is a `kind:30350` addressable event: `d` is a random per-origin installation id, `expiration` is public and mandatory, and everything else — transport endpoint, subscriptions, priority classes — is NIP-44-encrypted to the executor's advertised key.
+A lease is a `kind:30350` addressable event: `d` is a random per-origin installation id, `expiration` is public and mandatory, and everything else — transport endpoint, subscriptions, wake classes — is NIP-44-encrypted to the executor's advertised key.
 
 ## Motivation
 
@@ -49,9 +49,9 @@ This document uses MUST, MUST NOT, SHOULD, SHOULD NOT, MAY, and RECOMMENDED as d
 - **push lease (lease)**: the `kind:30350` addressable event authorizing wakes for one installation.
 - **executor**: the logical component that stores leases, matches events, and sends platform pushes. It is trusted by and operates for the origin, holds the descriptor's private decryption keys, and shares the origin's read-authorization state. It is usually the user's relay; it MAY be deployed as a separate process holding the app's transport credentials, but that separation is deployment topology, not a protocol boundary — **this NIP defines no protocol by which an untrusted third party can act as an executor.**
 - **origin**: the canonical origin identifier the descriptor advertises for a relay/community; the tenant key (see Acceptance and Origin Binding).
-- **wake signal**: the fixed, transport-authored reconnect payload defined in Wake Delivery. It contains no relay-supplied application data.
+- **wake signal**: a generic, transport-authored payload selected from the closed class set defined in Wake Delivery. It contains no relay-supplied application data.
 - **subscription**: one `{filter, class, ignore?, suppress?}` entry inside a lease.
-- **priority class**: one of `silent`, `default`, `time_sensitive`, `urgent`.
+- **wake class**: one of `default`, `time_sensitive`.
 - **transport profile**: the APNs/FCM/UnifiedPush-specific execution rules for a lease.
 
 ## The Lease Event
@@ -140,22 +140,20 @@ Each subscription `filter` is a NIP-01 filter object under these restrictions �
 
 A subscription MAY carry `ignore` (≤ `max_ignore` NIP-01 filters) and `suppress` (`p_tags_max` ≥ 1). Suppression evaluates after a positive match: if the matched event matches any `ignore` filter or carries more than `p_tags_max` `p` tags (the hellthread gate), the wake is dropped. `ignore` filters obey the grammar above *except* the narrowing-selector rule — they only subtract from an already-narrowed stream and cannot amplify. Suppression is safe to skip: a minimal executor MAY ignore it and remain correct, since extra wakes are harmless. Consequently a client MUST NOT infer from any observed behavior that suppression was enforced; it is best-effort noise reduction, not policy.
 
-### Priority Classes
+### Wake Classes
 
 Each subscription carries exactly one `class`:
 
 | Class | Meaning | APNs `interruption-level` | Android importance |
 |---|---|---|---|
-| `silent` | Sync-only wake, no alert | not user-visible; see APNs profile | `IMPORTANCE_MIN` |
 | `default` | Standard notification | `active` | `IMPORTANCE_DEFAULT` |
-| `time_sensitive` | Breaks through Focus/DND within OS policy | `time-sensitive` | `IMPORTANCE_HIGH` |
-| `urgent` | Reserved: approval gates | `critical` if entitled, else `time-sensitive` | `IMPORTANCE_HIGH` + full-screen intent where policy allows |
+| `time_sensitive` | Approval request; breaks through Focus/DND within OS policy | `time-sensitive` | `IMPORTANCE_HIGH` |
 
-Classes are strictly ordered: `silent` < `default` < `time_sensitive` < `urgent`. When one deduplicated wake covers matches from multiple subscriptions or leases targeting the same endpoint (see Coalescing), the wake's effective class is the highest eligible class among those matches. The descriptor's `class_support` is authoritative: a lease naming a class unsupported for its transport MUST be rejected at acceptance (`invalid: class not supported`), never silently downgraded.
+Classes are strictly ordered: `default` < `time_sensitive`. When one deduplicated wake covers matches from multiple subscriptions or leases targeting the same endpoint (see Coalescing), the wake's effective class is the highest eligible class among those matches. The descriptor's `class_support` is authoritative: a lease naming a class unsupported for its transport MUST be rejected at acceptance (`invalid: class not supported`), never silently downgraded.
 
-The executor MUST restrict `urgent` to the descriptor-advertised allow-list of approval-request kinds whose eligibility is decidable from the public event envelope (`invalid: class not permitted for kind`). Urgent DMs are explicitly out of scope for v1: gift-wrapped DM content is opaque to the executor, so no privacy-safe urgency marker exists yet; a future revision may add one.
+The executor MUST restrict `time_sensitive` to the descriptor-advertised allow-list of approval-request kinds whose eligibility is decidable from the public event envelope (`invalid: class not permitted for kind`). The Buzz profile permits only kind `46010`. Time-sensitive DMs are explicitly out of scope for v1: gift-wrapped DM content is opaque to the executor, so no privacy-safe urgency marker exists yet; a future revision may add one.
 
-`silent` remains a matching preference only. The public Buzz APNs profile sends the one fixed reconnect alert and does not expose relay-selected notification classes to the transport boundary.
+Implementations upgrading an existing Buzz deployment MAY accept legacy `urgent` as an input alias for `time_sensitive`, and legacy `silent` as an input alias for `default`, solely to preserve already accepted leases. They MUST normalize those aliases before enqueueing delivery and MUST NOT advertise them for new leases.
 
 Clients MUST NOT register any lease or subscription as a side effect of joining a channel or surface — absent explicit user opt-in the notifiable set is empty.
 
@@ -171,15 +169,16 @@ Until this draft has an upstream NIP number, executors MUST NOT advertise it in 
 {
   "push": {
     "origin": "wss://relay.example",         // canonical origin id; copied verbatim into lease content
+    "gateway_origin": "https://push.buzz.xyz",
     "keys": [ { "id": "2026-06", "pubkey": "<hex>", "current": true },
               { "id": "2026-01", "pubkey": "<hex>", "retiring": true } ],
-    "app_profiles": [ { "id": "com.example.app/ios", "transport": "apns" },
-                      { "id": "com.example.app/android", "transport": "fcm" } ],
-    "push_kinds": [9, 1059, 40007, 46010, 7],
-    "urgent_kinds": [46010],
+    "app_profiles": [ { "id": "buzz-ios-production", "transport": "apns" },
+                      { "id": "buzz-ios-sandbox", "transport": "apns" } ],
+    "push_kinds": [7, 9, 1059, 40002, 40007, 46010],
+    "time_sensitive_kinds": [46010],
+    "wake_classes": ["default","time_sensitive"],
     "h_grammar": "uuid-v4-lowercase",
-    "class_support": { "apns": ["silent","default","time_sensitive","urgent"],
-                       "fcm": ["silent","default","time_sensitive","urgent"] },
+    "class_support": { "apns": ["default","time_sensitive"] },
     "limitation": {
       "max_lease_ttl": 2592000,
       "max_leases_per_pubkey": 16,
@@ -192,7 +191,7 @@ Until this draft has an upstream NIP number, executors MUST NOT advertise it in 
 }
 ```
 
-A descriptor is valid only if: exactly one key is marked `current` and key ids are unique; app-profile ids are unique; `endpoint` is an `https://` URL; `urgent_kinds ⊆ push_kinds`; and every `class_support` value comes from the class registry in this NIP. Clients MUST treat a descriptor failing these checks as absence of push support.
+A descriptor is valid only if: exactly one key is marked `current` and key ids are unique; app-profile ids are unique; `gateway_origin` is an `https://` origin with no path, query, or fragment; `time_sensitive_kinds ⊆ push_kinds`; `wake_classes` contains only registered classes; and every `class_support` value comes from `wake_classes`. Clients MUST treat a descriptor failing these checks as absence of push support. Clients derive the registered enrollment and delivery routes from `gateway_origin`; a lease cannot override it.
 
 The executor URL and credentials come from the descriptor, never from the lease. A lease cannot point the executor at an arbitrary HTTP endpoint; this removes the callback-amplification class of attack entirely. Executors MUST NOT dereference a client-supplied `endpoint` URL except as the selected transport profile explicitly defines (UnifiedPush is the only profile whose endpoint is a URL, and it is validated per that profile before use).
 
@@ -212,19 +211,24 @@ Separate origins may independently wake the same installation for the same event
 
 ## Wake Delivery
 
-Every conforming transport sends only a fixed **reconnect** signal. The transport service, not the relay/executor, MUST construct the complete application payload. A relay request MUST NOT contain notification text, title, subtitle, URL, deep link, event or lease identifier, channel, sender, count, ciphertext, generic JSON, extension map, or any other application-content field. Unknown request members MUST be rejected rather than ignored.
+Every conforming transport sends only a generic **wake** signal selected from its registered closed class set. The transport service, not the relay/executor, MUST construct the complete application payload. A relay request may select only the registered wake class; it MUST NOT contain notification text, title, subtitle, URL, deep link, event or lease identifier, channel, sender, count, ciphertext, generic JSON, extension map, or any other application-content field. Unknown request members MUST be rejected rather than ignored.
 
-For every actual platform-send attempt `a`, the application body MUST satisfy `application_body(a) = C_transport`, where `C_transport` is one documented byte constant selected only by gateway deployment/profile. The equality quantifies over all accepted relay bodies, signatures, grants, endpoints, request identifiers, expirations, profiles, and provider responses. A transport MAY vary only explicitly enumerated platform routing controls that are not application-body bytes: destination, authenticated provider topic/environment, expiration, provider request id, push type, and priority. These values MUST NOT be copied into the application body. Timing and frequency remain observable transport metadata and MUST be bounded by gateway-owned abuse controls.
+For every actual platform-send attempt `a`, the application body MUST satisfy `application_body(a) = C_transport[wake_class]`, where the mapping is a documented compile-time constant selected only by gateway deployment/profile. The equality quantifies over all other accepted relay bytes, signatures, grants, endpoints, request identifiers, expirations, profiles, and provider responses. A transport MAY vary only the selected registered class and explicitly enumerated platform routing controls that are not application-body bytes: destination, authenticated provider topic/environment, expiration, provider request id, push type, and priority. These values MUST NOT be copied into the application body. Timing and frequency remain observable transport metadata and MUST be bounded by gateway-owned abuse controls.
 
 On receipt, the application reconnects using relay/account state already stored locally and fetches authoritative events through ordinary authenticated `REQ`. The push signal carries no origin or relay selector; clients MAY sync every locally configured origin. There is no wake-grant or rich-preview payload in this version.
 
 ## Transport Profiles
 
-Common invariant, all transports: the application payload is a transport-owned reconnect constant and MUST NOT depend on relay input, event data, or fetch success.
+Common invariant, all transports: the application payload is selected from a closed set of transport-owned constants and MUST NOT depend on relay input other than the registered wake class, event data, or fetch success.
 
 ### APNs
 
-The APNs application body is the exact UTF-8 byte constant `{"aps":{"alert":{"body":"Reconnect to your relay now"},"mutable-content":1}}`. It has no custom member, event identifier, unread count, or relay-supplied byte. The constant mutable-content flag lets the Buzz Notification Service Extension compute a local badge and, when separately authorized data is available, replace the generic text; the gateway does not carry that data. The gateway MUST send that exact body for every accepted APNs attempt; it MUST NOT serialize any relay request, endpoint grant, provider response, or generic JSON value into the body. `apns-topic`, environment, credentials, push type `alert`, and priority `10` come only from gateway configuration. `apns-id` is a canonical UUID and `apns-expiration` is bounded by the endpoint capability and a gateway-local ceiling.
+The APNs application body is selected from exactly two UTF-8 byte constants:
+
+- `default`: `{"aps":{"alert":{"body":"Zion needs attention"},"sound":"default"}}`
+- `time_sensitive`: `{"aps":{"alert":{"body":"Zion needs attention"},"sound":"default","interruption-level":"time-sensitive"}}`
+
+Neither body has a custom member, event identifier, unread count, or relay-supplied byte. The gateway MUST select only by the closed request `wake_class`; it MUST NOT serialize any other relay request, endpoint grant, provider response, or generic JSON value into the body. `apns-topic`, environment, credentials, push type `alert`, and priority `10` come only from gateway configuration. `apns-id` is a canonical UUID and `apns-expiration` is bounded by the endpoint capability and a gateway-local ceiling.
 
 ### FCM
 
@@ -389,10 +393,10 @@ Success is `200 {"status":"revoked"}`. The revocation atomically invalidates the
 `POST /v1/deliveries/apns` has the exact externally configured URL `https://push.buzz.xyz/v1/deliveries/apns`. Request:
 
 ```json
-{"v":1,"endpoint_grant":"<opaque-capability>","request_id":"<uuid>","expires_at":<unix-seconds>}
+{"v":1,"endpoint_grant":"<opaque-capability>","request_id":"<uuid>","expires_at":<unix-seconds>,"wake_class":"default"}
 ```
 
-The relay supplies a NIP-98 `Authorization: Nostr <standard-base64-event-json>` header for method `POST`, the exact URL above, and the SHA-256 payload hash of the **received request body bytes**. The gateway verifies the NIP-98 event signature, timestamp under NIP-98 rules, method, URL, and payload; the event pubkey is the relay identity. It decrypts `endpoint_grant`, requires that signer, current installation/delegation, endpoint epoch and generation, and both `now <= request.expires_at <= grant.expires_at`. Every NIP-98 event id is burned at admission.
+`wake_class` MUST be exactly `default` or `time_sensitive`; the request has no application-content field and unknown members are rejected. The relay supplies a NIP-98 `Authorization: Nostr <standard-base64-event-json>` header for method `POST`, the exact URL above, and the SHA-256 payload hash of the **received request body bytes**. The gateway verifies the NIP-98 event signature, timestamp under NIP-98 rules, method, URL, and payload; the event pubkey is the relay identity. It decrypts `endpoint_grant`, requires that signer, current installation/delegation, endpoint epoch and generation, and both `now <= request.expires_at <= grant.expires_at`. Every NIP-98 event id is burned at admission.
 
 The relay's durable job UUID is `request_id` and becomes the stable APNs `apns-id`. Delivery replay/quota reservation is one transaction. The commit of that transaction is send-begin: a revocation or rotation commit that completes first prevents the old-capability send; a send admitted first may finish. Terminal outcomes retain the `(relay_pubkey, request_id)` reservation; transient/configuration outcomes release it only after provider processing so a fresh NIP-98 event may retry the same job. Endpoint quota is charged once per admitted attempt and never refunded. A crash before transient cleanup can reject that id until its bounded request expiry; exactly-once provider delivery is not guaranteed.
 
@@ -407,7 +411,7 @@ Responses:
 - `404 {"error":"invalid_grant"}` — capability, signer, authority, replay, expiry, or quota rejection.
 - `503 {"error":"temporarily_unavailable"}` — durable authority/custody/disposition failure.
 
-The gateway performs one APNs request, except that an APNs expired-provider-token response permits one credential refresh and one retry. The application body is always the exact constant registered in the APNs transport profile above; no request or grant field enters it.
+The gateway performs one APNs request, except that an APNs expired-provider-token response permits one credential refresh and one retry. The application body is always the exact constant registered for `wake_class` in the APNs transport profile above; no other request or grant field enters it.
 
 ## Implementation Notes (Buzz, non-normative)
 
@@ -419,7 +423,7 @@ What each party learns:
 
 | Party | Learns |
 |---|---|
-| Platform push service (Apple/Google/distributor) | that a fixed reconnect wake occurred for this app installation, plus timing and enumerated transport metadata; no relay-supplied application bytes |
+| Platform push service (Apple/Google/distributor) | that a generic wake of one of the registered classes occurred for this app installation, plus timing and enumerated transport metadata; no relay-supplied application bytes |
 | Executor / relay | lease filters in plaintext (it must match them), the transport endpoint, and wake timing — this is new information relative to the bare event store, entrusted to the executor because it is the origin's trusted component |
 | Other relay users | nothing: leases are author-only reads |
 
@@ -437,6 +441,6 @@ Zombie leases (e.g. `#h` after leaving a channel) are neutralized by match-time 
 - `kind:30350`: push lease (addressable)
 - `exec` tag: executor encryption-key identifier for `kind:30350`
 - NIP-11 `supported_extensions`: contains `"nip-pl"` pre-numbering; descriptor object `push` as specified in Executor Discovery
-- Classes: `silent`, `default`, `time_sensitive`, `urgent`
+- Wake classes: `default`, `time_sensitive`
 - `h_grammar` values: `"uuid-v4-lowercase"` (initial entry; origins may register additional grammars with this NIP)
 - Public APNs gateway profile: base URL `https://push.buzz.xyz`; app profiles `buzz-ios-production`, `buzz-ios-sandbox`; wire version `1`

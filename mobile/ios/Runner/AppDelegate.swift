@@ -6,6 +6,7 @@ import UserNotifications
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var mediaUploadChannel: FlutterMethodChannel?
+  private var appleCompanionPlugin: AppleCompanionPlugin?
   private var qrScannerChannel: FlutterMethodChannel?
   private var inlinePhotoPickerSupportChannel: FlutterMethodChannel?
   private var nativeAttachmentPopoverCoordinator: NativeAttachmentPopoverCoordinator?
@@ -14,7 +15,6 @@ import UserNotifications
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    UNUserNotificationCenter.current().requestAuthorization(options: [.badge]) { _, _ in }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
@@ -28,6 +28,54 @@ import UserNotifications
     mediaUploadChannel?.setMethodCallHandler { [weak self] call, result in
       self?.handleMediaUploadMethodCall(call, result: result)
     }
+    appleCompanionPlugin = AppleCompanionPlugin(
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    configureNativeSurfaces(engineBridge)
+  }
+
+  override func application(
+    _ application: UIApplication,
+    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+  ) {
+    appleCompanionPlugin?.didRegisterForRemoteNotifications(deviceToken: deviceToken)
+    super.application(
+      application,
+      didRegisterForRemoteNotificationsWithDeviceToken: deviceToken
+    )
+  }
+
+  override func application(
+    _ application: UIApplication,
+    didFailToRegisterForRemoteNotificationsWithError error: Error
+  ) {
+    appleCompanionPlugin?.didFailToRegisterForRemoteNotifications(error)
+    super.application(
+      application,
+      didFailToRegisterForRemoteNotificationsWithError: error
+    )
+  }
+
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    if Self.shouldPresentForegroundNotification(
+      body: notification.request.content.body
+    ) {
+      completionHandler([.banner, .sound, .badge])
+    } else {
+      completionHandler([.badge])
+    }
+  }
+
+  static func shouldPresentForegroundNotification(body: String) -> Bool {
+    body == "Zion needs attention"
+  }
+
+  private func configureNativeSurfaces(_ engineBridge: FlutterImplicitEngineBridge) {
+    let messenger = engineBridge.applicationRegistrar.messenger()
     qrScannerChannel = FlutterMethodChannel(
       name: "buzz/qr_scanner",
       binaryMessenger: messenger

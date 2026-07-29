@@ -496,6 +496,32 @@ def run_git(repo: Path, *args: str) -> str:
     return result.stdout.strip()
 
 
+def _is_ancestor(repo: Path, ancestor: str, descendant: str) -> bool:
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo),
+                "merge-base",
+                "--is-ancestor",
+                ancestor,
+                descendant,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as error:
+        raise IntakeEnvironmentError(f"cannot execute git: {error}") from error
+    if result.returncode == 0:
+        return True
+    if result.returncode == 1:
+        return False
+    detail = result.stderr.strip() or result.stdout.strip() or "unknown error"
+    raise IntakeEnvironmentError(f"cannot verify Git ancestry: {detail}")
+
+
 def validate_state(state: dict[str, object]) -> None:
     """Validate durable repository pointers."""
     if _has_required_marker(state):
@@ -517,20 +543,8 @@ def expected_range(repo: Path, previous: str, pinned: str) -> list[str]:
     """Return the authoritative oldest-first topological commit range."""
     _full_sha(previous, "previous_reviewed_sha")
     _full_sha(pinned, "pinned_upstream_sha")
-    try:
-        ancestor = subprocess.run(
-            ["git", "-C", str(repo), "merge-base", "--is-ancestor", previous, pinned],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-    except OSError as error:
-        raise IntakeEnvironmentError(f"cannot execute git: {error}") from error
-    if ancestor.returncode == 1:
+    if not _is_ancestor(repo, previous, pinned):
         raise IntakeError(f"{previous} is not an ancestor of {pinned}")
-    if ancestor.returncode != 0:
-        detail = ancestor.stderr.strip() or "unknown error"
-        raise IntakeEnvironmentError(f"cannot verify Git ancestry: {detail}")
     output = run_git(
         repo,
         "rev-list",
@@ -539,6 +553,309 @@ def expected_range(repo: Path, previous: str, pinned: str) -> list[str]:
         f"{previous}..{pinned}",
     )
     return output.splitlines() if output else []
+
+
+def classify_topic(subject: str, sha: str) -> str:
+    """Return a stable upstream-PR or SHA-derived topic identifier."""
+    match = re.search(r"\(#(\d+)\)\s*$", subject)
+    if match is not None:
+        return f"pr-{match.group(1)}"
+    _full_sha(sha, "discovery commit SHA")
+    return f"commit-{sha[:12]}"
+
+
+def _upstream_pr(subject: str) -> int | None:
+    match = re.search(r"\(#(\d+)\)\s*$", subject)
+    return int(match.group(1)) if match is not None else None
+
+
+def security_reasons(subject: str, files: list[str]) -> list[str]:
+    """Return deterministic title/path reasons that require security review."""
+    reasons: list[str] = []
+    lowered_subject = subject.casefold()
+    for keyword in (
+        "cve-",
+        "security",
+        "vulnerability",
+        "authentication",
+        "authorization",
+        "permission",
+        "crypto",
+        "secret",
+        "credential",
+    ):
+        if keyword in lowered_subject:
+            reasons.append(f"title keyword: {keyword}")
+    path_markers = (
+        "auth",
+        "security",
+        "permission",
+        "crypto",
+        "secret",
+        "credential",
+        "keychain",
+        "entitlement",
+    )
+    for path in files:
+        lowered_path = path.casefold()
+        if any(marker in lowered_path for marker in path_markers):
+            reasons.append(f"sensitive path: {path}")
+    return reasons
+
+
+def _commit_metadata(repo: Path, sha: str) -> dict[str, object]:
+    header = run_git(repo, "show", "-s", "--format=%s%x00%aI", sha)
+    try:
+        subject, author_date = header.split("\0", 1)
+    except ValueError as error:
+        raise IntakeEnvironmentError(
+            f"cannot parse metadata for commit {sha}"
+        ) from error
+
+    parent_line = run_git(repo, "rev-list", "--parents", "-n", "1", sha)
+    parent_parts = parent_line.split()
+    if len(parent_parts) > 1:
+        numstat = run_git(
+            repo,
+            "diff",
+            "--numstat",
+            "--find-renames",
+            parent_parts[1],
+            sha,
+        )
+    else:
+        numstat = run_git(
+            repo,
+            "diff-tree",
+            "--root",
+            "--no-commit-id",
+            "--numstat",
+            "-r",
+            "--find-renames",
+            sha,
+        )
+
+    files: set[str] = set()
+    insertions = 0
+    deletions = 0
+    for line in numstat.splitlines():
+        parts = line.split("\t", 2)
+        if len(parts) != 3:
+            continue
+        added, removed, path = parts
+        files.add(path)
+        if added.isdigit():
+            insertions += int(added)
+        if removed.isdigit():
+            deletions += int(removed)
+    sorted_files = sorted(files)
+    topic_id = classify_topic(subject, sha)
+    return {
+        "author_date": author_date,
+        "files": sorted_files,
+        "security_reasons": security_reasons(subject, sorted_files),
+        "sha": sha,
+        "statistics": {
+            "deletions": deletions,
+            "files": len(sorted_files),
+            "insertions": insertions,
+        },
+        "subject": subject,
+        "topic_id": topic_id,
+        "upstream_pr": _upstream_pr(subject),
+    }
+
+
+def discover(repo: Path, upstream_ref: str) -> dict[str, object]:
+    """Inspect a capped upstream range without mutating repository state."""
+    root = repo / ".upstream-intake"
+    config = load_json(root / "config.json")
+    state = load_json(root / "state.json")
+    validate_config(repo, config)
+    validate_state(state)
+
+    reviewed = str(state["reviewed_through"])
+    resolved_head = run_git(
+        repo, "rev-parse", "--verify", f"{upstream_ref}^{{commit}}"
+    )
+    _full_sha(resolved_head, "resolved upstream ref")
+    if not _is_ancestor(repo, reviewed, resolved_head):
+        raise IntakeError(
+            f"reviewed_through {reviewed} is not an ancestor of {resolved_head}"
+        )
+
+    range_output = run_git(
+        repo,
+        "rev-list",
+        "--reverse",
+        "--topo-order",
+        f"{reviewed}..{resolved_head}",
+    )
+    candidate_shas = range_output.splitlines() if range_output else []
+    limits = _mapping(config.get("batch_limits"), "batch_limits")
+    max_commits = int(limits["max_commits"])
+    max_changed_files = int(limits["max_changed_files"])
+
+    selected: list[dict[str, object]] = []
+    changed_files: set[str] = set()
+    cap_reason: str | None = None
+    dedicated_batch_blocker: dict[str, object] | None = None
+    for sha in candidate_shas:
+        metadata = _commit_metadata(repo, sha)
+        commit_files = set(metadata["files"])
+        if not selected and len(commit_files) > max_changed_files:
+            selected.append(metadata)
+            changed_files.update(commit_files)
+            cap_reason = "single_commit_changed_file_limit"
+            dedicated_batch_blocker = {
+                "changed_files": len(commit_files),
+                "limit": max_changed_files,
+                "reason": "single_commit_exceeds_changed_file_limit",
+                "sha": sha,
+            }
+            break
+        if len(selected) >= max_commits:
+            cap_reason = "commit_limit"
+            break
+        if len(changed_files | commit_files) > max_changed_files:
+            cap_reason = "changed_file_limit"
+            break
+        selected.append(metadata)
+        changed_files.update(commit_files)
+
+    remaining = len(candidate_shas) - len(selected)
+    if remaining and cap_reason is None:
+        cap_reason = "commit_limit"
+    pinned = str(selected[-1]["sha"]) if selected else reviewed
+
+    topics_by_id: dict[str, dict[str, object]] = {}
+    for commit in selected:
+        topic_id = str(commit["topic_id"])
+        topic = topics_by_id.get(topic_id)
+        if topic is None:
+            title = re.sub(r"\s*\(#\d+\)\s*$", "", str(commit["subject"]))
+            topic = {
+                "entry_shas": [],
+                "title": title,
+                "topic_id": topic_id,
+                "upstream_pr": commit["upstream_pr"],
+            }
+            topics_by_id[topic_id] = topic
+        entry_shas = topic["entry_shas"]
+        assert isinstance(entry_shas, list)
+        entry_shas.append(commit["sha"])
+
+    return {
+        "cap": {
+            "max_changed_files": max_changed_files,
+            "max_commits": max_commits,
+            "reached": cap_reason is not None,
+            "reason": cap_reason,
+        },
+        "changed_file_count": len(changed_files),
+        "commit_count": len(selected),
+        "commits": selected,
+        "dedicated_batch_blocker": dedicated_batch_blocker,
+        "pinned_upstream_sha": pinned,
+        "remaining_commit_count": remaining,
+        "requested_upstream_sha": resolved_head,
+        "reviewed_through": reviewed,
+        "schema_version": 1,
+        "topics": list(topics_by_id.values()),
+        "upstream_ref": upstream_ref,
+    }
+
+
+def render_markdown(report: dict[str, object]) -> str:
+    """Render a deterministic human-readable discovery report."""
+    lines = [
+        "# Upstream discovery",
+        "",
+        (
+            f"- Range: `{report['reviewed_through']}.."
+            f"{report['pinned_upstream_sha']}`"
+        ),
+        f"- Requested head: `{report['requested_upstream_sha']}`",
+        f"- Commits: **{report['commit_count']}**",
+        f"- Changed files: **{report['changed_file_count']}**",
+        f"- Remaining commits: **{report['remaining_commit_count']}**",
+    ]
+    cap = _mapping(report.get("cap"), "report.cap")
+    if cap.get("reason") is not None:
+        lines.append(f"- Cap result: `{cap['reason']}`")
+    blocker = report.get("dedicated_batch_blocker")
+    if isinstance(blocker, dict):
+        lines.extend(
+            [
+                "",
+                "## Dedicated batch required",
+                "",
+                (
+                    f"`{blocker['sha']}` changes {blocker['changed_files']} files "
+                    f"against a limit of {blocker['limit']}."
+                ),
+            ]
+        )
+
+    topics = report.get("topics")
+    if isinstance(topics, list) and topics:
+        lines.extend(["", "## Topics", ""])
+        for topic in topics:
+            assert isinstance(topic, dict)
+            pr = (
+                f" upstream PR #{topic['upstream_pr']}"
+                if topic.get("upstream_pr") is not None
+                else ""
+            )
+            lines.append(
+                f"- `{topic['topic_id']}`: {topic['title']} "
+                f"({len(topic['entry_shas'])} commit(s)){pr}"
+            )
+
+    commits = report.get("commits")
+    if isinstance(commits, list) and commits:
+        lines.extend(["", "## Commits", ""])
+        for commit in commits:
+            assert isinstance(commit, dict)
+            reasons = commit.get("security_reasons")
+            security = (
+                f" - security review: {', '.join(reasons)}"
+                if isinstance(reasons, list) and reasons
+                else ""
+            )
+            lines.append(
+                f"- `{commit['sha']}` {commit['subject']} "
+                f"({commit['statistics']['files']} file(s)){security}"
+            )
+    return "\n".join(lines) + "\n"
+
+
+def _render_batch_markdown(batch: dict[str, object]) -> str:
+    validate_batch(batch)
+    entries = _object_list(batch.get("entries"), "entries")
+    decisions = {"accept": 0, "defer": 0, "reject": 0}
+    for entry in entries:
+        decisions[str(entry["decision"])] += 1
+    lines = [
+        f"# Upstream intake batch {batch['batch_id']}",
+        "",
+        (
+            f"- Range: `{batch['previous_reviewed_sha']}.."
+            f"{batch['pinned_upstream_sha']}`"
+        ),
+        f"- Accept: **{decisions['accept']}**",
+        f"- Reject: **{decisions['reject']}**",
+        f"- Defer: **{decisions['defer']}**",
+        "",
+        "## Entries",
+        "",
+    ]
+    for entry in entries:
+        lines.append(
+            f"- `{entry['upstream_sha']}` `{entry['decision']}` "
+            f"{entry['title']}"
+        )
+    return "\n".join(lines) + "\n"
 
 
 def _batch_paths(repo: Path) -> tuple[list[Path], list[Path]]:
@@ -623,6 +940,14 @@ def _build_parser() -> argparse.ArgumentParser:
     validate = subparsers.add_parser("validate")
     validate.add_argument("--repo", type=Path, required=True)
     validate.add_argument("--base-ref")
+    discovery = subparsers.add_parser("discover")
+    discovery.add_argument("--repo", type=Path, required=True)
+    discovery.add_argument("--upstream-ref", required=True)
+    discovery.add_argument("--format", choices=("json", "markdown"), default="json")
+    discovery.add_argument("--require-macos", action="store_true")
+    render = subparsers.add_parser("render")
+    render.add_argument("--repo", type=Path, required=True)
+    render.add_argument("--batch", type=Path, required=True)
     return parser
 
 
@@ -635,6 +960,22 @@ def main(argv: list[str] | None = None) -> int:
             repo = args.repo.resolve()
             validate_repository(repo, args.base_ref)
             print(json.dumps(_validate_result(repo), sort_keys=True))
+            return 0
+        if args.command == "discover":
+            if args.require_macos:
+                require_macos()
+            report = discover(args.repo.resolve(), args.upstream_ref)
+            if args.format == "markdown":
+                print(render_markdown(report), end="")
+            else:
+                print(json.dumps(report, sort_keys=True))
+            return 0
+        if args.command == "render":
+            repo = args.repo.resolve()
+            batch_path = args.batch
+            if not batch_path.is_absolute():
+                batch_path = repo / batch_path
+            print(_render_batch_markdown(load_json(batch_path)), end="")
             return 0
     except IntakeError as error:
         print(f"upstream intake policy error: {error}", file=sys.stderr)

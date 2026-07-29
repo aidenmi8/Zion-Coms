@@ -563,5 +563,249 @@ class GitRangeValidationTests(unittest.TestCase):
         self.assertIn("full 40-character", failure.stderr)
 
 
+class DiscoveryTests(unittest.TestCase):
+    """Discovery is capped, deterministic, security-aware, and read-only."""
+
+    def setUp(self) -> None:
+        self.tool = load_tool()
+        for function_name in (
+            "classify_topic",
+            "discover",
+            "render_markdown",
+            "security_reasons",
+        ):
+            self.assertTrue(
+                hasattr(self.tool, function_name),
+                f"production tool must expose {function_name}",
+            )
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.repo = Path(self.temp_dir.name)
+        self.git("init", "-q", "-b", "main")
+        self.git("config", "user.name", "Discovery Test")
+        self.git("config", "user.email", "discovery@example.test")
+        (self.repo / "LICENSE").write_text(MIT_LICENSE, encoding="utf-8")
+        self.git("add", "LICENSE")
+        self.git("commit", "-q", "-m", "base")
+        self.base = self.git("rev-parse", "HEAD")
+
+    def tearDown(self) -> None:
+        self.temp_dir.cleanup()
+
+    def git(self, *args: str) -> str:
+        result = subprocess.run(
+            ["git", "-C", str(self.repo), *args],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+
+    def commit_files(self, files: dict[str, str], message: str) -> str:
+        for name, content in files.items():
+            path = self.repo / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+        self.git("add", *files)
+        self.git("commit", "-q", "-m", message)
+        return self.git("rev-parse", "HEAD")
+
+    def configure(
+        self,
+        reviewed: str,
+        *,
+        max_commits: int = 25,
+        max_changed_files: int = 250,
+    ) -> None:
+        config = load_fixture("config-mit.json")
+        limits = copy.deepcopy(config["batch_limits"])
+        limits["max_commits"] = max_commits
+        limits["max_changed_files"] = max_changed_files
+        config["batch_limits"] = limits
+        state = {
+            "schema_version": 1,
+            "reviewed_through": reviewed,
+            "last_discovered": reviewed,
+            "open_batches": [],
+        }
+        write_json(self.repo / ".upstream-intake/config.json", config)
+        write_json(self.repo / ".upstream-intake/state.json", state)
+
+    def test_no_change_discovery_reports_zero_commits(self) -> None:
+        self.configure(self.base)
+
+        report = self.tool.discover(self.repo, "main")
+
+        self.assertEqual(0, report["commit_count"])
+        self.assertEqual(0, report["changed_file_count"])
+        self.assertEqual(self.base, report["pinned_upstream_sha"])
+        self.assertEqual([], report["commits"])
+
+    def test_reviewed_sha_must_be_ancestor_of_requested_ref(self) -> None:
+        descendant = self.commit_files({"later.txt": "later\n"}, "Later")
+        self.configure(descendant)
+
+        with self.assertRaisesRegex(self.tool.IntakeError, "not an ancestor"):
+            self.tool.discover(self.repo, self.base)
+
+    def test_commits_include_metadata_and_stable_topic_grouping(self) -> None:
+        first = self.commit_files(
+            {"mobile/pairing.dart": "pairing\n"}, "Fix pairing (#123)"
+        )
+        second = self.commit_files(
+            {"desktop/activity.tsx": "activity\n"}, "Polish activity"
+        )
+        self.configure(self.base)
+
+        report = self.tool.discover(self.repo, "main")
+        commits = report["commits"]
+
+        self.assertEqual([first, second], [commit["sha"] for commit in commits])
+        self.assertEqual("Fix pairing (#123)", commits[0]["subject"])
+        self.assertRegex(
+            commits[0]["author_date"],
+            r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}",
+        )
+        self.assertEqual(["mobile/pairing.dart"], commits[0]["files"])
+        self.assertEqual(
+            {"deletions": 0, "files": 1, "insertions": 1},
+            commits[0]["statistics"],
+        )
+        self.assertEqual("pr-123", commits[0]["topic_id"])
+        self.assertEqual(123, commits[0]["upstream_pr"])
+        self.assertEqual(f"commit-{second[:12]}", commits[1]["topic_id"])
+        self.assertIsNone(commits[1]["upstream_pr"])
+        self.assertEqual(
+            [first],
+            next(
+                topic["entry_shas"]
+                for topic in report["topics"]
+                if topic["topic_id"] == "pr-123"
+            ),
+        )
+
+    def test_default_commit_cap_pins_the_twenty_fifth_commit(self) -> None:
+        shas = []
+        for index in range(26):
+            shas.append(
+                self.commit_files(
+                    {f"changes/{index:02d}.txt": f"{index}\n"},
+                    f"Change {index:02d}",
+                )
+            )
+        self.configure(self.base)
+
+        report = self.tool.discover(self.repo, "main")
+
+        self.assertEqual(25, report["commit_count"])
+        self.assertEqual(shas[24], report["pinned_upstream_sha"])
+        self.assertEqual(1, report["remaining_commit_count"])
+        self.assertEqual("commit_limit", report["cap"]["reason"])
+
+    def test_configured_lower_file_cap_is_honored(self) -> None:
+        first = self.commit_files(
+            {"one.txt": "one\n", "two.txt": "two\n"}, "Two files"
+        )
+        self.commit_files({"three.txt": "three\n"}, "Third file")
+        self.configure(self.base, max_changed_files=2)
+
+        report = self.tool.discover(self.repo, "main")
+
+        self.assertEqual(1, report["commit_count"])
+        self.assertEqual(first, report["pinned_upstream_sha"])
+        self.assertEqual(2, report["changed_file_count"])
+        self.assertEqual("changed_file_limit", report["cap"]["reason"])
+
+    def test_single_oversized_commit_is_explicit_dedicated_batch_blocker(
+        self,
+    ) -> None:
+        oversized = self.commit_files(
+            {
+                "one.txt": "one\n",
+                "two.txt": "two\n",
+                "three.txt": "three\n",
+            },
+            "Atomic generated update",
+        )
+        self.configure(self.base, max_changed_files=2)
+
+        report = self.tool.discover(self.repo, "main")
+
+        self.assertEqual(1, report["commit_count"])
+        self.assertEqual(oversized, report["pinned_upstream_sha"])
+        self.assertEqual(
+            {
+                "changed_files": 3,
+                "limit": 2,
+                "reason": "single_commit_exceeds_changed_file_limit",
+                "sha": oversized,
+            },
+            report["dedicated_batch_blocker"],
+        )
+
+    def test_security_reasons_include_title_and_sensitive_path(self) -> None:
+        secure = self.commit_files(
+            {"crates/buzz-auth/src/secret.rs": "secret\n"},
+            "Harden authentication secret handling",
+        )
+        self.configure(self.base)
+
+        report = self.tool.discover(self.repo, "main")
+        commit = report["commits"][0]
+
+        self.assertEqual(secure, commit["sha"])
+        self.assertIn("title keyword: authentication", commit["security_reasons"])
+        self.assertIn(
+            "sensitive path: crates/buzz-auth/src/secret.rs",
+            commit["security_reasons"],
+        )
+
+    def test_discovery_does_not_modify_repository_or_intake_state(self) -> None:
+        self.commit_files({"change.txt": "change\n"}, "Read-only candidate")
+        self.configure(self.base)
+        before = {
+            "status": self.git("status", "--porcelain=v1", "--untracked-files=all"),
+            "refs": self.git("show-ref"),
+            "head": self.git("rev-parse", "HEAD"),
+            "state": (
+                self.repo / ".upstream-intake/state.json"
+            ).read_bytes(),
+            "config": (
+                self.repo / ".upstream-intake/config.json"
+            ).read_bytes(),
+        }
+
+        self.tool.discover(self.repo, "main")
+
+        after = {
+            "status": self.git("status", "--porcelain=v1", "--untracked-files=all"),
+            "refs": self.git("show-ref"),
+            "head": self.git("rev-parse", "HEAD"),
+            "state": (
+                self.repo / ".upstream-intake/state.json"
+            ).read_bytes(),
+            "config": (
+                self.repo / ".upstream-intake/config.json"
+            ).read_bytes(),
+        }
+        self.assertEqual(before, after)
+
+    def test_markdown_and_json_share_the_same_range_and_counts(self) -> None:
+        candidate = self.commit_files(
+            {"candidate.txt": "candidate\n"}, "Candidate"
+        )
+        self.configure(self.base)
+        report = self.tool.discover(self.repo, "main")
+
+        markdown = self.tool.render_markdown(report)
+        encoded = json.loads(json.dumps(report, sort_keys=True))
+
+        self.assertIn(f"`{self.base}..{candidate}`", markdown)
+        self.assertIn("Commits: **1**", markdown)
+        self.assertIn("Changed files: **1**", markdown)
+        self.assertEqual(candidate, encoded["pinned_upstream_sha"])
+        self.assertEqual(1, encoded["commit_count"])
+        self.assertEqual(1, encoded["changed_file_count"])
+
+
 if __name__ == "__main__":
     unittest.main()

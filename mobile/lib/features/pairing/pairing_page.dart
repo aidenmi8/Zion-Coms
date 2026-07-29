@@ -16,12 +16,6 @@ import 'pairing_qr_scanner.dart';
 part 'pairing_page/onboarding_background.dart';
 part 'pairing_page/pairing_welcome_view.dart';
 
-const _onboardingChartreuse = Color(0xFFD7D72E);
-const _onboardingShellBottom = Color(0xFFD7E7F6);
-const _onboardingCtaLabel = Color(0xFFD7E6F0);
-const _onboardingInk = Color(0xFF111111);
-const _onboardingMutedInk = Color(0xB3111111);
-
 class PairingPage extends HookConsumerWidget {
   /// When true, the pairing page is being used to add a new community
   /// (user is already authenticated with at least one community).
@@ -85,25 +79,17 @@ class PairingPage extends HookConsumerWidget {
             .copyWith(statusBarColor: Colors.transparent);
     final pairingAppBar = addingCommunity
         ? AppBar(
-            foregroundColor: isVerifyingSas
-                ? context.colors.onSurface
-                : _onboardingInk,
-            systemOverlayStyle: isVerifyingSas
-                ? themedSystemOverlayStyle
-                : SystemUiOverlayStyle.dark.copyWith(
-                    statusBarColor: Colors.transparent,
-                  ),
+            foregroundColor: context.colors.onSurface,
+            systemOverlayStyle: themedSystemOverlayStyle,
             leading: IconButton(
               icon: const Icon(LucideIcons.arrowLeft),
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Text(
               'Add Community',
-              style: isVerifyingSas
-                  ? null
-                  : context.textTheme.titleMedium?.copyWith(
-                      color: _onboardingInk,
-                    ),
+              style: context.textTheme.titleMedium?.copyWith(
+                color: context.colors.onSurface,
+              ),
             ),
           )
         : null;
@@ -131,9 +117,7 @@ class PairingPage extends HookConsumerWidget {
           )
         : AnnotatedRegion<SystemUiOverlayStyle>(
             key: const Key('pairing-onboarding-system-overlay'),
-            value: SystemUiOverlayStyle.dark.copyWith(
-              statusBarColor: Colors.transparent,
-            ),
+            value: themedSystemOverlayStyle,
             child: _OnboardingBackground(
               child: Scaffold(
                 backgroundColor: Colors.transparent,

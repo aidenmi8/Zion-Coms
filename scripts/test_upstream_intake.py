@@ -807,5 +807,374 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(1, encoded["changed_file_count"])
 
 
+class ArchiveImmutabilityTests(unittest.TestCase):
+    """Closed decision history changes only through append-only records."""
+
+    def setUp(self) -> None:
+        self.tool = load_tool()
+        self.assertTrue(
+            hasattr(self.tool, "validate_archive_changes"),
+            "production tool must expose validate_archive_changes",
+        )
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.repo = Path(self.temp_dir.name)
+        self.git("init", "-q", "-b", "main")
+        self.git("config", "user.name", "Archive Test")
+        self.git("config", "user.email", "archive@example.test")
+        self.batch = load_fixture("mixed-batch.json")
+        self.batch["status"] = "closed"
+        self.path = (
+            self.repo
+            / ".upstream-intake/batches/archive/2026-07-29-4444444.json"
+        )
+        write_json(self.path, self.batch)
+        self.git("add", ".upstream-intake")
+        self.git("commit", "-q", "-m", "archive batch")
+        self.base_ref = self.git("rev-parse", "HEAD")
+
+    def tearDown(self) -> None:
+        self.temp_dir.cleanup()
+
+    def git(self, *args: str) -> str:
+        result = subprocess.run(
+            ["git", "-C", str(self.repo), *args],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+
+    def reclassification(self) -> dict[str, object]:
+        return {
+            "date": "2026-07-29",
+            "new_decision": "accept",
+            "old_decision": "reject",
+            "reason": "The dependency is now approved.",
+            "tracking_reference": "https://github.com/example/fork/issues/22",
+            "upstream_sha": "1111111111111111111111111111111111111111",
+        }
+
+    def test_deleting_archived_batch_fails(self) -> None:
+        self.path.unlink()
+
+        with self.assertRaisesRegex(self.tool.IntakeError, "deleted"):
+            self.tool.validate_archive_changes(self.repo, self.base_ref)
+
+    def test_editing_original_archived_decision_fails(self) -> None:
+        current = json.loads(self.path.read_text(encoding="utf-8"))
+        current["entries"][0]["decision"] = "accept"
+        write_json(self.path, current)
+
+        with self.assertRaisesRegex(self.tool.IntakeError, "immutable"):
+            self.tool.validate_archive_changes(self.repo, self.base_ref)
+
+    def test_append_only_complete_reclassification_passes(self) -> None:
+        current = json.loads(self.path.read_text(encoding="utf-8"))
+        current["reclassifications"].append(self.reclassification())
+        write_json(self.path, current)
+
+        self.tool.validate_archive_changes(self.repo, self.base_ref)
+
+    def test_reclassification_does_not_allow_original_evidence_edit(self) -> None:
+        current = json.loads(self.path.read_text(encoding="utf-8"))
+        current["entries"][0]["rationale"] = "Rewritten history."
+        current["reclassifications"].append(self.reclassification())
+        write_json(self.path, current)
+
+        with self.assertRaisesRegex(self.tool.IntakeError, "immutable"):
+            self.tool.validate_archive_changes(self.repo, self.base_ref)
+
+
+class AuditTests(unittest.TestCase):
+    """Audit surfaces action and evidence gaps without rewriting the ledger."""
+
+    def setUp(self) -> None:
+        self.tool = load_tool()
+        self.assertTrue(
+            hasattr(self.tool, "audit_repository"),
+            "production tool must expose audit_repository",
+        )
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.repo = Path(self.temp_dir.name)
+        self.git("init", "-q", "-b", "main")
+        self.git("config", "user.name", "Audit Test")
+        self.git("config", "user.email", "audit@example.test")
+        (self.repo / "LICENSE").write_text(MIT_LICENSE, encoding="utf-8")
+        self.git("add", "LICENSE")
+        self.git("commit", "-q", "-m", "base")
+        self.base = self.git("rev-parse", "HEAD")
+        self.first = self.commit_file("first.txt", "first\n", "First")
+        self.second = self.commit_file("second.txt", "second\n", "Second")
+        self.third = self.commit_file("third.txt", "third\n", "Third")
+        self.fourth = self.commit_file("fourth.txt", "fourth\n", "Fourth")
+        self.install_auditable_state()
+
+    def tearDown(self) -> None:
+        self.temp_dir.cleanup()
+
+    def git(self, *args: str) -> str:
+        result = subprocess.run(
+            ["git", "-C", str(self.repo), *args],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+
+    def commit_file(self, name: str, content: str, message: str) -> str:
+        (self.repo / name).write_text(content, encoding="utf-8")
+        self.git("add", name)
+        self.git("commit", "-q", "-m", message)
+        return self.git("rev-parse", "HEAD")
+
+    def install_auditable_state(self) -> None:
+        config = load_fixture("config-mit.json")
+        batch = make_batch(
+            [self.first, self.second, self.third],
+            self.base,
+            self.fourth,
+            batch_id="audit-batch",
+        )
+        batch["status"] = "reviewed"
+        entries = batch["entries"]
+        entries[0]["delivery"] = "queued"
+        entries[0]["tracking"]["issue"] = (
+            "https://github.com/example/fork/issues/30"
+        )
+        entries[1]["decision"] = "defer"
+        entries[1]["integration_method"] = None
+        entries[1]["delivery"] = "not_applicable"
+        entries[1]["revisit"] = {
+            "owner": "ios-owner",
+            "tracking": None,
+            "trigger": "The upstream API stabilizes.",
+            "triggered": True,
+        }
+        entries[2]["verification"] = []
+
+        archive = make_batch(
+            [self.first],
+            self.base,
+            self.first,
+            batch_id="prior-batch",
+        )
+        archive["status"] = "closed"
+        archive["entries"][0]["verification"] = ["archived verification"]
+
+        state = {
+            "schema_version": 1,
+            "reviewed_through": self.base,
+            "last_discovered": "ffffffffffffffffffffffffffffffffffffffff",
+            "open_batches": ["audit-batch"],
+        }
+        write_json(self.repo / ".upstream-intake/config.json", config)
+        write_json(self.repo / ".upstream-intake/state.json", state)
+        write_json(
+            self.repo / ".upstream-intake/batches/open/audit-batch.json",
+            batch,
+        )
+        write_json(
+            self.repo / ".upstream-intake/batches/archive/prior-batch.json",
+            archive,
+        )
+
+    def test_audit_reports_action_and_range_evidence_gaps(self) -> None:
+        report = self.tool.audit_repository(self.repo)
+
+        self.assertFalse(report["ok"])
+        self.assertEqual(
+            [self.first],
+            [item["upstream_sha"] for item in report["queued_acceptances"]],
+        )
+        self.assertEqual(
+            [self.second],
+            [item["upstream_sha"] for item in report["triggered_deferrals"]],
+        )
+        self.assertIn(
+            "ffffffffffffffffffffffffffffffffffffffff",
+            [item["sha"] for item in report["unreachable_pointers"]],
+        )
+        self.assertIn(
+            self.third,
+            [item["upstream_sha"] for item in report["missing_evidence"]],
+        )
+        self.assertEqual([self.first], report["duplicate_shas"])
+        self.assertEqual([self.fourth], report["omitted_shas"])
+
+
+class InitializationTests(unittest.TestCase):
+    """Project activation is explicit, preflighted, and dry-run first."""
+
+    def setUp(self) -> None:
+        self.tool = load_tool()
+        self.assertTrue(
+            hasattr(self.tool, "initialize_project"),
+            "production tool must expose initialize_project",
+        )
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.repo = Path(self.temp_dir.name)
+        self.git("init", "-q", "-b", "main")
+        self.git("config", "user.name", "Initialization Test")
+        self.git("config", "user.email", "init@example.test")
+        (self.repo / "LICENSE").write_text(MIT_LICENSE, encoding="utf-8")
+        self.git("add", "LICENSE")
+        self.git("commit", "-q", "-m", "base")
+        self.reviewed_sha = self.git("rev-parse", "HEAD")
+
+    def tearDown(self) -> None:
+        self.temp_dir.cleanup()
+
+    def git(self, *args: str) -> str:
+        result = subprocess.run(
+            ["git", "-C", str(self.repo), *args],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+
+    def settings(self) -> dict[str, object]:
+        return {
+            "compatibility_review": "",
+            "fork_main_branch": "main",
+            "fork_repository": "example/mit-fork",
+            "fork_spdx": "MIT",
+            "license_files": ["LICENSE"],
+            "notice_files": [],
+            "project_profiles": ["native-xcode"],
+            "reviewed_sha": self.reviewed_sha,
+            "target_platforms": ["ios"],
+            "upstream_branch": "main",
+            "upstream_remote": "upstream",
+            "upstream_repository": "example/upstream",
+            "upstream_spdx": "MIT",
+        }
+
+    def expected_paths(self) -> list[str]:
+        return sorted(
+            [
+                ".github/PULL_REQUEST_TEMPLATE/upstream-intake.md",
+                ".github/workflows/upstream-sync.yml",
+                ".upstream-intake/batches/archive/.gitkeep",
+                ".upstream-intake/batches/open/.gitkeep",
+                ".upstream-intake/config.json",
+                ".upstream-intake/state.json",
+                ".upstream-intake/tools/upstream_intake.py",
+            ]
+        )
+
+    def test_default_initialization_is_dry_run(self) -> None:
+        result = self.tool.initialize_project(
+            self.repo, self.settings(), apply=False
+        )
+
+        self.assertFalse(result["applied"])
+        self.assertEqual(self.expected_paths(), result["files"])
+        self.assertFalse((self.repo / ".upstream-intake").exists())
+
+    def test_apply_refuses_dirty_repository(self) -> None:
+        (self.repo / "dirty.txt").write_text("dirty\n", encoding="utf-8")
+
+        with self.assertRaisesRegex(self.tool.IntakeError, "clean repository"):
+            self.tool.initialize_project(self.repo, self.settings(), apply=True)
+
+    def test_apply_refuses_conflicting_existing_target(self) -> None:
+        workflow = self.repo / ".github/workflows/upstream-sync.yml"
+        workflow.parent.mkdir(parents=True)
+        workflow.write_text("name: Existing policy\n", encoding="utf-8")
+        self.git("add", ".github")
+        self.git("commit", "-q", "-m", "existing workflow")
+        settings = self.settings()
+        settings["reviewed_sha"] = self.git("rev-parse", "HEAD")
+
+        with self.assertRaisesRegex(self.tool.IntakeError, "existing target differs"):
+            self.tool.initialize_project(self.repo, settings, apply=True)
+
+    def test_initialization_requires_full_existing_reviewed_sha(self) -> None:
+        settings = self.settings()
+        settings["reviewed_sha"] = self.reviewed_sha[:12]
+
+        with self.assertRaisesRegex(
+            self.tool.IntakeError, "full 40-character"
+        ):
+            self.tool.initialize_project(self.repo, settings, apply=False)
+
+    def test_initialization_requires_explicit_platform_and_profile(self) -> None:
+        settings = self.settings()
+        settings["project_profiles"] = []
+
+        with self.assertRaisesRegex(self.tool.IntakeError, "project_profiles"):
+            self.tool.initialize_project(self.repo, settings, apply=False)
+
+    def test_apply_renders_complete_files_and_exact_canonical_tool(self) -> None:
+        result = self.tool.initialize_project(
+            self.repo, self.settings(), apply=True
+        )
+
+        self.assertTrue(result["applied"])
+        self.assertEqual(self.expected_paths(), result["written"])
+        generated_text = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in self.repo.rglob("*")
+            if path.is_file() and ".git" not in path.parts
+        )
+        self.assertNotIn("__REQUIRED__", generated_text)
+        self.assertEqual(
+            TOOL_PATH.read_bytes(),
+            (
+                self.repo / ".upstream-intake/tools/upstream_intake.py"
+            ).read_bytes(),
+        )
+
+    def test_reapply_is_idempotent_only_when_generated_files_match(self) -> None:
+        self.tool.initialize_project(self.repo, self.settings(), apply=True)
+        self.git("add", ".upstream-intake", ".github")
+        self.git("commit", "-q", "-m", "initialize intake")
+        settings = self.settings()
+        settings["reviewed_sha"] = self.reviewed_sha
+
+        result = self.tool.initialize_project(self.repo, settings, apply=True)
+
+        self.assertEqual([], result["written"])
+        self.assertEqual(self.expected_paths(), result["unchanged"])
+
+    def test_init_project_cli_is_dry_run_without_apply(self) -> None:
+        command = [
+            "python3",
+            str(TOOL_PATH),
+            "init-project",
+            "--repo",
+            str(self.repo),
+            "--upstream-repository",
+            "example/upstream",
+            "--upstream-remote",
+            "upstream",
+            "--upstream-branch",
+            "main",
+            "--fork-repository",
+            "example/mit-fork",
+            "--fork-main-branch",
+            "main",
+            "--reviewed-sha",
+            self.reviewed_sha,
+            "--target-platform",
+            "ios",
+            "--project-profile",
+            "native-xcode",
+            "--upstream-spdx",
+            "MIT",
+            "--fork-spdx",
+            "MIT",
+            "--license-file",
+            "LICENSE",
+        ]
+
+        result = subprocess.run(command, capture_output=True, text=True)
+
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["applied"])
+        self.assertFalse((self.repo / ".upstream-intake").exists())
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,31 @@
+name: Discover upstream changes
+
+on:
+  schedule:
+    - cron: "17 13 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch configured upstream branch
+        shell: bash
+        run: |
+          git remote add __REQUIRED__UPSTREAM_REMOTE__ https://github.com/__REQUIRED__UPSTREAM_REPOSITORY__.git
+          git fetch --no-tags __REQUIRED__UPSTREAM_REMOTE__ __REQUIRED__UPSTREAM_BRANCH__
+      - name: Report capped upstream discovery
+        shell: bash
+        run: |
+          python3 .upstream-intake/tools/upstream_intake.py discover \
+            --repo . \
+            --upstream-ref __REQUIRED__UPSTREAM_REMOTE__/__REQUIRED__UPSTREAM_BRANCH__ \
+            --format markdown >> "$GITHUB_STEP_SUMMARY"

@@ -19,6 +19,7 @@ SUPPORTED_PROJECT_PROFILES = frozenset(
 )
 MAX_COMMITS = 25
 MAX_CHANGED_FILES = 250
+REQUIRED_MARKER = "__" + "REQUIRED" + "__"
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 VALID_BATCH_STATUSES = frozenset(
     {"discovered", "reviewing", "implementing", "in_pr", "reviewed", "closed"}
@@ -98,7 +99,7 @@ def _string_list(
 
 def _has_required_marker(value: object) -> bool:
     if isinstance(value, str):
-        return "__REQUIRED__" in value
+        return REQUIRED_MARKER in value
     if isinstance(value, list):
         return any(_has_required_marker(item) for item in value)
     if isinstance(value, dict):
@@ -124,7 +125,9 @@ def _resolve_policy_file(repo: Path, relative: str, field: str) -> Path:
 def validate_config(repo: Path, config: dict[str, object]) -> None:
     """Validate a repository-specific upstream intake policy."""
     if _has_required_marker(config):
-        raise IntakeError("configuration contains unresolved __REQUIRED__ marker")
+        raise IntakeError(
+            f"configuration contains unresolved {REQUIRED_MARKER} marker"
+        )
     if config.get("schema_version") != 1:
         raise IntakeError("schema_version must be 1")
 
@@ -358,7 +361,7 @@ def _validate_decision(entry: dict[str, Any], index: int) -> None:
 def validate_batch(batch: dict[str, object]) -> None:
     """Validate topic coverage and every product/integration decision."""
     if _has_required_marker(batch):
-        raise IntakeError("batch contains unresolved __REQUIRED__ marker")
+        raise IntakeError(f"batch contains unresolved {REQUIRED_MARKER} marker")
     if batch.get("schema_version") != 1:
         raise IntakeError("batch schema_version must be 1")
     _non_empty_string(batch.get("batch_id"), "batch_id")
@@ -525,7 +528,7 @@ def _is_ancestor(repo: Path, ancestor: str, descendant: str) -> bool:
 def validate_state(state: dict[str, object]) -> None:
     """Validate durable repository pointers."""
     if _has_required_marker(state):
-        raise IntakeError("state contains unresolved __REQUIRED__ marker")
+        raise IntakeError(f"state contains unresolved {REQUIRED_MARKER} marker")
     if state.get("schema_version") != 1:
         raise IntakeError("state schema_version must be 1")
     _full_sha(state.get("reviewed_through"), "state.reviewed_through")
@@ -858,6 +861,463 @@ def _render_batch_markdown(batch: dict[str, object]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _validate_reclassification(
+    record: object, batch: dict[str, object], index: int
+) -> None:
+    if not isinstance(record, dict):
+        raise IntakeError(f"reclassifications[{index}] must be an object")
+    sha = _full_sha(
+        record.get("upstream_sha"),
+        f"reclassifications[{index}].upstream_sha",
+    )
+    entries = _object_list(batch.get("entries"), "entries")
+    original = next(
+        (entry for entry in entries if entry.get("upstream_sha") == sha), None
+    )
+    if original is None:
+        raise IntakeError(
+            f"reclassifications[{index}] references a SHA outside the batch"
+        )
+    old_decision = record.get("old_decision")
+    new_decision = record.get("new_decision")
+    if old_decision not in {"accept", "reject", "defer"}:
+        raise IntakeError(
+            f"reclassifications[{index}].old_decision is invalid"
+        )
+    if new_decision not in {"accept", "reject", "defer"}:
+        raise IntakeError(
+            f"reclassifications[{index}].new_decision is invalid"
+        )
+    if old_decision != original.get("decision"):
+        raise IntakeError(
+            f"reclassifications[{index}].old_decision must match original history"
+        )
+    if new_decision == old_decision:
+        raise IntakeError(
+            f"reclassifications[{index}] must change the product decision"
+        )
+    for field in ("reason", "date", "tracking_reference"):
+        _non_empty_string(
+            record.get(field), f"reclassifications[{index}].{field}"
+        )
+
+
+def validate_archive_changes(repo: Path, base_ref: str) -> None:
+    """Enforce append-only reclassification for already archived batches."""
+    base_paths_output = run_git(
+        repo,
+        "ls-tree",
+        "-r",
+        "--name-only",
+        base_ref,
+        "--",
+        ".upstream-intake/batches/archive",
+    )
+    base_paths = {
+        path
+        for path in base_paths_output.splitlines()
+        if path.endswith(".json")
+    }
+    current_root = repo / ".upstream-intake/batches/archive"
+    current_paths = {
+        path.relative_to(repo).as_posix()
+        for path in current_root.glob("*.json")
+    }
+    deleted = sorted(base_paths - current_paths)
+    if deleted:
+        raise IntakeError(f"archived batch deleted: {deleted[0]}")
+
+    for relative in sorted(base_paths):
+        base_text = run_git(repo, "show", f"{base_ref}:{relative}")
+        try:
+            base_batch = json.loads(base_text)
+        except json.JSONDecodeError as error:
+            raise IntakeError(
+                f"archived base batch is invalid JSON: {relative}"
+            ) from error
+        if not isinstance(base_batch, dict):
+            raise IntakeError(f"archived base batch must be an object: {relative}")
+        current_batch = load_json(repo / relative)
+        base_records = base_batch.get("reclassifications", [])
+        current_records = current_batch.get("reclassifications", [])
+        if not isinstance(base_records, list) or not isinstance(
+            current_records, list
+        ):
+            raise IntakeError(f"archive reclassifications must be arrays: {relative}")
+        base_history = {
+            key: value
+            for key, value in base_batch.items()
+            if key != "reclassifications"
+        }
+        current_history = {
+            key: value
+            for key, value in current_batch.items()
+            if key != "reclassifications"
+        }
+        if base_history != current_history:
+            raise IntakeError(f"archived batch history is immutable: {relative}")
+        if current_records[: len(base_records)] != base_records:
+            raise IntakeError(
+                f"archived reclassification history is immutable: {relative}"
+            )
+        for index, record in enumerate(
+            current_records[len(base_records) :], start=len(base_records)
+        ):
+            _validate_reclassification(record, base_batch, index)
+
+    for relative in sorted(current_paths - base_paths):
+        batch = load_json(repo / relative)
+        validate_batch(batch)
+        if batch.get("status") != "closed":
+            raise IntakeError(f"new archived batch must be closed: {relative}")
+
+
+def _git_object_exists(repo: Path, sha: str) -> bool:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo), "cat-file", "-e", f"{sha}^{{commit}}"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as error:
+        raise IntakeEnvironmentError(f"cannot execute git: {error}") from error
+    return result.returncode == 0
+
+
+def audit_repository(repo: Path) -> dict[str, object]:
+    """Return actionable ledger, pointer, and evidence gaps without mutation."""
+    root = repo / ".upstream-intake"
+    state = load_json(root / "state.json")
+    open_paths, archive_paths = _batch_paths(repo)
+    queued_acceptances: list[dict[str, object]] = []
+    triggered_deferrals: list[dict[str, object]] = []
+    unreachable_pointers: list[dict[str, object]] = []
+    missing_evidence: list[dict[str, object]] = []
+    omitted_shas: set[str] = set()
+    unexpected_shas: set[str] = set()
+    policy_errors: list[dict[str, str]] = []
+    occurrences: dict[str, int] = {}
+
+    for field in ("reviewed_through", "last_discovered"):
+        sha = state.get(field)
+        if (
+            not isinstance(sha, str)
+            or FULL_SHA.fullmatch(sha) is None
+            or not _git_object_exists(repo, sha)
+        ):
+            unreachable_pointers.append({"field": f"state.{field}", "sha": sha})
+
+    for path in [*open_paths, *archive_paths]:
+        batch = load_json(path)
+        batch_id = str(batch.get("batch_id", path.stem))
+        try:
+            validate_batch(batch)
+        except IntakeError as error:
+            policy_errors.append({"batch_id": batch_id, "error": str(error)})
+        entries_value = batch.get("entries")
+        entries = entries_value if isinstance(entries_value, list) else []
+        entry_shas: list[str] = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            sha = entry.get("upstream_sha")
+            if not isinstance(sha, str):
+                continue
+            entry_shas.append(sha)
+            occurrences[sha] = occurrences.get(sha, 0) + 1
+            if (
+                entry.get("decision") == "accept"
+                and entry.get("delivery") == "queued"
+            ):
+                queued_acceptances.append(
+                    {
+                        "batch_id": batch_id,
+                        "tracking": entry.get("tracking"),
+                        "upstream_sha": sha,
+                    }
+                )
+            revisit = entry.get("revisit")
+            if (
+                entry.get("decision") == "defer"
+                and isinstance(revisit, dict)
+                and revisit.get("triggered") is True
+            ):
+                triggered_deferrals.append(
+                    {
+                        "batch_id": batch_id,
+                        "revisit": revisit,
+                        "upstream_sha": sha,
+                    }
+                )
+            tracking = entry.get("tracking")
+            fork_commits = (
+                tracking.get("fork_commits")
+                if isinstance(tracking, dict)
+                else None
+            )
+            if (
+                batch.get("status") in {"in_pr", "reviewed", "closed"}
+                and entry.get("decision") == "accept"
+                and entry.get("delivery") == "included"
+                and not entry.get("verification")
+                and not fork_commits
+            ):
+                missing_evidence.append(
+                    {
+                        "batch_id": batch_id,
+                        "reason": "included accepted work lacks verification evidence",
+                        "upstream_sha": sha,
+                    }
+                )
+
+        previous = batch.get("previous_reviewed_sha")
+        pinned = batch.get("pinned_upstream_sha")
+        for field, sha in (
+            ("previous_reviewed_sha", previous),
+            ("pinned_upstream_sha", pinned),
+        ):
+            if (
+                not isinstance(sha, str)
+                or FULL_SHA.fullmatch(sha) is None
+                or not _git_object_exists(repo, sha)
+            ):
+                unreachable_pointers.append(
+                    {"field": f"{batch_id}.{field}", "sha": sha}
+                )
+        if (
+            isinstance(previous, str)
+            and isinstance(pinned, str)
+            and FULL_SHA.fullmatch(previous) is not None
+            and FULL_SHA.fullmatch(pinned) is not None
+            and _git_object_exists(repo, previous)
+            and _git_object_exists(repo, pinned)
+        ):
+            try:
+                expected = expected_range(repo, previous, pinned)
+            except (IntakeError, IntakeEnvironmentError) as error:
+                policy_errors.append({"batch_id": batch_id, "error": str(error)})
+            else:
+                omitted_shas.update(set(expected) - set(entry_shas))
+                unexpected_shas.update(set(entry_shas) - set(expected))
+
+    duplicate_shas = sorted(
+        sha for sha, count in occurrences.items() if count > 1
+    )
+    report = {
+        "duplicate_shas": duplicate_shas,
+        "missing_evidence": missing_evidence,
+        "ok": not any(
+            (
+                triggered_deferrals,
+                unreachable_pointers,
+                missing_evidence,
+                duplicate_shas,
+                omitted_shas,
+                unexpected_shas,
+                policy_errors,
+            )
+        ),
+        "omitted_shas": sorted(omitted_shas),
+        "policy_errors": policy_errors,
+        "queued_acceptances": queued_acceptances,
+        "triggered_deferrals": triggered_deferrals,
+        "unexpected_shas": sorted(unexpected_shas),
+        "unreachable_pointers": unreachable_pointers,
+    }
+    return report
+
+
+def _template_root() -> Path:
+    return Path(__file__).resolve().parent.parent / "assets/project-template"
+
+
+def _render_project_files(
+    repo: Path, settings: dict[str, object]
+) -> dict[str, bytes]:
+    reviewed_sha = _full_sha(settings.get("reviewed_sha"), "reviewed_sha")
+    if not _git_object_exists(repo, reviewed_sha):
+        raise IntakeError("reviewed_sha must name an existing immutable commit")
+    target_platforms = _string_list(
+        settings.get("target_platforms"),
+        "target_platforms",
+        require_non_empty=True,
+    )
+    project_profiles = _string_list(
+        settings.get("project_profiles"),
+        "project_profiles",
+        require_non_empty=True,
+    )
+    license_files = _string_list(
+        settings.get("license_files"),
+        "license_files",
+        require_non_empty=True,
+    )
+    notice_files = _string_list(
+        settings.get("notice_files", []),
+        "notice_files",
+        require_non_empty=False,
+    )
+    upstream_repository = _non_empty_string(
+        settings.get("upstream_repository"), "upstream_repository"
+    )
+    upstream_remote = _non_empty_string(
+        settings.get("upstream_remote"), "upstream_remote"
+    )
+    upstream_branch = _non_empty_string(
+        settings.get("upstream_branch"), "upstream_branch"
+    )
+    fork_repository = _non_empty_string(
+        settings.get("fork_repository"), "fork_repository"
+    )
+    fork_main_branch = _non_empty_string(
+        settings.get("fork_main_branch"), "fork_main_branch"
+    )
+    upstream_spdx = _non_empty_string(
+        settings.get("upstream_spdx"), "upstream_spdx"
+    )
+    fork_spdx = _non_empty_string(settings.get("fork_spdx"), "fork_spdx")
+    compatibility_review = settings.get("compatibility_review", "")
+    if not isinstance(compatibility_review, str):
+        raise IntakeError("compatibility_review must be a string")
+
+    template_root = _template_root()
+    config = load_json(template_root / ".upstream-intake/config.json")
+    config["upstream"] = {
+        "branch": upstream_branch,
+        "remote": upstream_remote,
+        "repository": upstream_repository,
+    }
+    config["fork"] = {
+        "main_branch": fork_main_branch,
+        "repository": fork_repository,
+    }
+    config["execution"] = {
+        "host_os": "macos",
+        "project_profiles": project_profiles,
+        "target_platforms": target_platforms,
+    }
+    config["licensing"] = {
+        "compatibility_review": compatibility_review,
+        "fork_spdx": fork_spdx,
+        "license_files": license_files,
+        "notice_files": notice_files,
+        "upstream_spdx": upstream_spdx,
+    }
+    config["protected_contracts"] = ["repository-policy"]
+    config["checks"] = {"always": ["git diff --check"]}
+    config["commands"] = {
+        "authorized": [
+            "git status --short --branch",
+            "git worktree list",
+            f"git fetch --no-tags {upstream_remote} {upstream_branch}",
+        ],
+        "prohibited": [
+            "git push",
+            "git merge",
+            "git cherry-pick",
+            "git rebase",
+            "deploy",
+            "release",
+            "install",
+        ],
+    }
+    validate_config(repo, config)
+    state = {
+        "last_discovered": reviewed_sha,
+        "open_batches": [],
+        "reviewed_through": reviewed_sha,
+        "schema_version": 1,
+    }
+    validate_state(state)
+
+    workflow = (
+        template_root / ".github/workflows/upstream-sync.yml"
+    ).read_text(encoding="utf-8")
+    replacements = {
+        f"{REQUIRED_MARKER}UPSTREAM_BRANCH__": upstream_branch,
+        f"{REQUIRED_MARKER}UPSTREAM_REMOTE__": upstream_remote,
+        f"{REQUIRED_MARKER}UPSTREAM_REPOSITORY__": upstream_repository,
+    }
+    for marker, value in replacements.items():
+        workflow = workflow.replace(marker, value)
+
+    files = {
+        ".github/PULL_REQUEST_TEMPLATE/upstream-intake.md": (
+            template_root
+            / ".github/PULL_REQUEST_TEMPLATE/upstream-intake.md"
+        ).read_bytes(),
+        ".github/workflows/upstream-sync.yml": workflow.encode("utf-8"),
+        ".upstream-intake/batches/archive/.gitkeep": b"\n",
+        ".upstream-intake/batches/open/.gitkeep": b"\n",
+        ".upstream-intake/config.json": (
+            json.dumps(config, indent=2, sort_keys=True) + "\n"
+        ).encode("utf-8"),
+        ".upstream-intake/state.json": (
+            json.dumps(state, indent=2, sort_keys=True) + "\n"
+        ).encode("utf-8"),
+        ".upstream-intake/tools/upstream_intake.py": Path(__file__).read_bytes(),
+    }
+    unresolved = [
+        relative
+        for relative, content in files.items()
+        if REQUIRED_MARKER.encode("utf-8") in content
+    ]
+    if unresolved:
+        raise IntakeError(
+            f"rendered project files contain unresolved markers: {unresolved}"
+        )
+    return files
+
+
+def initialize_project(
+    repo: Path, settings: dict[str, object], *, apply: bool = False
+) -> dict[str, object]:
+    """Dry-run or atomically preflight and write a repository distribution."""
+    require_macos()
+    repo = repo.resolve()
+    run_git(repo, "rev-parse", "--git-dir")
+    files = _render_project_files(repo, settings)
+    relative_paths = sorted(files)
+    result: dict[str, object] = {
+        "applied": apply,
+        "files": relative_paths,
+        "unchanged": [],
+        "written": [],
+    }
+    if not apply:
+        return result
+
+    if run_git(repo, "status", "--porcelain=v1", "--untracked-files=all"):
+        raise IntakeError("init-project --apply requires a clean repository")
+    unchanged: list[str] = []
+    conflicts: list[str] = []
+    for relative in relative_paths:
+        destination = repo / relative
+        if not destination.exists():
+            continue
+        if not destination.is_file() or destination.read_bytes() != files[relative]:
+            conflicts.append(relative)
+        else:
+            unchanged.append(relative)
+    if conflicts:
+        raise IntakeError(
+            f"existing target differs from rendered distribution: {conflicts[0]}"
+        )
+
+    written: list[str] = []
+    for relative in relative_paths:
+        if relative in unchanged:
+            continue
+        destination = repo / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(files[relative])
+        written.append(relative)
+    result["unchanged"] = unchanged
+    result["written"] = written
+    return result
+
+
 def _batch_paths(repo: Path) -> tuple[list[Path], list[Path]]:
     root = repo / ".upstream-intake/batches"
     return (
@@ -868,7 +1328,6 @@ def _batch_paths(repo: Path) -> tuple[list[Path], list[Path]]:
 
 def validate_repository(repo: Path, base_ref: str | None = None) -> None:
     """Validate configuration, pointers, ledgers, and exact Git ranges."""
-    del base_ref
     root = repo / ".upstream-intake"
     config = load_json(root / "config.json")
     state = load_json(root / "state.json")
@@ -913,6 +1372,8 @@ def validate_repository(repo: Path, base_ref: str | None = None) -> None:
             raise IntakeError(
                 f"{batch_id} commit set must exactly equal its pinned Git range"
             )
+    if base_ref is not None:
+        validate_archive_changes(repo, base_ref)
 
 
 def _validate_result(repo: Path) -> dict[str, object]:
@@ -948,6 +1409,32 @@ def _build_parser() -> argparse.ArgumentParser:
     render = subparsers.add_parser("render")
     render.add_argument("--repo", type=Path, required=True)
     render.add_argument("--batch", type=Path, required=True)
+    audit = subparsers.add_parser("audit")
+    audit.add_argument("--repo", type=Path, required=True)
+    initialize = subparsers.add_parser("init-project")
+    initialize.add_argument("--repo", type=Path, required=True)
+    initialize.add_argument("--upstream-repository", required=True)
+    initialize.add_argument("--upstream-remote", required=True)
+    initialize.add_argument("--upstream-branch", required=True)
+    initialize.add_argument("--fork-repository", required=True)
+    initialize.add_argument("--fork-main-branch", required=True)
+    initialize.add_argument("--reviewed-sha", required=True)
+    initialize.add_argument(
+        "--target-platform", action="append", dest="target_platforms", required=True
+    )
+    initialize.add_argument(
+        "--project-profile", action="append", dest="project_profiles", required=True
+    )
+    initialize.add_argument("--upstream-spdx", required=True)
+    initialize.add_argument("--fork-spdx", required=True)
+    initialize.add_argument(
+        "--license-file", action="append", dest="license_files", required=True
+    )
+    initialize.add_argument(
+        "--notice-file", action="append", dest="notice_files", default=[]
+    )
+    initialize.add_argument("--compatibility-review", default="")
+    initialize.add_argument("--apply", action="store_true")
     return parser
 
 
@@ -976,6 +1463,39 @@ def main(argv: list[str] | None = None) -> int:
             if not batch_path.is_absolute():
                 batch_path = repo / batch_path
             print(_render_batch_markdown(load_json(batch_path)), end="")
+            return 0
+        if args.command == "audit":
+            print(
+                json.dumps(
+                    audit_repository(args.repo.resolve()),
+                    sort_keys=True,
+                )
+            )
+            return 0
+        if args.command == "init-project":
+            settings = {
+                "compatibility_review": args.compatibility_review,
+                "fork_main_branch": args.fork_main_branch,
+                "fork_repository": args.fork_repository,
+                "fork_spdx": args.fork_spdx,
+                "license_files": args.license_files,
+                "notice_files": args.notice_files,
+                "project_profiles": args.project_profiles,
+                "reviewed_sha": args.reviewed_sha,
+                "target_platforms": args.target_platforms,
+                "upstream_branch": args.upstream_branch,
+                "upstream_remote": args.upstream_remote,
+                "upstream_repository": args.upstream_repository,
+                "upstream_spdx": args.upstream_spdx,
+            }
+            print(
+                json.dumps(
+                    initialize_project(
+                        args.repo.resolve(), settings, apply=args.apply
+                    ),
+                    sort_keys=True,
+                )
+            )
             return 0
     except IntakeError as error:
         print(f"upstream intake policy error: {error}", file=sys.stderr)

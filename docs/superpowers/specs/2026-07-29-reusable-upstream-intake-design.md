@@ -20,6 +20,12 @@ The process separates three concerns:
 2. Each fork stores its changing upstream state and decisions in the repository.
 3. Build, release, and deployment remain separate from source intake.
 
+The personal skill is intentionally scoped to Codex running on macOS. Its
+first-class application targets are iOS and macOS. An Apple-app repository may
+also contain supporting web, relay, API, or container code; the skill can
+review that code through repository-configured checks without claiming Windows
+or Linux application support.
+
 For Zion-Coms, the process replaces the current all-or-nothing scheduled merge
 with report-only discovery and locally prepared, fork-owned intake changes.
 
@@ -34,8 +40,8 @@ with report-only discovery and locally prepared, fork-owned intake changes.
 - Preserve fork branding, compatibility contracts, and product decisions.
 - Use one batch PR by default to control review, CI, and token overhead.
 - Preserve atomic local commits and upstream provenance inside that batch.
-- Make the process portable across repositories, programming languages, and
-  Codex conversations.
+- Make the process portable across iOS and macOS repositories, mixed language
+  stacks, design systems, and Codex conversations running on the user's Mac.
 - Fail closed when the upstream range, decision record, tests, or provenance is
   incomplete.
 
@@ -49,6 +55,9 @@ with report-only discovery and locally prepared, fork-owned intake changes.
 - Requiring Linear, Jira, GitHub Issues, or another specific tracker.
 - Creating a plugin or hosted service before a local skill and repository
   ledger prove insufficient.
+- Running the skill from Windows or Linux Codex hosts.
+- Providing Windows or Linux application build, packaging, signing, or release
+  profiles.
 
 ## Vocabulary and State Model
 
@@ -134,6 +143,11 @@ reports from these files, but generated reports are not authoritative.
     "repository": "aidenmi8/Zion-Coms",
     "main_branch": "main"
   },
+  "execution": {
+    "host_os": "macos",
+    "target_platforms": ["ios", "macos"],
+    "project_profiles": ["flutter-ios", "tauri-macos"]
+  },
   "protected_contracts": [
     "visible-brand",
     "compatibility-identifiers",
@@ -150,6 +164,14 @@ reports from these files, but generated reports are not authoritative.
 
 Commands are project configuration, not universal defaults. Agents must still
 read and obey the repository's `AGENTS.md` before running them.
+
+`host_os` must be `macos`; the skill stops with a clear scope error before Git
+operations on any other Codex host. `target_platforms` may contain `ios`,
+`macos`, or both.
+`project_profiles` routes the skill to relevant Apple-platform guidance, but
+the repository's explicit contracts and commands remain authoritative.
+Supporting web, relay, API, or container areas may define additional checks
+without becoming first-class application targets.
 
 ### State
 
@@ -233,6 +255,12 @@ Before the first intake, document:
 - Infrastructure and deployment surfaces that must not change implicitly.
 - Required local, CI, build, and physical-device gates.
 - Owners for each subsystem.
+- Xcode projects or workspaces, schemes, deployment targets, bundle IDs,
+  entitlements, signing boundaries, extensions, Watch targets, deep links, and
+  privacy declarations that apply.
+- The app's design system, branding, assets, colors, typography, animation,
+  accessibility, and reduced-motion contracts.
+- Repository-specific prohibited commands and toolchain activation rules.
 
 Convert fragile requirements into executable contract tests wherever practical.
 Text in a policy file is not enough for identifiers or branding that can be
@@ -393,6 +421,19 @@ Path-aware jobs may reduce cost, but required global contract tests must never
 be skipped. Remote CI runs at least once in a clean hosted environment even
 when all local gates passed.
 
+Apple-platform checks are selected from the repository profile:
+
+- Native Swift or Objective-C apps use their configured Xcode workspace,
+  project, scheme, simulator or device, signing boundary, and test plan.
+- Flutter iOS apps use only repository-authorized Flutter and Xcode commands.
+- Tauri macOS apps preserve their configured Rust, frontend, sidecar, bundle,
+  signing, and packaging contracts.
+- SwiftPM macOS components use their configured package build and test gates.
+
+The skill must prefer enabled Apple build and simulator tooling when repository
+instructions require it. It must never invent schemes, bundle IDs, signing
+settings, device destinations, or prohibited build commands.
+
 No CI workflow may automatically merge, deploy, publish, migrate, or install
 artifacts as part of intake.
 
@@ -485,8 +526,9 @@ reviewable result when conflicts stop the job.
 ### Why a skill
 
 A skill is sufficient because this is a repeatable local reasoning and Git
-workflow. It needs instructions, deterministic validation scripts, and
-templates, but no dedicated hosted service or third-party connector.
+workflow running on the user's Mac. It needs instructions, deterministic
+validation scripts, and templates, but no dedicated hosted service or
+third-party connector.
 
 A plugin should be considered later only if the process needs a central
 cross-repository dashboard, a GitHub App, organization-wide credentials,
@@ -494,10 +536,10 @@ automatic tracker synchronization, or a remote policy service.
 
 ### Skill location and ownership
 
-The default installation target is:
+The default installation target on the user's Mac is:
 
 ```text
-~/.codex/skills/upstream-fork-intake/
+${CODEX_HOME:-$HOME/.codex}/skills/upstream-fork-intake/
 ```
 
 That makes the workflow available to Codex across projects and conversations.
@@ -506,9 +548,9 @@ The skill must never store repository-specific state. It reads the checked-in
 
 Installing the skill once makes it available to other local Codex tasks using
 the same profile. The skill folder is also the portable distribution unit for
-another machine or Codex profile. Environments that cannot load local skills
-can use the checked-in repository process and the skill's default prompt, but
-they will not receive automatic skill triggering.
+another Mac or Codex profile. Environments that cannot load local skills can
+use the checked-in repository process and the skill's default prompt, but they
+will not receive automatic skill triggering.
 
 ### Proposed skill contents
 
@@ -522,17 +564,22 @@ upstream-fork-intake/
   references/
     ledger-schema.md
     review-checklist.md
+    apple-platform-checks.md
   assets/
     project-template/
 ```
 
 - `SKILL.md` contains the concise mandatory sequence, safety boundaries,
   classification rules, and resource routing.
-- `upstream_intake.py` uses Python's standard library and Git to discover,
-  validate, and render batches without a project-language dependency.
+- `upstream_intake.py` uses the configured Python 3 runtime on macOS, Python's
+  standard library, and Git to discover, validate, and render batches without a
+  project-language dependency. It verifies the Darwin host before Git
+  operations.
 - `ledger-schema.md` defines configuration, state, batch, and transition rules.
 - `review-checklist.md` defines dependency, risk, compatibility, test, and
   release checks.
+- `apple-platform-checks.md` routes native Xcode, Flutter iOS, Tauri macOS, and
+  SwiftPM repositories to the correct project-configured contracts.
 - `assets/project-template/` contains generic configuration, state, discovery
   workflow, and PR-body templates that can be instantiated in another fork.
 - `agents/openai.yaml` exposes a clear display name and default prompt.
@@ -541,9 +588,9 @@ No README, changelog, or duplicate quick-reference files are added.
 
 ### Skill trigger and default prompt
 
-The description should trigger when a user asks to compare, ingest, port,
-adapt, reject, defer, synchronize, or review changes from an upstream
-repository into a customized fork.
+The description should trigger when a user on the configured Mac asks to
+compare, ingest, port, adapt, reject, defer, synchronize, or review changes
+from an upstream repository into a customized iOS or macOS application fork.
 
 The default prompt should be equivalent to:
 
@@ -556,6 +603,7 @@ The default prompt should be equivalent to:
 
 The skill must:
 
+- Verify that Codex is running on macOS before Git operations.
 - Read `AGENTS.md` and repository instructions first.
 - Run `git status` and `git worktree list` before mutation.
 - Use a clean isolated worktree for implementation.
@@ -565,6 +613,10 @@ The skill must:
 - Never advance the reviewed pointer with unclassified commits.
 - Never auto-merge or auto-deploy.
 - Preserve repository-specific protected contracts.
+- Treat app design, branding, accessibility, bundle metadata, signing,
+  entitlements, extensions, and privacy declarations as repository-specific.
+- Never modify signing identities, provisioning, bundle identifiers, or device
+  registrations without explicit project configuration and user authority.
 - Stop on force-push, missing ancestry, incomplete state, or unavailable
   required tools.
 
@@ -577,7 +629,10 @@ The skill implementation must be validated with:
   invalid-transition, deferred-without-trigger, and accepted-without-method
   cases.
 - A dry run against Zion-Coms without modifying its main checkout.
-- A forward test in a second sample fork or fixture repository.
+- A dry run against at least one differently structured Apple project.
+- Profile tests covering native Xcode, Flutter iOS, Tauri macOS, and SwiftPM
+  configuration without requiring every project to use every profile.
+- A negative test confirming that the skill stops on a non-macOS host.
 
 ## Failure Handling
 
@@ -600,16 +655,23 @@ The skill implementation must be validated with:
 
 1. Install or invoke the personal `upstream-fork-intake` skill.
 2. Add `.upstream-intake/config.json`.
-3. Record a deliberately chosen initial `reviewed_through` SHA.
-4. Add fork-specific contract tests and configured check commands.
-5. Add the report-only discovery workflow.
-6. Protect the fork's main branch with required checks.
-7. Run discovery in dry-run mode.
-8. Review and commit the first batch manually.
-9. Enable the recurring schedule only after the dry run and validator pass.
+3. Select `ios`, `macos`, or both as target platforms.
+4. Select the applicable native Xcode, Flutter iOS, Tauri macOS, or SwiftPM
+   profiles.
+5. Record a deliberately chosen initial `reviewed_through` SHA.
+6. Add project-specific design, branding, bundle, entitlement, signing,
+   privacy, extension, compatibility, and testing contracts.
+7. Add explicit authorized and prohibited commands.
+8. Add the report-only discovery workflow.
+9. Protect the fork's main branch with required checks.
+10. Run discovery in dry-run mode.
+11. Review and commit the first batch manually.
+12. Enable the recurring schedule only after the dry run and validator pass.
 
 The portable process remains the same; only repository configuration,
-protected contracts, owners, and test commands change.
+Apple project profiles, protected contracts, owners, and test commands change.
+Supporting web or server components remain governed by that repository's
+additional configured checks.
 
 ## Acceptance Criteria
 
@@ -624,5 +686,9 @@ protected contracts, owners, and test commands change.
 - Split PRs require a documented hard boundary.
 - Fork contracts run in CI.
 - Source intake cannot deploy or publish automatically.
-- The personal skill is portable and contains no Zion-specific mutable state.
+- The personal skill runs from the user's Mac and contains no Zion-specific
+  mutable state.
+- iOS and macOS repositories can supply different architecture, toolchain,
+  design, branding, signing, and test profiles without changing the skill core.
+- The skill stops clearly when invoked from an unsupported host.
 - A dry run can demonstrate the complete process without modifying the fork.

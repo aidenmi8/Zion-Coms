@@ -14,6 +14,12 @@ The default delivery unit is one batch pull request, prepared and tested
 locally before it is pushed. The batch may be split only across hard review,
 risk, release, or rollback boundaries.
 
+Implementation is deliberately staged. Zion-Coms first receives the minimum
+ledger, validator, report-only discovery, and one real mixed intake batch. The
+personal skill and expanded Apple project profiles are extracted only after the
+repository process has survived two or three real batches without changing its
+core state model.
+
 The process separates three concerns:
 
 1. A reusable personal Codex skill holds the stable procedure and templates.
@@ -32,13 +38,16 @@ with report-only discovery and locally prepared, fork-owned intake changes.
 ## Goals
 
 - Discover every new commit from a pinned upstream branch.
-- Review every commit before changing the fork.
+- Review related changes as upstream PR or topic units while recording every
+  commit SHA before changing the fork.
 - Support exact patches and fork-specific adaptations.
 - Allow large features to be accepted and queued without importing them
   immediately.
 - Record rejected and deferred commits so they do not repeatedly appear as new.
 - Preserve fork branding, compatibility contracts, and product decisions.
 - Use one batch PR by default to control review, CI, and token overhead.
+- Cap normal batch size and route urgent security work through a dedicated fast
+  lane.
 - Preserve atomic local commits and upstream provenance inside that batch.
 - Make the process portable across iOS and macOS repositories, mixed language
   stacks, design systems, and Codex conversations running on the user's Mac.
@@ -55,6 +64,8 @@ with report-only discovery and locally prepared, fork-owned intake changes.
 - Requiring Linear, Jira, GitHub Issues, or another specific tracker.
 - Creating a plugin or hosted service before a local skill and repository
   ledger prove insufficient.
+- Requiring the complete personal skill or full Apple profile matrix for the
+  first Zion-Coms intake batch.
 - Running the skill from Windows or Linux Codex hosts.
 - Providing Windows or Linux application build, packaging, signing, or release
   profiles.
@@ -115,12 +126,17 @@ Each participating repository stores the following files:
   config.json
   state.json
   batches/
-    YYYY-MM-DD-<pinned-short-sha>.json
+    open/
+      YYYY-MM-DD-<pinned-short-sha>.json
+    archive/
 .github/
   workflows/
     upstream-discovery.yml
   PULL_REQUEST_TEMPLATE/
     upstream-intake.md
+scripts/
+  upstream-intake.mjs
+  upstream-intake.test.mjs
 ```
 
 JSON is used for the portable schema because it can be parsed with standard
@@ -148,6 +164,16 @@ reports from these files, but generated reports are not authoritative.
     "target_platforms": ["ios", "macos"],
     "project_profiles": ["flutter-ios", "tauri-macos"]
   },
+  "licensing": {
+    "upstream_spdx": "Apache-2.0",
+    "fork_spdx": "Apache-2.0",
+    "license_files": ["LICENSE"],
+    "notice_files": []
+  },
+  "batch_limits": {
+    "max_commits": 25,
+    "max_changed_files": 250
+  },
   "protected_contracts": [
     "visible-brand",
     "compatibility-identifiers",
@@ -172,6 +198,17 @@ operations on any other Codex host. `target_platforms` may contain `ios`,
 the repository's explicit contracts and commands remain authoritative.
 Supporting web, relay, API, or container areas may define additional checks
 without becoming first-class application targets.
+
+Licensing is repository-specific. Zion-Coms declares `Apache-2.0`; a fork whose
+upstream and fork are MIT-licensed declares `MIT` instead. The validator must
+never assume one license for every project. A missing, changed, or incompatible
+license declaration blocks `take` and `adapt` until it is reviewed.
+
+Normal discovery pins no more than 25 commits or 250 changed files per batch by
+default. Projects may choose lower limits. When either cap would be exceeded,
+discovery pins an earlier upstream SHA and leaves the remainder for the next
+batch. Critical security work and hard-boundary changes use dedicated batches
+instead of increasing the cap.
 
 ### State
 
@@ -200,10 +237,20 @@ once:
   "batch_id": "2026-07-29-485d03a",
   "previous_reviewed_sha": "<sha>",
   "pinned_upstream_sha": "<sha>",
+  "kind": "normal",
   "status": "reviewing",
+  "topics": [
+    {
+      "topic_id": "relay-lock-inversion",
+      "title": "Relay subscription lock inversion",
+      "upstream_pr": null,
+      "entry_shas": ["<sha>"]
+    }
+  ],
   "entries": [
     {
       "upstream_sha": "<sha>",
+      "topic_id": "relay-lock-inversion",
       "title": "Fix a relay race",
       "areas": ["relay"],
       "risk": "high",
@@ -212,6 +259,10 @@ once:
       "delivery": "included",
       "rationale": "Wanted reliability fix with compatible dependencies.",
       "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
       "tracking": {
         "issue": null,
         "pull_request": null,
@@ -220,7 +271,8 @@ once:
       "verification": [],
       "revisit": null
     }
-  ]
+  ],
+  "reclassifications": []
 }
 ```
 
@@ -228,6 +280,8 @@ Required invariants:
 
 - The commit set equals the pinned upstream range exactly.
 - Each upstream SHA appears once in the batch and once globally.
+- Every entry belongs to exactly one reviewed topic, normally an upstream PR or
+  coherent change chain.
 - Accepted entries specify `take` or `adapt`.
 - Rejected entries include a non-empty rationale.
 - Deferred entries include an owner or tracking reference and a concrete
@@ -237,9 +291,21 @@ Required invariants:
   pointer advances.
 - A fork commit or PR may map to multiple upstream SHAs only when the changes
   are inseparable, and the rationale explains the grouping.
+- An entry blocked by a rejected dependency can never use `take`.
+- An entry blocked by a rejected dependency can be `included` only as a tested
+  `adapt` with `dependency_resolution` set to `adapt_without_dependency`.
+- An accepted queued entry blocked by a rejected dependency must link to a
+  concrete implementation plan; otherwise it must be rejected or deferred.
+- A closed batch under `batches/archive/` is immutable unless the change adds a
+  reclassification record containing the old decision, new decision, reason,
+  date, and tracking reference.
 
 A durable tracking reference may be a GitHub, Linear, Jira, or other issue URL,
 or a repository-local backlog record when no external tracker is configured.
+`kind` is `normal` or `security`. A reclassification record contains the
+affected upstream SHA, old and new decisions, reason, date, and tracking
+reference; it never rewrites the original historical decision without an audit
+record.
 
 ## End-to-end Process
 
@@ -261,6 +327,8 @@ Before the first intake, document:
 - The app's design system, branding, assets, colors, typography, animation,
   accessibility, and reduced-motion contracts.
 - Repository-specific prohibited commands and toolchain activation rules.
+- The upstream and fork license identifiers, license files, notice files,
+  copyright headers, and attribution requirements.
 
 Convert fragile requirements into executable contract tests wherever practical.
 Text in a policy file is not enough for identifiers or branding that can be
@@ -275,17 +343,30 @@ The scheduled workflow:
 3. Verifies that `reviewed_through` is an ancestor of that SHA.
 4. Enumerates commits in topological order from `reviewed_through` exclusively
    through the pinned head inclusively.
-5. Collects commit titles, files, statistics, upstream PR links when available,
-   test changes, and risk indicators.
-6. Performs a synthetic merge or patch applicability check without changing
+5. Pins an earlier head when the configured commit or changed-file cap would be
+   exceeded.
+6. Proposes topic groups using upstream PRs and coherent change chains; a human
+   or reviewing agent confirms the groups.
+7. Collects commit titles, files, statistics, upstream PR links when available,
+   test changes, dependencies, and risk indicators.
+8. Flags security candidates using CVE or advisory references, security labels,
+   and changes to authentication, authorization, cryptography, permissions, or
+   secret-handling code.
+9. Performs a synthetic merge or patch applicability check without changing
    the fork.
-7. Produces an Actions summary or updates one intake issue.
+10. Produces an Actions summary or updates one intake issue.
 
 Discovery must not create a code branch, merge, push, or open one PR per commit.
 If there are no new commits, it exits successfully without changing state.
 
 If upstream advances while a batch is being reviewed, the pinned batch remains
 unchanged. The newer commits wait for the next batch.
+
+Security detection is a prioritization signal, not an approval. A high or
+critical security candidate pauses normal batch publication and receives a
+dedicated security intake batch and PR. It still receives full dependency,
+license, contract, and test review. Embargoed details remain in an appropriately
+private tracker rather than a public intake report.
 
 ### 3. Create an isolated local intake workspace
 
@@ -300,9 +381,13 @@ Before implementation:
 All review and implementation happens against the pinned upstream SHA. A later
 upstream head never silently changes the active scope.
 
-### 4. Review every upstream commit
+### 4. Review topic groups and every upstream SHA
 
-For each commit, inspect:
+Use the upstream PR or coherent topic group as the decision unit to avoid
+re-deciding a feature, fixup, and partial revert separately. Still inspect and
+record every SHA so range completeness remains deterministic.
+
+For each topic and its commits, inspect:
 
 - The complete diff.
 - Parent and neighboring commits.
@@ -323,9 +408,28 @@ Assign:
 - Dependencies.
 - Tracking and revisit details when required.
 
-High priority changes are reviewed sooner, not less thoroughly.
+If accepted change B depends on rejected change A, choose exactly one outcome:
+
+- Adapt B without A and prove the replacement dependency path with tests.
+- Accept B as queued with a durable plan that explicitly removes the dependency
+  on A.
+- Reject B because A is required.
+- Defer B until the dependency decision changes.
+
+Never mark B as `take` or `included` while A is absent. The reviewed pointer may
+advance only after the dependency outcome is explicit and valid.
+
+High priority changes are reviewed sooner, not less thoroughly. High or
+critical security candidates leave the normal queue through the dedicated
+fast lane described above.
 
 ### 5. Choose take or adapt for accepted changes
+
+Start UI, design, branding, server, schema, package, build, release, and
+deployment changes as `adapt` candidates. Reclassify one as `take` only after
+dependency and contract review proves the patch is isolated. Pure
+dependency-free logic fixes, tests, and documentation may start as `take`
+candidates. These are review defaults, not automatic decisions.
 
 Use `take` only when:
 
@@ -336,7 +440,8 @@ Use `take` only when:
 - Upstream tests cover the important failure mode.
 
 Apply exact patches with provenance, preserving the original author where Git
-supports it and recording the upstream SHA in the commit body.
+supports it and recording `Upstream-Source` and `Upstream-Commit` in the commit
+body.
 
 Use `adapt` when:
 
@@ -354,8 +459,22 @@ For adaptations:
 3. Confirm the test fails before implementation when practical.
 4. Implement the smallest fork-compatible change.
 5. Document excluded upstream behavior.
-6. Record `Upstream-Source: owner/repository@sha`.
+6. Record `Upstream-Source: owner/repository` and `Upstream-Commit: sha`.
 7. Preserve required license and attribution notices.
+
+Before either method:
+
+1. Read the repository's configured upstream and fork licenses.
+2. Confirm the checked-in license files match the declarations.
+3. Preserve copyright headers when taking or adapting substantial files.
+4. Preserve or update `NOTICE` and third-party attribution when the applicable
+   license or redistribution requires it.
+5. Stop for explicit review when license compatibility or attribution is
+   unclear.
+
+Zion-Coms follows Apache-2.0. Other repositories may declare MIT or another
+license; the workflow applies the declared license rather than assuming
+Zion-Coms rules everywhere.
 
 ### 6. Prepare one batch PR locally
 
@@ -376,8 +495,12 @@ The PR body records:
 
 - Fork base SHA.
 - Previous reviewed and pinned upstream SHAs.
+- Topic groups and their upstream PRs when available.
 - Every upstream commit and its decision.
 - Accepted integration methods.
+- Rejected dependencies and their resolutions.
+- Security-candidate disposition.
+- License and attribution review.
 - Fork implementation commits.
 - Deliberately excluded behavior.
 - Compatibility-contract results.
@@ -395,6 +518,8 @@ Do not split merely because upstream used multiple commits. Split when a change:
 - Requires independent rollback.
 - Cannot share the same test or release window.
 - Makes the combined review too large to validate reliably.
+- Would exceed the configured commit or changed-file cap.
+- Is a high or critical security candidate requiring the security fast lane.
 
 When a split is required, the primary batch PR still records the decision.
 Large accepted work becomes `accept + queued` with a durable tracking issue.
@@ -405,6 +530,19 @@ deferred.
 ### 8. Run fork-owned CI
 
 Upstream CI is supporting evidence; fork CI is authoritative.
+
+The MVP adds a normal repository CI job for the ledger validator before any
+personal skill is required. The validator checks:
+
+- JSON parsing and schema version.
+- Pinned range completeness and uniqueness.
+- Topic membership for every SHA.
+- Decision, integration method, and delivery invariants.
+- Rejected-dependency resolution.
+- Required tracking and revisit fields.
+- License declarations and provenance fields.
+- Batch-size limits.
+- Archived-batch immutability and valid reclassification records.
 
 Every batch PR runs:
 
@@ -421,7 +559,12 @@ Path-aware jobs may reduce cost, but required global contract tests must never
 be skipped. Remote CI runs at least once in a clean hosted environment even
 when all local gates passed.
 
-Apple-platform checks are selected from the repository profile:
+The first Zion-Coms batches use its existing `just` gates, visible-brand
+scanner, platform-brand contract, mobile checks, admin checks, and relevant
+integration tests. A complete Apple profile matrix is not required for the MVP.
+
+After the process is proven, Apple-platform checks can be selected from the
+repository profile:
 
 - Native Swift or Objective-C apps use their configured Xcode workspace,
   project, scheme, simulator or device, signing boundary, and test plan.
@@ -430,9 +573,9 @@ Apple-platform checks are selected from the repository profile:
   signing, and packaging contracts.
 - SwiftPM macOS components use their configured package build and test gates.
 
-The skill must prefer enabled Apple build and simulator tooling when repository
-instructions require it. It must never invent schemes, bundle IDs, signing
-settings, device destinations, or prohibited build commands.
+The later skill must prefer enabled Apple build and simulator tooling when
+repository instructions require it. It must never invent schemes, bundle IDs,
+signing settings, device destinations, or prohibited build commands.
 
 No CI workflow may automatically merge, deploy, publish, migrate, or install
 artifacts as part of intake.
@@ -444,8 +587,11 @@ The batch PR may update `reviewed_through` to the pinned upstream head only when
 - Every commit in the pinned range appears exactly once.
 - Every entry has a valid decision and rationale.
 - Accepted work is either included or durably queued.
+- No included entry remains blocked by a rejected dependency.
 - Deferred work has an owner and revisit trigger.
 - Rejected work has a reason.
+- License declarations, required attribution, and provenance are complete.
+- High or critical security candidates are not hidden inside a normal batch.
 - The validator passes.
 
 The reviewed pointer advances when the batch PR merges. Rejected commits then
@@ -479,6 +625,9 @@ A recurring audit:
 - Reports deferred work whose revisit trigger has fired.
 - Detects missing PR, fork commit, verification, or release references.
 - Flags upstream force-pushes or unreachable reviewed SHAs.
+- Keeps only active batches hot and moves closed batches under
+  `batches/archive/`.
+- Rejects archived-batch edits that lack an explicit reclassification record.
 
 Rejected work is not reopened automatically. It may be reclassified by a
 deliberate ledger change with a new rationale.
@@ -486,7 +635,7 @@ deliberate ledger change with a new rationale.
 ## PR and CI Cost Controls
 
 - Discovery produces a report or issue, not a PR.
-- Classification happens locally.
+- Topic classification and SHA-level recording happen locally.
 - No PR is created for each upstream commit.
 - Local focused tests run during implementation.
 - Full local CI runs before the first push.
@@ -503,6 +652,7 @@ and reviewer effort without sacrificing provenance.
 
 Zion-Coms must preserve:
 
+- Apache-2.0 licensing and applicable attribution.
 - Visible Zion branding.
 - `BUZZ_*` environment variables.
 - `buzz://` links.
@@ -512,16 +662,69 @@ Zion-Coms must preserve:
 
 The current upstream batch should be processed as one decision ledger and one
 default implementation PR. Small correctness, documentation, and CI changes
-may share that PR. Mobile presentation changes should be adapted. A large
-optional feature should be accepted and queued, rejected, or deferred based on
-product intent; if accepted for immediate implementation, it should be split
-only when the hard-boundary rules require it.
+may share that PR. Mobile presentation, shared server, infrastructure, and
+release changes start as adapt candidates. A dependency-free fix may become a
+take after review. A large optional feature should be accepted and queued,
+rejected, or deferred based on product intent; if accepted for immediate
+implementation, it should be split only when the hard-boundary rules require
+it.
 
-The existing `.github/workflows/upstream-sync.yml` must eventually be replaced
-or rewritten because it attempts an all-or-nothing merge and produces no
-reviewable result when conflicts stop the job.
+The MVP must remove merge, push, and PR creation from the existing
+`.github/workflows/upstream-sync.yml` before its next scheduled run. The
+replacement remains report-only until the ledger and validator complete one
+real mixed batch.
 
-## Portable Codex Skill
+## MVP Rollout Before Skill Extraction
+
+### Phase 1: establish protected contracts
+
+- Inventory the existing Zion visible-brand, platform-brand, identifier, route,
+  sidecar, mobile, admin, and release contracts.
+- Add only missing executable checks needed to protect an upstream intake.
+- Record Zion-Coms as Apache-2.0 and identify applicable attribution files.
+- Establish a clean baseline for the existing repository checks.
+
+### Phase 2: add the minimum ledger loop
+
+- Check in configuration, state, and open/archive batch directories.
+- Add the repo-local JSON validator and focused unit fixtures.
+- Add validation as a normal required CI job.
+- Rewrite the scheduled sync as report-only discovery with no write permission,
+  branch creation, merge, push, or PR creation.
+- Generate the first pinned topic report without modifying product code.
+
+### Phase 3: run a real mixed batch
+
+- Review by upstream PR or topic while recording all SHAs.
+- Include at least one representative combination of take, adapt, reject,
+  defer, or accept plus queued when the upstream range supports it.
+- Implement accepted work locally with provenance.
+- Run focused and full repository gates.
+- Publish one draft batch PR, splitting only at a hard boundary.
+- Merge only after ledger, contract, and product review.
+
+### Phase 4: prove repetition
+
+- Run two or three real batches using the same state model.
+- Record every manual workaround or schema ambiguity.
+- Change the schema only when real use proves it necessary.
+- Confirm batch caps, rejected-dependency handling, security prioritization,
+  and archive rules are understandable without chat history.
+
+### Phase 5: extract the personal skill
+
+- Initialize the skill only after the first four phases pass.
+- Move the stable sequence and validated templates into the skill.
+- Keep mutable repository state in each project's `.upstream-intake/`.
+- Add Apple project profiles only for repeated native Xcode, Flutter iOS,
+  Tauri macOS, or SwiftPM differences observed in real batches.
+- Validate and forward-test the skill before using it in another project.
+
+The MVP intentionally does not require the final personal skill, a plugin,
+cross-project automation, a complete Apple profile matrix, or a central
+dashboard.
+
+## Later Personal Codex Skill
 
 ### Why a skill
 
@@ -576,8 +779,8 @@ upstream-fork-intake/
   project-language dependency. It verifies the Darwin host before Git
   operations.
 - `ledger-schema.md` defines configuration, state, batch, and transition rules.
-- `review-checklist.md` defines dependency, risk, compatibility, test, and
-  release checks.
+- `review-checklist.md` defines dependency, risk, compatibility, license,
+  attribution, test, and release checks.
 - `apple-platform-checks.md` routes native Xcode, Flutter iOS, Tauri macOS, and
   SwiftPM repositories to the correct project-configured contracts.
 - `assets/project-template/` contains generic configuration, state, discovery
@@ -610,9 +813,14 @@ The skill must:
 - Pin immutable fork and upstream SHAs.
 - Never modify a dirty checkout.
 - Never assume a clean merge is semantically acceptable.
+- Review coherent topics while recording every SHA.
 - Never advance the reviewed pointer with unclassified commits.
+- Never include a change whose rejected dependency remains unresolved.
+- Route high and critical security candidates to the dedicated fast lane.
 - Never auto-merge or auto-deploy.
 - Preserve repository-specific protected contracts.
+- Read and apply the repository's declared license and attribution rules rather
+  than assuming Apache-2.0 or MIT globally.
 - Treat app design, branding, accessibility, bundle metadata, signing,
   entitlements, extensions, and privacy declarations as repository-specific.
 - Never modify signing identities, provisioning, bundle identifiers, or device
@@ -644,6 +852,13 @@ The skill implementation must be validated with:
 - Accepted entry without method: fail validation.
 - Rejected entry without rationale: fail validation.
 - Deferred entry without owner or trigger: fail validation.
+- Batch over the configured cap: pin an earlier upstream SHA.
+- High or critical security candidate in a normal batch: pause and create a
+  dedicated security intake.
+- Accepted change blocked by a rejected dependency: adapt with proof, queue
+  with a concrete plan, reject, or defer.
+- Missing, changed, or unclear license declaration: stop take/adapt work.
+- Archived batch changed without a reclassification record: fail validation.
 - Take patch with conflicts: re-evaluate as adapt; do not resolve blindly.
 - Adaptation without test evidence: block unless the entry is documentation-only
   and records why no executable test applies.
@@ -651,22 +866,24 @@ The skill implementation must be validated with:
 - Hosted CI failure: keep the PR draft and revise locally.
 - Release failure: roll back the release without rewriting the intake decision.
 
-## Porting to Another Project
+## Porting to Another Project After Proof
 
 1. Install or invoke the personal `upstream-fork-intake` skill.
 2. Add `.upstream-intake/config.json`.
 3. Select `ios`, `macos`, or both as target platforms.
 4. Select the applicable native Xcode, Flutter iOS, Tauri macOS, or SwiftPM
    profiles.
-5. Record a deliberately chosen initial `reviewed_through` SHA.
-6. Add project-specific design, branding, bundle, entitlement, signing,
+5. Declare the repository's actual upstream and fork licenses, commonly MIT in
+   the user's other projects and Apache-2.0 for Zion-Coms.
+6. Record a deliberately chosen initial `reviewed_through` SHA.
+7. Add project-specific design, branding, bundle, entitlement, signing,
    privacy, extension, compatibility, and testing contracts.
-7. Add explicit authorized and prohibited commands.
-8. Add the report-only discovery workflow.
-9. Protect the fork's main branch with required checks.
-10. Run discovery in dry-run mode.
-11. Review and commit the first batch manually.
-12. Enable the recurring schedule only after the dry run and validator pass.
+8. Add explicit authorized and prohibited commands.
+9. Add the report-only discovery workflow.
+10. Protect the fork's main branch with required checks.
+11. Run discovery in dry-run mode.
+12. Review and commit the first batch manually.
+13. Enable the recurring schedule only after the dry run and validator pass.
 
 The portable process remains the same; only repository configuration,
 Apple project profiles, protected contracts, owners, and test commands change.
@@ -675,17 +892,33 @@ additional configured checks.
 
 ## Acceptance Criteria
 
+### MVP process
+
 - Another Codex session can determine the exact upstream review state using
   only repository files and Git history.
-- Every upstream commit receives one durable decision.
+- Coherent topics are the review unit and every upstream commit receives one
+  durable SHA-level record.
 - Accepted work distinguishes exact take from manual adaptation.
 - Large accepted features can remain queued without being deferred.
 - Rejected commits do not reappear as unreviewed.
 - Deferred commits have concrete revisit conditions.
 - One batch PR is the default.
+- Normal batches respect configured size caps.
 - Split PRs require a documented hard boundary.
+- High and critical security candidates use the dedicated fast lane.
+- A rejected dependency cannot hide behind an accepted included entry.
+- Each repository declares its actual license and preserves required
+  attribution.
+- Closed batches are archived and cannot change silently.
+- The ledger validator runs as a normal required CI check.
 - Fork contracts run in CI.
 - Source intake cannot deploy or publish automatically.
+- The existing blind merge workflow is report-only.
+- At least one real mixed Zion-Coms batch completes successfully.
+
+### Later personal skill
+
+- Two or three real batches complete without changing the core state model.
 - The personal skill runs from the user's Mac and contains no Zion-specific
   mutable state.
 - iOS and macOS repositories can supply different architecture, toolchain,

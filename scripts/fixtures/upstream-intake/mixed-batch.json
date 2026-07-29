@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-07-29-4444444",
+  "previous_reviewed_sha": "0000000000000000000000000000000000000000",
+  "pinned_upstream_sha": "4444444444444444444444444444444444444444",
+  "kind": "normal",
+  "status": "reviewing",
+  "topics": [
+    {
+      "topic_id": "dependency-chain",
+      "title": "Dependency chain",
+      "upstream_pr": 101,
+      "entry_shas": [
+        "1111111111111111111111111111111111111111",
+        "2222222222222222222222222222222222222222"
+      ]
+    },
+    {
+      "topic_id": "queued-feature",
+      "title": "Queued feature",
+      "upstream_pr": 102,
+      "entry_shas": [
+        "3333333333333333333333333333333333333333"
+      ]
+    },
+    {
+      "topic_id": "pending-decision",
+      "title": "Pending decision",
+      "upstream_pr": null,
+      "entry_shas": [
+        "4444444444444444444444444444444444444444"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "1111111111111111111111111111111111111111",
+      "topic_id": "dependency-chain",
+      "title": "Introduce an unwanted dependency",
+      "areas": [
+        "desktop"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The fork does not use this dependency.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "2222222222222222222222222222222222222222",
+      "topic_id": "dependency-chain",
+      "title": "Preserve the behavior without the dependency",
+      "areas": [
+        "desktop"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "included",
+      "rationale": "The behavior is wanted with a fork-owned implementation.",
+      "dependencies": [
+        "1111111111111111111111111111111111111111"
+      ],
+      "blocked_by_rejected": [
+        "1111111111111111111111111111111111111111"
+      ],
+      "dependency_resolution": "adapt_without_dependency",
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [
+        "focused behavior test"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "3333333333333333333333333333333333333333",
+      "topic_id": "queued-feature",
+      "title": "Accept a large feature for a later batch",
+      "areas": [
+        "mobile"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The feature is wanted but outside the current atomic batch.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": "https://github.com/example/fork/issues/17",
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "4444444444444444444444444444444444444444",
+      "topic_id": "pending-decision",
+      "title": "Defer an unresolved product decision",
+      "areas": [
+        "ios"
+      ],
+      "risk": "low",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The product owner must choose the desired behavior.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "Product owner selects the desired behavior.",
+        "owner": "mobile-product",
+        "tracking": null
+      }
+    }
+  ],
+  "reclassifications": []
+}

@@ -64,6 +64,72 @@ void main() {
       expect(overlay.value.statusBarColor, Colors.transparent);
     });
 
+    testWidgets('uses the active Zion dark theme for onboarding colors', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: AppTheme.dark(),
+            home: const PairingPage(addingCommunity: true),
+          ),
+        ),
+      );
+
+      final background = tester.widget<DecoratedBox>(
+        find.byKey(const Key('pairing-onboarding-background')),
+      );
+      final decoration = background.decoration as BoxDecoration;
+      final gradient = decoration.gradient! as LinearGradient;
+      final title = tester.widget<Text>(find.text('Welcome to Zion'));
+      final subtitle = tester.widget<Text>(
+        find.text(
+          'Scan the QR code from your desktop app\n'
+          'or paste a pairing code to connect.',
+        ),
+      );
+      final appBar = tester.widget<AppBar>(find.byType(AppBar));
+      final scanButton = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Scan a QR code'),
+      );
+
+      expect(gradient.colors, [
+        darkColorScheme.surface,
+        darkColorScheme.surfaceContainerHighest,
+      ]);
+      expect(title.style?.color, darkColorScheme.onSurface);
+      expect(subtitle.style?.color, darkColorScheme.onSurfaceVariant);
+      expect(appBar.foregroundColor, darkColorScheme.onSurface);
+      expect(
+        scanButton.style?.backgroundColor?.resolve(<WidgetState>{}),
+        darkColorScheme.primary,
+      );
+      expect(
+        scanButton.style?.foregroundColor?.resolve(<WidgetState>{}),
+        darkColorScheme.onPrimary,
+      );
+    });
+
+    testWidgets('uses light status-bar icons on dark onboarding', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: AppTheme.dark(),
+            home: const PairingPage(addingCommunity: true),
+          ),
+        ),
+      );
+
+      final overlay = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+        find.byKey(const Key('pairing-onboarding-system-overlay')),
+      );
+
+      expect(overlay.value.statusBarIconBrightness, Brightness.light);
+      expect(overlay.value.statusBarColor, Colors.transparent);
+    });
+
     testWidgets('uses light status-bar icons for dark-theme SAS verification', (
       tester,
     ) async {

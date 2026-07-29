@@ -59,9 +59,11 @@ class _PairingWelcomeView extends StatelessWidget {
                             width: 136,
                             height: 136,
                             alignment: Alignment.center,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Color(0x4DFFFFFF),
+                              color: context.colors.primary.withValues(
+                                alpha: 0.12,
+                              ),
                             ),
                             child: ZionBrandMotion(
                               variant: brandState.variant,
@@ -77,7 +79,7 @@ class _PairingWelcomeView extends StatelessWidget {
                   'Welcome to Zion',
                   textAlign: TextAlign.center,
                   style: context.textTheme.headlineSmall?.copyWith(
-                    color: _onboardingInk,
+                    color: context.colors.onSurface,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.4,
                   ),
@@ -87,7 +89,7 @@ class _PairingWelcomeView extends StatelessWidget {
                   'Scan the QR code from your desktop app\nor paste a pairing code to connect.',
                   textAlign: TextAlign.center,
                   style: context.textTheme.bodyMedium?.copyWith(
-                    color: _onboardingMutedInk,
+                    color: context.colors.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: Grid.md),
@@ -98,7 +100,7 @@ class _PairingWelcomeView extends StatelessWidget {
                     child: Column(
                       children: [
                         FilledButton(
-                          style: _onboardingButtonStyle,
+                          style: _onboardingButtonStyle(context),
                           onPressed: isBusy ? null : onScan,
                           child: Text(
                             isBusy && !pairingCodeExpanded
@@ -108,7 +110,7 @@ class _PairingWelcomeView extends StatelessWidget {
                         ),
                         const SizedBox(height: Grid.xxs),
                         TextButton(
-                          style: _onboardingSecondaryButtonStyle,
+                          style: _onboardingSecondaryButtonStyle(context),
                           onPressed: isBusy ? null : onTogglePairingCode,
                           child: Text(
                             pairingCodeExpanded
@@ -138,30 +140,36 @@ class _PairingWelcomeView extends StatelessWidget {
                                     TextField(
                                       controller: codeController,
                                       style: context.textTheme.bodyMedium
-                                          ?.copyWith(color: _onboardingInk),
-                                      cursorColor: _onboardingInk,
+                                          ?.copyWith(
+                                            color: context.colors.onSurface,
+                                          ),
+                                      cursorColor: context.colors.primary,
                                       decoration: InputDecoration(
                                         filled: true,
-                                        fillColor: Colors.white.withValues(
-                                          alpha: 0.7,
-                                        ),
+                                        fillColor: context
+                                            .colors
+                                            .surfaceContainerHighest,
                                         hintText:
                                             'nostrpair://... or buzz://...',
                                         hintStyle: context.textTheme.bodyMedium
                                             ?.copyWith(
-                                              color: _onboardingMutedInk,
+                                              color: context
+                                                  .colors
+                                                  .onSurfaceVariant,
                                             ),
-                                        prefixIcon: const Icon(
+                                        prefixIcon: Icon(
                                           LucideIcons.link,
-                                          color: _onboardingInk,
+                                          color:
+                                              context.colors.onSurfaceVariant,
                                         ),
-                                        enabledBorder: _inputBorder,
-                                        disabledBorder: _inputBorder,
-                                        focusedBorder: _inputBorder.copyWith(
-                                          borderSide: const BorderSide(
-                                            color: _onboardingInk,
-                                          ),
-                                        ),
+                                        enabledBorder: _inputBorder(context),
+                                        disabledBorder: _inputBorder(context),
+                                        focusedBorder: _inputBorder(context)
+                                            .copyWith(
+                                              borderSide: BorderSide(
+                                                color: context.colors.primary,
+                                              ),
+                                            ),
                                         isDense: true,
                                       ),
                                       autocorrect: false,
@@ -179,7 +187,7 @@ class _PairingWelcomeView extends StatelessWidget {
                                     SizedBox(
                                       width: double.infinity,
                                       child: FilledButton(
-                                        style: _onboardingButtonStyle,
+                                        style: _onboardingButtonStyle(context),
                                         onPressed: isBusy ? null : onConnect,
                                         child: Text(connectButtonLabel),
                                       ),
@@ -233,30 +241,36 @@ class _PairingWelcomeView extends StatelessWidget {
   }
 }
 
-final _inputBorder = OutlineInputBorder(
+OutlineInputBorder _inputBorder(BuildContext context) => OutlineInputBorder(
   borderRadius: BorderRadius.circular(Radii.md),
-  borderSide: BorderSide(color: _onboardingInk.withValues(alpha: 0.18)),
+  borderSide: BorderSide(color: context.colors.outline),
 );
 
-final _onboardingButtonStyle = FilledButton.styleFrom(
-  minimumSize: const Size(0, 48),
-  padding: const EdgeInsets.symmetric(
-    horizontal: Grid.lg,
-    vertical: Grid.twelve,
-  ),
-  backgroundColor: _onboardingInk,
-  foregroundColor: _onboardingCtaLabel,
-  disabledBackgroundColor: _onboardingInk.withValues(alpha: 0.38),
-  disabledForegroundColor: _onboardingCtaLabel.withValues(alpha: 0.7),
-  shape: const StadiumBorder(),
-);
+ButtonStyle _onboardingButtonStyle(BuildContext context) =>
+    FilledButton.styleFrom(
+      minimumSize: const Size(0, 48),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Grid.lg,
+        vertical: Grid.twelve,
+      ),
+      backgroundColor: context.colors.primary,
+      foregroundColor: context.colors.onPrimary,
+      disabledBackgroundColor: context.colors.primary.withValues(alpha: 0.38),
+      disabledForegroundColor: context.colors.onPrimary.withValues(alpha: 0.7),
+      shape: const StadiumBorder(),
+    );
 
-final _onboardingSecondaryButtonStyle = TextButton.styleFrom(
-  minimumSize: const Size(0, 44),
-  padding: const EdgeInsets.symmetric(horizontal: Grid.md, vertical: Grid.xxs),
-  backgroundColor: _onboardingInk.withValues(alpha: 0.1),
-  foregroundColor: _onboardingInk,
-  disabledBackgroundColor: _onboardingInk.withValues(alpha: 0.05),
-  disabledForegroundColor: _onboardingInk.withValues(alpha: 0.45),
-  shape: const StadiumBorder(),
-);
+ButtonStyle _onboardingSecondaryButtonStyle(BuildContext context) =>
+    TextButton.styleFrom(
+      minimumSize: const Size(0, 44),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Grid.md,
+        vertical: Grid.xxs,
+      ),
+      backgroundColor: context.colors.surfaceContainerHighest,
+      foregroundColor: context.colors.onSurface,
+      disabledBackgroundColor: context.colors.surfaceContainerHighest
+          .withValues(alpha: 0.5),
+      disabledForegroundColor: context.colors.onSurface.withValues(alpha: 0.45),
+      shape: const StadiumBorder(),
+    );

@@ -92,6 +92,25 @@ test("personaManagedAgentUpdate syncs edited persona identity to linked agent", 
   });
 });
 
+test("personaManagedAgentUpdate syncs persona parallelism to a linked agent", () => {
+  assert.deepEqual(
+    personaManagedAgentUpdate(
+      agent({
+        name: "Fizz Prime",
+        systemPrompt: "New prompt",
+        model: "new-model",
+        envVars: { NEW_KEY: "2" },
+        parallelism: 24,
+      }),
+      persona({ parallelism: 1 }),
+    ),
+    {
+      pubkey: "deadbeef".repeat(8),
+      parallelism: 1,
+    },
+  );
+});
+
 test("personaManagedAgentUpdate skips unrelated or unchanged agents", () => {
   assert.equal(
     personaManagedAgentUpdate(agent({ personaId: "persona-2" }), persona()),

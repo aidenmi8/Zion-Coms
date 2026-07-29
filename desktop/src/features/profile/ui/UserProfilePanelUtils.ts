@@ -292,6 +292,14 @@ export function personaManagedAgentUpdate(
     hasChanges = true;
   }
 
+  if (
+    persona.parallelism != null &&
+    persona.parallelism !== agent.parallelism
+  ) {
+    input.parallelism = persona.parallelism;
+    hasChanges = true;
+  }
+
   const runtimeChanged =
     options.previousPersona !== undefined &&
     options.previousPersona.runtime !== persona.runtime;

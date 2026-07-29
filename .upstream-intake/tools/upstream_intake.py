@@ -21,6 +21,9 @@ MAX_COMMITS = 25
 MAX_CHANGED_FILES = 250
 REQUIRED_MARKER = "__" + "REQUIRED" + "__"
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
+SAFE_NAME_COMPONENT = re.compile(r"^[A-Za-z0-9._-]+$")
+SAFE_REMOTE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+SAFE_BRANCH_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
 VALID_BATCH_STATUSES = frozenset(
     {"discovered", "reviewing", "implementing", "in_pr", "reviewed", "closed"}
 )
@@ -84,6 +87,47 @@ def _non_empty_string(value: object, field: str) -> str:
     return value.strip()
 
 
+def _repository_slug(value: object, field: str) -> str:
+    slug = _non_empty_string(value, field)
+    parts = slug.split("/")
+    if (
+        len(parts) != 2
+        or any(
+            part in {".", ".."} or SAFE_NAME_COMPONENT.fullmatch(part) is None
+            for part in parts
+        )
+    ):
+        raise IntakeError(f"{field} must be a safe owner/repository slug")
+    return slug
+
+
+def _remote_name(value: object, field: str) -> str:
+    remote = _non_empty_string(value, field)
+    if SAFE_REMOTE_NAME.fullmatch(remote) is None:
+        raise IntakeError(f"{field} must be a shell-safe Git remote name")
+    return remote
+
+
+def _branch_name(value: object, field: str) -> str:
+    branch = _non_empty_string(value, field)
+    components = branch.split("/")
+    invalid_component = any(
+        not component
+        or component.startswith(".")
+        or component.endswith(".")
+        or component.endswith(".lock")
+        for component in components
+    )
+    if (
+        SAFE_BRANCH_NAME.fullmatch(branch) is None
+        or invalid_component
+        or ".." in branch
+        or "@{" in branch
+    ):
+        raise IntakeError(f"{field} must be a safe Git branch name")
+    return branch
+
+
 def _string_list(
     value: object, field: str, *, require_non_empty: bool
 ) -> list[str]:
@@ -132,12 +176,13 @@ def validate_config(repo: Path, config: dict[str, object]) -> None:
         raise IntakeError("schema_version must be 1")
 
     upstream = _mapping(config.get("upstream"), "upstream")
-    for field in ("repository", "remote", "branch"):
-        _non_empty_string(upstream.get(field), f"upstream.{field}")
+    _repository_slug(upstream.get("repository"), "upstream.repository")
+    _remote_name(upstream.get("remote"), "upstream.remote")
+    _branch_name(upstream.get("branch"), "upstream.branch")
 
     fork = _mapping(config.get("fork"), "fork")
-    for field in ("repository", "main_branch"):
-        _non_empty_string(fork.get(field), f"fork.{field}")
+    _repository_slug(fork.get("repository"), "fork.repository")
+    _branch_name(fork.get("main_branch"), "fork.main_branch")
 
     execution = _mapping(config.get("execution"), "execution")
     if execution.get("host_os") != "macos":
@@ -1164,19 +1209,19 @@ def _render_project_files(
         "notice_files",
         require_non_empty=False,
     )
-    upstream_repository = _non_empty_string(
+    upstream_repository = _repository_slug(
         settings.get("upstream_repository"), "upstream_repository"
     )
-    upstream_remote = _non_empty_string(
+    upstream_remote = _remote_name(
         settings.get("upstream_remote"), "upstream_remote"
     )
-    upstream_branch = _non_empty_string(
+    upstream_branch = _branch_name(
         settings.get("upstream_branch"), "upstream_branch"
     )
-    fork_repository = _non_empty_string(
+    fork_repository = _repository_slug(
         settings.get("fork_repository"), "fork_repository"
     )
-    fork_main_branch = _non_empty_string(
+    fork_main_branch = _branch_name(
         settings.get("fork_main_branch"), "fork_main_branch"
     )
     upstream_spdx = _non_empty_string(

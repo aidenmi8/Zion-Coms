@@ -1228,6 +1228,25 @@ class InitializationTests(unittest.TestCase):
         with self.assertRaisesRegex(self.tool.IntakeError, "project_profiles"):
             self.tool.initialize_project(self.repo, settings, apply=False)
 
+    def test_initialization_rejects_unsafe_workflow_coordinates(self) -> None:
+        unsafe_values = {
+            "upstream_repository": "example/upstream\nrun: touch injected",
+            "fork_repository": "example/fork; touch injected",
+            "upstream_remote": "upstream; touch injected",
+            "upstream_branch": "main; touch injected",
+        }
+
+        for field, value in unsafe_values.items():
+            with self.subTest(field=field):
+                settings = self.settings()
+                settings[field] = value
+                with self.assertRaisesRegex(
+                    self.tool.IntakeError, field
+                ):
+                    self.tool.initialize_project(
+                        self.repo, settings, apply=False
+                    )
+
     def test_apply_renders_complete_files_and_exact_canonical_tool(self) -> None:
         result = self.tool.initialize_project(
             self.repo, self.settings(), apply=True

@@ -873,6 +873,14 @@ class DiscoveryTests(unittest.TestCase):
             commit["security_reasons"],
         )
 
+    def test_author_filename_does_not_match_auth_path_marker(self) -> None:
+        reasons = self.tool.security_reasons(
+            "Polish message author metadata",
+            ["mobile/lib/shared/widgets/message_author_meta.dart"],
+        )
+
+        self.assertEqual([], reasons)
+
     def test_discovery_does_not_modify_repository_or_intake_state(self) -> None:
         self.commit_files({"change.txt": "change\n"}, "Read-only candidate")
         self.configure(self.base)

@@ -589,19 +589,25 @@ def security_reasons(subject: str, files: list[str]) -> list[str]:
     ):
         if keyword in lowered_subject:
             reasons.append(f"title keyword: {keyword}")
-    path_markers = (
+    path_markers = {
         "auth",
+        "authentication",
+        "authorization",
         "security",
         "permission",
+        "permissions",
         "crypto",
+        "cryptography",
         "secret",
         "credential",
+        "credentials",
         "keychain",
         "entitlement",
-    )
+        "entitlements",
+    }
     for path in files:
-        lowered_path = path.casefold()
-        if any(marker in lowered_path for marker in path_markers):
+        path_tokens = set(re.split(r"[^a-z0-9]+", path.casefold()))
+        if path_tokens & path_markers:
             reasons.append(f"sensitive path: {path}")
     return reasons
 

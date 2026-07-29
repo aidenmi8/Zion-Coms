@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Zion</string>
+	<string>$(APP_DISPLAY_NAME)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -44,9 +44,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Zion needs camera access to scan QR codes for device pairing.</string>
+	<string>Zion needs camera access so you can take photos to attach to messages and scan QR codes for device pairing.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Zion needs photo library access so you can attach images to messages.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Zion needs permission to save images to your photo library.</string>
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

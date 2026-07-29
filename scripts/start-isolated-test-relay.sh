@@ -153,6 +153,9 @@ tmux new-session -d -s "${TMUX_SESSION}" "cd '${REPO_ROOT}' && env \
   BUZZ_S3_BUCKET=buzz-media \
   BUZZ_REQUIRE_AUTH_TOKEN=false \
   BUZZ_RECONCILE_CHANNELS=true \
+  BUZZ_RATE_LIMIT_HUMAN_MESSAGES_PER_MIN=100000 \
+  BUZZ_RATE_LIMIT_HUMAN_API_CALLS_PER_MIN=100000 \
+  BUZZ_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC=10000 \
   './target/${CARGO_TARGET_PROFILE}/buzz-relay' > '${RELAY_LOG}' 2>&1"
 
 # Wait for the main port to accept connections.

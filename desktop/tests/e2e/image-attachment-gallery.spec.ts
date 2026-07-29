@@ -321,6 +321,10 @@ test("hidden spoiler images are excluded from gallery navigation until revealed"
   await expect(spoiler).toHaveAttribute("data-revealed", "false");
   await spoiler.click();
   await expect(spoiler).toHaveAttribute("data-revealed", "true");
+  await expect(row.locator(`img[src*="${SPOILER_HIDDEN_SHA}"]`)).toHaveCSS(
+    "opacity",
+    "1",
+  );
 
   await row.locator(`img[src*="${SPOILER_VISIBLE_SHA}"]`).click();
   await expect(dialog).toBeVisible();

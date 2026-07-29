@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-07-29-06-security-047533c",
+  "previous_reviewed_sha": "259de6afbe0cc0d106e57ebdb2323064990e4122",
+  "pinned_upstream_sha": "047533c56c2a2d03f23ef3edb990e58405767aac",
+  "kind": "security",
+  "status": "implementing",
+  "topics": [
+    {
+      "topic_id": "segment-047533c",
+      "title": "Keep TLS on relays joined by invite",
+      "upstream_pr": null,
+      "entry_shas": [
+        "047533c56c2a2d03f23ef3edb990e58405767aac"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "047533c56c2a2d03f23ef3edb990e58405767aac",
+      "topic_id": "segment-047533c",
+      "title": "Keep TLS on relays joined by invite",
+      "areas": [
+        "mobile",
+        "ios",
+        "transport",
+        "security"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Invite handling must not downgrade secure relay origins and must migrate identity-scoped preferences safely.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "transport security and identity-scoped storage"
+      ],
+      "tracking": {
+        "issue": "https://linear.app/mi8/issue/MI8-15/upstream-intake-implement-buzz-f95fdc1-security-lane",
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

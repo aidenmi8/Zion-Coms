@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-07-29-02-security-22be8bb",
+  "previous_reviewed_sha": "90e058ebf68137e048a409aec6616519379ff726",
+  "pinned_upstream_sha": "22be8bb35177e27efc2dca2534df9a8dd871eae0",
+  "kind": "security",
+  "status": "implementing",
+  "topics": [
+    {
+      "topic_id": "segment-22be8bb",
+      "title": "Avoid relay subscription lock inversion",
+      "upstream_pr": null,
+      "entry_shas": [
+        "22be8bb35177e27efc2dca2534df9a8dd871eae0"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "22be8bb35177e27efc2dca2534df9a8dd871eae0",
+      "topic_id": "segment-22be8bb",
+      "title": "Avoid relay subscription lock inversion",
+      "areas": [
+        "relay",
+        "concurrency",
+        "security"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The lock-order fix prevents a relay deadlock and includes concurrent regression coverage.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "relay concurrency lock ordering"
+      ],
+      "tracking": {
+        "issue": "https://linear.app/mi8/issue/MI8-15/upstream-intake-implement-buzz-f95fdc1-security-lane",
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

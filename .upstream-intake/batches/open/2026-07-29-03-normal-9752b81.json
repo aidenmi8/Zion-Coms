@@ -1,0 +1,450 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-07-29-03-normal-9752b81",
+  "previous_reviewed_sha": "22be8bb35177e27efc2dca2534df9a8dd871eae0",
+  "pinned_upstream_sha": "9752b816a95e88751b9c7e4d3343fe3210de5d43",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "segment-6300a6b",
+      "title": "Apply per-runtime ACP environment defaults",
+      "upstream_pr": null,
+      "entry_shas": [
+        "6300a6b1d03e32c473c7b6568df663c8927565cf"
+      ]
+    },
+    {
+      "topic_id": "segment-485d03a",
+      "title": "Polish mobile attachments and gallery",
+      "upstream_pr": null,
+      "entry_shas": [
+        "485d03a358b6d695aaf97879f3fbaf2f308d0755"
+      ]
+    },
+    {
+      "topic_id": "segment-c405ad1",
+      "title": "Fix prompt caching and proxy TLS passthrough",
+      "upstream_pr": null,
+      "entry_shas": [
+        "c405ad1d4b1da061c11b3d26761252d41dcc62d3"
+      ]
+    },
+    {
+      "topic_id": "segment-ce01e93",
+      "title": "Polish mobile typing indicator",
+      "upstream_pr": null,
+      "entry_shas": [
+        "ce01e930edff97bdc12a205fb8f938fcacdba8c1"
+      ]
+    },
+    {
+      "topic_id": "segment-24d90d1",
+      "title": "Refine community invite limits",
+      "upstream_pr": null,
+      "entry_shas": [
+        "24d90d1280a9325c6cbcf8eea30ac54db5afd2cb"
+      ]
+    },
+    {
+      "topic_id": "segment-6438ded",
+      "title": "Route model families to native gateway wire formats",
+      "upstream_pr": null,
+      "entry_shas": [
+        "6438dedf83a9dbe1853e484326911bf6c7f1618c"
+      ]
+    },
+    {
+      "topic_id": "segment-4555899",
+      "title": "Polish mobile navigation and menus",
+      "upstream_pr": null,
+      "entry_shas": [
+        "4555899ab2bfc7aa47b22dd872253f3704091782"
+      ]
+    },
+    {
+      "topic_id": "segment-f7a3988",
+      "title": "Preserve shared agent fidelity",
+      "upstream_pr": null,
+      "entry_shas": [
+        "f7a3988ba13b590d9a55a7e8413fc3fb5ffbef18"
+      ]
+    },
+    {
+      "topic_id": "segment-294c8c8",
+      "title": "Move observer work off the main thread",
+      "upstream_pr": null,
+      "entry_shas": [
+        "294c8c821de51442a8c384c0bdb66b1a10224ca0"
+      ]
+    },
+    {
+      "topic_id": "segment-51bb97d",
+      "title": "Run Tauri clippy in pre-push",
+      "upstream_pr": null,
+      "entry_shas": [
+        "51bb97d2be658854bb8a39983af568e90591d375"
+      ]
+    },
+    {
+      "topic_id": "segment-a13085e",
+      "title": "Release Buzz Desktop 0.5.1",
+      "upstream_pr": null,
+      "entry_shas": [
+        "a13085e9ac9a7c8dbd9426a6b88fc75abf62220e"
+      ]
+    },
+    {
+      "topic_id": "segment-9752b81",
+      "title": "Serialize Tauri pre-push checks",
+      "upstream_pr": null,
+      "entry_shas": [
+        "9752b816a95e88751b9c7e4d3343fe3210de5d43"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "6300a6b1d03e32c473c7b6568df663c8927565cf",
+      "topic_id": "segment-6300a6b",
+      "title": "Apply per-runtime ACP environment defaults",
+      "areas": [
+        "acp",
+        "agents"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Hermes isolation is wanted without the rejected Goose scheduler injection.",
+      "dependencies": [
+        "1d4f97b959a0d91f7bac0e1f97189e5c10347712"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": "adapt_without_dependency",
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "485d03a358b6d695aaf97879f3fbaf2f308d0755",
+      "topic_id": "segment-485d03a",
+      "title": "Polish mobile attachments and gallery",
+      "areas": [
+        "mobile",
+        "ios"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The iOS behavior is wanted with Zion visual and permission contracts preserved.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "c405ad1d4b1da061c11b3d26761252d41dcc62d3",
+      "topic_id": "segment-c405ad1",
+      "title": "Fix prompt caching and proxy TLS passthrough",
+      "areas": [
+        "agents",
+        "acp",
+        "network"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Caching, accounting, and TLS passthrough fixes improve supported agent routing.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "ce01e930edff97bdc12a205fb8f938fcacdba8c1",
+      "topic_id": "segment-ce01e93",
+      "title": "Polish mobile typing indicator",
+      "areas": [
+        "mobile",
+        "ios"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The behavior is wanted with Zion motion and reduced-motion presentation preserved.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "24d90d1280a9325c6cbcf8eea30ac54db5afd2cb",
+      "topic_id": "segment-24d90d1",
+      "title": "Refine community invite limits",
+      "areas": [
+        "desktop",
+        "invites"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The invite-limit behavior is compatible with Zion's existing invite interface.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "6438dedf83a9dbe1853e484326911bf6c7f1618c",
+      "topic_id": "segment-6438ded",
+      "title": "Route model families to native gateway wire formats",
+      "areas": [
+        "agents",
+        "network"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Native routing improves supported provider interoperability.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "4555899ab2bfc7aa47b22dd872253f3704091782",
+      "topic_id": "segment-4555899",
+      "title": "Polish mobile navigation and menus",
+      "areas": [
+        "mobile",
+        "ios"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The navigation behavior is wanted with Zion styling and accessibility retained.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "f7a3988ba13b590d9a55a7e8413fc3fb5ffbef18",
+      "topic_id": "segment-f7a3988",
+      "title": "Preserve shared agent fidelity",
+      "areas": [
+        "desktop",
+        "catalog"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The fidelity fix belongs with the queued Zion catalog adaptation.",
+      "dependencies": [
+        "a35771fc441cdc3c6f517f419037206783b502d2"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "294c8c821de51442a8c384c0bdb66b1a10224ca0",
+      "topic_id": "segment-294c8c8",
+      "title": "Move observer work off the main thread",
+      "areas": [
+        "desktop",
+        "performance"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The performance fix is compatible with Zion desktop behavior.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "51bb97d2be658854bb8a39983af568e90591d375",
+      "topic_id": "segment-51bb97d",
+      "title": "Run Tauri clippy in pre-push",
+      "areas": [
+        "desktop",
+        "ci"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The gate improves local Rust validation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "a13085e9ac9a7c8dbd9426a6b88fc75abf62220e",
+      "topic_id": "segment-a13085e",
+      "title": "Release Buzz Desktop 0.5.1",
+      "areas": [
+        "desktop",
+        "release"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Zion owns the 0.0.9 DV release line and must not ingest Buzz release metadata.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "9752b816a95e88751b9c7e4d3343fe3210de5d43",
+      "topic_id": "segment-9752b81",
+      "title": "Serialize Tauri pre-push checks",
+      "areas": [
+        "desktop",
+        "ci"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Serialization prevents competing Tauri checks from contending for shared build state.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

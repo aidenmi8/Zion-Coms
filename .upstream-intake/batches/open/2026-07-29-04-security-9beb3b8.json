@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-07-29-04-security-9beb3b8",
+  "previous_reviewed_sha": "9752b816a95e88751b9c7e4d3343fe3210de5d43",
+  "pinned_upstream_sha": "9beb3b8c6ebc3e2fb0c17f4ca4d522731b81434c",
+  "kind": "security",
+  "status": "implementing",
+  "topics": [
+    {
+      "topic_id": "segment-9beb3b8",
+      "title": "Mask credential environment values in help",
+      "upstream_pr": null,
+      "entry_shas": [
+        "9beb3b8c6ebc3e2fb0c17f4ca4d522731b81434c"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "9beb3b8c6ebc3e2fb0c17f4ca4d522731b81434c",
+      "topic_id": "segment-9beb3b8",
+      "title": "Mask credential environment values in help",
+      "areas": [
+        "cli",
+        "acp",
+        "credentials",
+        "security"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Secret environment values must not appear in recursive CLI or ACP help output.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "credentials and secret display"
+      ],
+      "tracking": {
+        "issue": "https://linear.app/mi8/issue/MI8-15/upstream-intake-implement-buzz-f95fdc1-security-lane",
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

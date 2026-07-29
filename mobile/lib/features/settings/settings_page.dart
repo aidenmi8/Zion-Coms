@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../app/push_companion_provider.dart';
 import '../../shared/auth/auth.dart';
+import '../../shared/brand/zion_release.dart';
 import '../../shared/branding/sentra_branding.dart';
 import '../../shared/clipboard_utils.dart';
 import '../../shared/relay/relay.dart';
@@ -138,7 +139,7 @@ class _VersionFooter extends StatelessWidget {
             ),
             const SizedBox(height: Grid.xxs),
             Text(
-              'Zion · v$version',
+              formatZionReleaseLabel(version, currentZionReleaseChannel),
               style: context.textTheme.bodySmall?.copyWith(
                 color: context.colors.onSurfaceVariant.withValues(alpha: 0.6),
               ),

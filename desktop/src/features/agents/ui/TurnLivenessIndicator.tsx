@@ -1,21 +1,14 @@
 import { motion, useReducedMotion } from "motion/react";
 
 import { cn } from "@/shared/lib/cn";
-import { FuzzyLogo } from "@/shared/ui/buzz-logo/FuzzyLogo";
+import { ZionMotion } from "@/shared/ui/zion-brand/ZionMotion";
 import { useTranscriptAnimationEnabled } from "./transcriptAnimationPreference";
 
 const MARKS = ["first", "second", "third"] as const;
 const STAGGER_SECONDS = 0.25;
 const CYCLE_SECONDS = 1.8;
 
-export function TurnLivenessIndicator({
-  className,
-  fuzz = false,
-}: {
-  className?: string;
-  /** Defaults to false — the indicator stays mounted for whole turns. */
-  fuzz?: boolean;
-}) {
+export function TurnLivenessIndicator({ className }: { className?: string }) {
   const animationsEnabled = useTranscriptAnimationEnabled();
   const shouldReduceMotion = useReducedMotion();
   const showStaggeredRow = animationsEnabled && !shouldReduceMotion;
@@ -24,16 +17,14 @@ export function TurnLivenessIndicator({
     return (
       <div
         aria-label="Agent turn in progress"
-        className={cn("opacity-25", className)}
+        className={cn("text-muted-foreground opacity-70", className)}
         data-testid="turn-liveness-indicator"
         role="status"
       >
-        <FuzzyLogo
-          ariaLabel="Agent turn in progress"
-          className="text-foreground"
-          fuzz={fuzz}
-          loop
-          loopRestSeconds={2}
+        <ZionMotion
+          className="w-4!"
+          variant="liveness"
+          playing={!shouldReduceMotion}
         />
       </div>
     );
@@ -42,7 +33,10 @@ export function TurnLivenessIndicator({
   return (
     <div
       aria-label="Agent turn in progress"
-      className={cn("flex items-center gap-1.5 opacity-25", className)}
+      className={cn(
+        "flex items-center gap-1 text-muted-foreground opacity-70",
+        className,
+      )}
       data-testid="turn-liveness-indicator"
       role="status"
     >
@@ -61,11 +55,10 @@ export function TurnLivenessIndicator({
             times: [0, 0.3, 0.7, 1],
           }}
         >
-          <FuzzyLogo
-            ariaLabel=""
-            className="w-5! text-foreground"
-            fuzz={fuzz}
-            pulse={false}
+          <ZionMotion
+            className="w-4!"
+            variant="liveness"
+            playing={!shouldReduceMotion}
           />
         </motion.div>
       ))}

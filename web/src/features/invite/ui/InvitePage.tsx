@@ -1,4 +1,3 @@
-import buzzAppIcon from "@/assets/app-icon@3x.png";
 import { claimInviteInBrowser } from "@/features/invite/invite-api";
 import {
   BUZZ_RELEASES_URL,
@@ -9,6 +8,7 @@ import {
 import { hasNip07Provider } from "@/shared/lib/nostr-signer";
 import { relayWsUrl } from "@/shared/lib/relay-url";
 import { Button } from "@/shared/ui/button";
+import { ZionBrandMotion } from "@/shared/ui/zion-brand/ZionBrandMotion";
 import * as React from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -23,6 +23,20 @@ type JoinPolicy = {
 };
 
 type PolicyDocument = { title: string; markdown: string };
+
+/** Convert relay invite sentinels into user-facing recovery guidance. */
+function inviteClaimErrorMessage(message: string): string {
+  if (message.includes("invite_exhausted")) {
+    return "This invite has reached its use limit. Ask for a new invite.";
+  }
+  if (message.includes("invite_expired")) {
+    return "This invite has expired. Ask for a new invite.";
+  }
+  if (message.includes("invite_invalid")) {
+    return "This invite is invalid. Check the link or ask for a new invite.";
+  }
+  return message;
+}
 
 /** Landing page for a community invite link (`/invite/<code>`). */
 export function InvitePage({ code }: { code: string }) {
@@ -110,9 +124,9 @@ export function InvitePage({ code }: { code: string }) {
       await claimInviteInBrowser(code, receipt);
       window.location.assign("/");
     } catch (error) {
-      setBrowserJoinError(
-        error instanceof Error ? error.message : "Could not claim this invite.",
-      );
+      const message =
+        error instanceof Error ? error.message : "Could not claim this invite.";
+      setBrowserJoinError(inviteClaimErrorMessage(message));
     } finally {
       setJoiningBrowser(false);
     }
@@ -172,19 +186,19 @@ export function InvitePage({ code }: { code: string }) {
 
   return (
     <div
-      className="flex flex-1 flex-col items-center justify-center px-4 py-16 text-center"
+      className="flex flex-1 flex-col items-center justify-center bg-[#0b0812] px-4 py-16 text-center text-[#f3efff]"
       style={{
-        backgroundImage: "linear-gradient(180deg, #D7D72E 0%, #D7E7F6 100%)",
+        backgroundImage:
+          "radial-gradient(circle at 50% 0%, rgb(185 154 255 / 0.18), transparent 42%), linear-gradient(180deg, #0b0812 0%, #151020 100%)",
       }}
     >
       <div className="w-full max-w-xl space-y-4">
-        <div className="flex w-full flex-col items-center rounded-3xl bg-white px-6 py-10 sm:px-12 sm:py-12">
-          <div
-            className="h-12 w-12 overflow-hidden bg-black"
-            style={{ borderRadius: "22.37%" }}
-          >
-            <img alt="Zion" className="h-full w-full" src={buzzAppIcon} />
-          </div>
+        <div className="flex w-full flex-col items-center rounded-3xl border border-[#332842] bg-[#f3efff] px-6 py-10 text-[#0b0812] shadow-[0_1.5rem_4rem_rgb(0_0_0_/_0.3)] sm:px-12 sm:py-12">
+          <ZionBrandMotion
+            ariaLabel="Zion"
+            className="zion-brand-motion--light-surface h-20 w-20"
+            variant="onboarding"
+          />
           <h1 className="mt-4 text-2xl font-semibold tracking-tight text-black">
             You&apos;re invited to
           </h1>
@@ -214,7 +228,7 @@ export function InvitePage({ code }: { code: string }) {
           <div className="mt-9 w-full max-w-md space-y-2">
             {browserSigningAvailable ? (
               <Button
-                className="h-10 w-full bg-black text-white hover:bg-black/90 focus-visible:ring-black disabled:cursor-not-allowed disabled:bg-black/30 disabled:text-white/70"
+                className="h-10 w-full bg-[#b99aff] text-[#0b0812] hover:bg-[#c8b1ff] focus-visible:ring-[#b99aff] disabled:cursor-not-allowed disabled:bg-[#b99aff]/30 disabled:text-[#0b0812]/60"
                 disabled={disabled}
                 onClick={joinInBrowser}
               >
@@ -226,8 +240,8 @@ export function InvitePage({ code }: { code: string }) {
                 asChild
                 className={`h-10 w-full ${
                   browserSigningAvailable
-                    ? "border border-black bg-white text-black hover:bg-black/5"
-                    : "bg-black text-white hover:bg-black/90 focus-visible:ring-black"
+                    ? "border border-[#332842] bg-transparent text-[#0b0812] hover:bg-[#332842]/10"
+                    : "bg-[#b99aff] text-[#0b0812] hover:bg-[#c8b1ff] focus-visible:ring-[#b99aff]"
                 }`}
               >
                 <a
@@ -238,10 +252,10 @@ export function InvitePage({ code }: { code: string }) {
               </Button>
             ) : (
               <Button
-                className={`h-10 w-full disabled:cursor-not-allowed disabled:bg-black/30 disabled:text-white/70 ${
+                className={`h-10 w-full disabled:cursor-not-allowed disabled:bg-[#b99aff]/30 disabled:text-[#0b0812]/60 ${
                   browserSigningAvailable
-                    ? "border border-black bg-white text-black hover:bg-black/5"
-                    : "bg-black text-white hover:bg-black/90 focus-visible:ring-black"
+                    ? "border border-[#332842] bg-transparent text-[#0b0812] hover:bg-[#332842]/10"
+                    : "bg-[#b99aff] text-[#0b0812] hover:bg-[#c8b1ff] focus-visible:ring-[#b99aff]"
                 }`}
                 disabled={disabled}
                 onClick={openInvite}
@@ -256,12 +270,12 @@ export function InvitePage({ code }: { code: string }) {
             ) : null}
           </div>
         </div>
-        <p className="flex h-[3.125rem] items-center justify-center rounded-2xl bg-white text-sm text-black/60">
+        <p className="flex h-[3.125rem] items-center justify-center rounded-2xl border border-[#332842] bg-[#151020] text-sm text-[#b9aecf]">
           Don&apos;t have the app?{" "}
           <a
             aria-expanded={needsMacChoice ? showMacChoice : undefined}
             aria-haspopup={needsMacChoice ? "dialog" : undefined}
-            className="ml-1 font-medium text-black underline-offset-4 hover:text-black/70 hover:underline focus-visible:underline"
+            className="ml-1 font-medium text-[#f3efff] underline-offset-4 hover:text-[#b99aff] hover:underline focus-visible:underline"
             href={downloadUrl}
             ref={downloadTriggerRef}
             rel="noreferrer"

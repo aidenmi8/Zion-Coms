@@ -222,9 +222,7 @@ fn approval_lifecycle_events_fold_to_pending_and_terminal_states() {
         .iter()
         .filter(|approval| approval.status != "pending")
         .all(|approval| approval.approver_pubkey.as_deref() == Some(&"22".repeat(32))));
-    assert!(approvals
-        .iter()
-        .all(|approval| approval.token.len() == 64));
+    assert!(approvals.iter().all(|approval| approval.token.len() == 64));
 }
 
 #[test]

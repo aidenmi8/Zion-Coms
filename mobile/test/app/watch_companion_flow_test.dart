@@ -56,6 +56,7 @@ class _FakeRelay implements SignedEventRelay {
     required String content,
     required List<List<String>> tags,
     int? createdAt,
+    void Function(NostrEvent event)? onSigned,
   }) async {
     submissions.add(_Submission(kind: kind, content: content, tags: tags));
     return const NostrEvent(

@@ -1,8 +1,8 @@
 :root {
   font-family:
     "Helvetica Neue", Helvetica, Arial, ui-sans-serif, system-ui, sans-serif;
-  color: #231e1e;
-  background: #d7e7f6;
+  color: #f3efff;
+  background: #0b0812;
   font-synthesis: none;
 }
 
@@ -39,7 +39,13 @@ button {
 
 .app {
   min-height: 100vh;
-  background: linear-gradient(180deg, #d7d72e 0%, #dfe379 24%, #d7e7f6 78%);
+  background:
+    radial-gradient(circle at 50% 0%, rgb(185 154 255 / 0.16), transparent 42%),
+    linear-gradient(180deg, #0b0812 0%, #151020 100%);
+}
+
+.zion-brand-shell {
+  isolation: isolate;
 }
 
 .app-header {
@@ -59,26 +65,32 @@ button {
   font-size: 1.1rem;
   font-weight: 500;
   letter-spacing: -0.04em;
+  color: #f3efff;
 }
 
 .brand b {
   font-weight: 400;
-  color: rgb(35 30 30 / 60%);
+  color: rgb(199 190 216 / 72%);
 }
 
 .brand-mark {
+  position: relative;
+  overflow: hidden;
   width: 2.5rem;
   height: 2.5rem;
   display: grid;
   place-items: center;
   border-radius: 0.7rem;
-  color: #d7d72e;
-  background: #231e1e;
+  border: 1px solid rgb(185 154 255 / 28%);
+  background: #151020;
+  box-shadow: 0 0 1.5rem rgb(185 154 255 / 12%);
 }
 
 .brand-mark svg {
-  width: 1.7rem;
-  fill: currentColor;
+  width: 1.65rem;
+  height: 1.65rem;
+  color: #f3efff;
+  filter: drop-shadow(0 0 0.5rem rgb(185 154 255 / 18%));
 }
 
 nav {
@@ -86,9 +98,9 @@ nav {
   align-items: center;
   gap: 0.35rem;
   padding: 0.3rem;
-  border: 1px solid rgb(35 30 30 / 10%);
+  border: 1px solid rgb(185 154 255 / 24%);
   border-radius: 999px;
-  background: rgb(255 255 255 / 42%);
+  background: rgb(21 16 32 / 70%);
   backdrop-filter: blur(12px);
 }
 
@@ -98,7 +110,7 @@ nav {
   gap: 0.5rem;
   padding: 0.65rem 1rem;
   border-radius: 999px;
-  color: rgb(35 30 30 / 60%);
+  color: rgb(243 239 255 / 72%);
   font-size: 0.9rem;
   letter-spacing: -0.035em;
   transition:
@@ -117,13 +129,13 @@ nav {
 }
 
 .nav-link:hover {
-  color: #231e1e;
+  color: #f3efff;
 }
 
 .nav-link[aria-current="page"] {
-  color: #231e1e;
-  background: white;
-  box-shadow: 0 0.2rem 1rem rgb(35 30 30 / 8%);
+  color: #f3efff;
+  background: rgb(101 73 150 / 45%);
+  box-shadow: 0 0.2rem 1rem rgb(0 0 0 / 24%);
 }
 
 main {
@@ -139,7 +151,7 @@ main {
 
 .page-title > p {
   margin: 0 0 1rem;
-  color: rgb(35 30 30 / 55%);
+  color: rgb(199 190 216 / 78%);
   font-size: 0.78rem;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -157,7 +169,7 @@ h1 {
 .page-title > span {
   display: block;
   margin-top: 1.5rem;
-  color: rgb(35 30 30 / 62%);
+  color: rgb(199 190 216 / 80%);
   font-size: 1.05rem;
   line-height: 1.5;
   letter-spacing: -0.035em;
@@ -169,7 +181,7 @@ h1 {
   align-items: center;
   gap: 0.35rem;
   margin-bottom: 2.25rem;
-  color: rgb(35 30 30 / 62%);
+  color: rgb(199 190 216 / 82%);
   font-size: 0.9rem;
   letter-spacing: -0.035em;
 }
@@ -494,6 +506,38 @@ dt {
 dd {
   min-width: 0;
   margin: 0;
+}
+
+.reported-message {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  border-left: 3px solid #d7d72e;
+  border-radius: 0 0.8rem 0.8rem 0;
+  background: #f6f6f1;
+  padding: 1rem;
+}
+
+.reported-message p,
+.message-unavailable {
+  margin: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.reported-message-meta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.4rem 0.75rem;
+  width: 100%;
+  color: rgb(35 30 30 / 48%);
+  font-size: 0.78rem;
+}
+
+.message-unavailable {
+  color: rgb(35 30 30 / 60%);
+  font-style: italic;
 }
 
 .sensitive {

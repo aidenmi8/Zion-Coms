@@ -418,7 +418,7 @@ test.describe("observer feed screenshots", () => {
           method: "session/new",
           params: {
             systemPrompt:
-              "[Base]\nYou are a helpful AI assistant running in Buzz.\n\n[System]\nYou are Observer Agent. You coordinate multi-agent workflows in the #agents channel.\n\n---\n# Team Instructions\nAlways tag on handoff.\n\n[Agent Memory — core]\nI am Observer Agent.\n## Lessons Learned\nAlways tag on handoff.\n\n[Channel Canvas]\nCanvas revision (event ID): a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2\nLast modified: 2026-07-11T10:00:00Z\nFetch current content with: buzz canvas get --channel 94a444a4-c0a3-5966-ab05-530c6ddc2301",
+              "[Base]\nYou are a helpful AI assistant running in Buzz.\n\n[System]\nYou are Observer Agent. You coordinate multi-agent workflows in the #agents channel.\n\n[Team Instructions]\nAlways tag on handoff.\n\n[Agent Memory — core]\nI am Observer Agent.\n## Lessons Learned\nAlways tag on handoff.\n\n[Channel Canvas]\nCanvas revision (event ID): a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2\nLast modified: 2026-07-11T10:00:00Z\nFetch current content with: buzz canvas get --channel 94a444a4-c0a3-5966-ab05-530c6ddc2301",
           },
         },
       },
@@ -698,7 +698,7 @@ test.describe("observer feed screenshots", () => {
           method: "session/new",
           params: {
             systemPrompt:
-              "[Base]\nYou are a helpful AI assistant running in Buzz.\n\n[System]\nYou are Observer Agent. You coordinate multi-agent workflows in the #agents channel.\n\n---\n# Team Instructions\nAlways tag on handoff.\n\n[Agent Memory — core]\nI am Observer Agent.\n## Lessons Learned\nAlways tag on handoff.\n\n[Channel Canvas]\nCanvas revision (event ID): a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2\nLast modified: 2026-07-11T10:00:00Z\nFetch current content with: buzz canvas get --channel 94a444a4-c0a3-5966-ab05-530c6ddc2301",
+              "[Base]\nYou are a helpful AI assistant running in Buzz.\n\n[System]\nYou are Observer Agent. You coordinate multi-agent workflows in the #agents channel.\n\n[Team Instructions]\nAlways tag on handoff.\n\n[Agent Memory — core]\nI am Observer Agent.\n## Lessons Learned\nAlways tag on handoff.\n\n[Channel Canvas]\nCanvas revision (event ID): a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2\nLast modified: 2026-07-11T10:00:00Z\nFetch current content with: buzz canvas get --channel 94a444a4-c0a3-5966-ab05-530c6ddc2301",
           },
         },
       },
@@ -812,6 +812,138 @@ test.describe("observer feed screenshots", () => {
     await settleAnimations(dialog);
     await dialog.screenshot({
       path: `${SHOTS}/11-first-turn-ordering.png`,
+    });
+  });
+
+  test("12 — empty Activity loader keeps the transparent Zion mark compact", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem("buzz-theme", "buzz-dark");
+    });
+    await installMockBridge(page, { managedAgents: MANAGED_AGENTS });
+    const feedPanel = await openObserverFeedPanel(page, OBSERVER_AGENT_PUBKEY);
+
+    await seedObserverEvents(page, OBSERVER_AGENT_PUBKEY, [
+      {
+        seq: 1,
+        timestamp: NOW,
+        kind: "turn_started",
+        agentIndex: 0,
+        channelId: CHANNEL_ID,
+        sessionId: "session-loading",
+        turnId: "turn-loading",
+        payload: { source: "channel", triggeringEventIds: [] },
+      },
+    ]);
+
+    const loader = feedPanel.locator(
+      '[data-brand-surface="zion-motion"][data-zion-variant="liveness"]',
+    );
+    await expect(loader).toBeVisible({ timeout: 5_000 });
+
+    const loaderAudit = await loader.evaluate((node) => {
+      const bounds = node.getBoundingClientRect();
+      const mark = node.querySelector('[data-brand-surface="zion-mark"]');
+      return {
+        backgroundColor: mark ? getComputedStyle(mark).backgroundColor : null,
+        embeddedImages: mark?.querySelectorAll("image, img").length ?? -1,
+        height: bounds.height,
+        tagName: mark?.tagName.toLowerCase() ?? null,
+        width: bounds.width,
+      };
+    });
+
+    expect(loaderAudit.width).toBeLessThanOrEqual(48);
+    expect(loaderAudit.height).toBeLessThanOrEqual(48);
+    expect(loaderAudit).toMatchObject({
+      backgroundColor: "rgba(0, 0, 0, 0)",
+      embeddedImages: 0,
+      tagName: "svg",
+    });
+
+    await settleAnimations(feedPanel);
+    await feedPanel.screenshot({
+      path: `${SHOTS}/12-compact-empty-loader.png`,
+    });
+  });
+
+  test("13 — live-turn signal uses readable transparent inline Zion marks", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem("buzz-theme", "buzz-dark");
+    });
+    await installMockBridge(page, { managedAgents: MANAGED_AGENTS });
+    const feedPanel = await openObserverFeedPanel(page, OBSERVER_AGENT_PUBKEY);
+
+    await seedObserverEvents(page, OBSERVER_AGENT_PUBKEY, [
+      {
+        seq: 1,
+        timestamp: NOW,
+        kind: "turn_started",
+        agentIndex: 0,
+        channelId: CHANNEL_ID,
+        sessionId: "session-live",
+        turnId: "turn-live",
+        payload: { source: "channel", triggeringEventIds: [] },
+      },
+      {
+        seq: 2,
+        timestamp: NOW,
+        kind: "acp_read",
+        agentIndex: 0,
+        channelId: CHANNEL_ID,
+        sessionId: "session-live",
+        turnId: "turn-live",
+        payload: {
+          method: "session/update",
+          params: {
+            sessionId: "session-live",
+            update: {
+              content: {
+                type: "text",
+                text: "Checking the active context.",
+              },
+              sessionUpdate: "agent_message_chunk",
+            },
+          },
+        },
+      },
+    ]);
+
+    const indicator = feedPanel.getByTestId("turn-liveness-indicator");
+    await expect(indicator).toBeVisible({ timeout: 5_000 });
+
+    const signalAudit = await indicator.evaluate((node) => ({
+      opacity: Number.parseFloat(getComputedStyle(node).opacity),
+      marks: Array.from(
+        node.querySelectorAll('[data-brand-surface="zion-mark"]'),
+      ).map((mark) => ({
+        backgroundColor: getComputedStyle(mark).backgroundColor,
+        embeddedImages: mark.querySelectorAll("image, img").length,
+        pathCount: mark.querySelectorAll("path").length,
+        tagName: mark.tagName.toLowerCase(),
+        width: mark.getBoundingClientRect().width,
+      })),
+    }));
+
+    expect(signalAudit.opacity).toBeGreaterThanOrEqual(0.6);
+    expect(signalAudit.marks).toHaveLength(3);
+    for (const mark of signalAudit.marks) {
+      expect(mark).toMatchObject({
+        backgroundColor: "rgba(0, 0, 0, 0)",
+        embeddedImages: 0,
+        pathCount: 2,
+        tagName: "svg",
+      });
+      expect(mark.width).toBeGreaterThanOrEqual(12);
+      expect(mark.width).toBeLessThanOrEqual(16);
+    }
+
+    await settleAnimations(feedPanel);
+    await feedPanel.screenshot({
+      path: `${SHOTS}/13-transparent-live-turn-signal.png`,
     });
   });
 });

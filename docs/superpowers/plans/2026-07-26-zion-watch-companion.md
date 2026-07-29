@@ -34,7 +34,7 @@
 - Modify: `crates/buzz-db/src/workflow.rs`
 - Modify: `crates/buzz-db/src/push.rs`
 - Modify: `crates/buzz-db/src/migration.rs`
-- Create: `migrations/0025_zion_watch_approvals_push.sql`
+- Create: `migrations/0026_zion_watch_approvals_push.sql`
 
 - [ ] **Step 1: Add failing kind and builder tests**
 
@@ -96,7 +96,7 @@ cargo test -p buzz-db migration
 
 Expected: the delegated status and migration assertions fail.
 
-- [ ] **Step 5: Write migration `0025_zion_watch_approvals_push.sql`**
+- [ ] **Step 5: Write migration `0026_zion_watch_approvals_push.sql`**
 
 Use an idempotent enum addition:
 
@@ -132,7 +132,7 @@ Expected: all pass.
 ```bash
 git add crates/buzz-core/src/kind.rs crates/buzz-sdk/src/builders.rs \
   crates/buzz-db/src/workflow.rs crates/buzz-db/src/push.rs \
-  crates/buzz-db/src/migration.rs migrations/0025_zion_watch_approvals_push.sql
+  crates/buzz-db/src/migration.rs migrations/0026_zion_watch_approvals_push.sql
 git commit -m "feat: define Zion Watch approval protocol"
 ```
 

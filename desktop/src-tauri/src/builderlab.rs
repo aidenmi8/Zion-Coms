@@ -28,10 +28,10 @@ const AUTH_COMPLETE_HTML: &str = r#"<!doctype html>
     <title>Zion authentication complete</title>
   <style>
     :root {
-      color-scheme: light;
+      color-scheme: dark;
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #231e1e;
-      background: #d7d72e;
+      color: #f3efff;
+      background: #0b0812;
     }
 
     * {
@@ -45,26 +45,26 @@ const AUTH_COMPLETE_HTML: &str = r#"<!doctype html>
       display: grid;
       place-items: center;
       padding: 24px;
-      background-color: #d7d72e;
-      background-image: radial-gradient(circle, rgba(35, 30, 30, 0.16) 1.2px, transparent 1.3px);
-      background-size: 37px 37px;
+      background-color: #0b0812;
+      background-image: radial-gradient(circle at 50% 0%, rgba(185, 154, 255, 0.18), transparent 42%), linear-gradient(180deg, #0b0812 0%, #151020 100%);
     }
 
     main {
       width: min(100%, 560px);
       padding: clamp(32px, 8vw, 64px);
-      border: 2px solid #231e1e;
+      border: 1px solid rgba(185, 154, 255, 0.28);
       border-radius: 28px;
-      background: #d7e7f6;
-      box-shadow: 8px 8px 0 #231e1e;
+      background: #151020;
+      box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.35);
     }
 
-    .bee {
+    .zion-mark {
       display: block;
-      width: 72px;
-      height: auto;
+      width: 96px;
+      height: 96px;
       margin-bottom: 40px;
-      color: #231e1e;
+      color: #f3efff;
+      filter: drop-shadow(0 0 1rem rgba(185, 154, 255, 0.22));
     }
 
     .eyebrow {
@@ -74,7 +74,9 @@ const AUTH_COMPLETE_HTML: &str = r#"<!doctype html>
       margin: 0 0 20px;
       padding: 6px 14px;
       border-radius: 999px;
-      background: #d7d72e;
+      border: 1px solid rgba(185, 154, 255, 0.24);
+      background: rgba(185, 154, 255, 0.16);
+      color: #d9c9ff;
       font-size: 14px;
       font-weight: 600;
       letter-spacing: 0.01em;
@@ -105,11 +107,12 @@ const AUTH_COMPLETE_HTML: &str = r#"<!doctype html>
       main {
         padding: 32px 28px 36px;
         border-radius: 22px;
-        box-shadow: 6px 6px 0 #231e1e;
+        box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.35);
       }
 
-      .bee {
-        width: 60px;
+      .zion-mark {
+        width: 72px;
+        height: 72px;
         margin-bottom: 32px;
       }
     }
@@ -117,20 +120,8 @@ const AUTH_COMPLETE_HTML: &str = r#"<!doctype html>
 </head>
 <body>
   <main>
-    <svg class="bee" viewBox="0 0 466 309" role="img" aria-label="Zion">
-      <defs>
-        <mask id="bee-mask">
-          <rect width="466" height="309" fill="black"/>
-          <circle cx="91.7" cy="154.5" r="91.7" fill="white"/>
-          <circle cx="374.3" cy="154.5" r="91.7" fill="white"/>
-          <rect x="128" width="210" height="309" rx="34" fill="white"/>
-          <ellipse cx="193.3" cy="84.4" rx="27" ry="27" fill="black"/>
-          <ellipse cx="276" cy="84.4" rx="27" ry="27" fill="black"/>
-          <rect x="166.3" y="157.2" width="136.9" height="38.3" rx="5" fill="black"/>
-          <rect x="166.9" y="235.1" width="136.2" height="37.6" rx="5" fill="black"/>
-        </mask>
-      </defs>
-      <rect width="466" height="309" fill="currentColor" mask="url(#bee-mask)"/>
+    <svg class="zion-mark" viewBox="0 0 120 120" role="img" aria-label="Zion">
+      <path fill="currentColor" d="M24 52 52 20h32L56 52H24Zm12 48 28-32h32L68 100H36Z"/>
     </svg>
     <div class="eyebrow">Authentication complete</div>
     <h1>You&rsquo;re signed in.</h1>
@@ -645,12 +636,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn auth_complete_page_uses_sion_brand() {
+    fn auth_complete_page_uses_zion_brand() {
         for expected in [
             "<title>Zion authentication complete</title>",
-            "#d7d72e",
-            "#231e1e",
-            "#d7e7f6",
+            "class=\"zion-mark\"",
             "aria-label=\"Zion\"",
             "return to Zion",
         ] {
@@ -659,6 +648,9 @@ mod tests {
                 "authentication complete page is missing {expected}"
             );
         }
+        assert!(AUTH_COMPLETE_HTML.contains("Authentication complete"));
+        assert!(!AUTH_COMPLETE_HTML.contains("bee-mask"));
+        assert!(!AUTH_COMPLETE_HTML.contains("#d7d72e"));
     }
 
     #[test]

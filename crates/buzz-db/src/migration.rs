@@ -560,7 +560,7 @@ mod tests {
         let mut migrations: Vec<_> = MIGRATOR.iter().collect();
         migrations.sort_by_key(|migration| migration.version);
 
-        assert_eq!(migrations.len(), 25);
+        assert_eq!(migrations.len(), 26);
         assert_eq!(migrations[0].version, 1);
         assert_eq!(&*migrations[0].description, "initial schema");
         assert!(migrations[0]
@@ -880,11 +880,36 @@ mod tests {
             .contains("for update"));
         assert!(ttl_shared.contains("NEW.kind <> 9007"));
 
+        // Use-limited invite links: durable relay_invites table stores only
+        // the SHA-256 of an opaque v2 code, scoped by community_id. Never
+        // listed in _operator_global_tables — it is community-scoped.
+        assert_eq!(migrations[24].version, 25);
+        let relay_invites = migrations[24].sql.as_str();
+        assert!(relay_invites.contains("CREATE TABLE relay_invites"));
+        assert!(relay_invites
+            .contains("token_hash   BYTEA       NOT NULL CHECK (length(token_hash) = 32)"));
+        assert!(relay_invites.contains("PRIMARY KEY (community_id, id)"));
+        assert!(relay_invites.contains("UNIQUE (community_id, token_hash)"));
+        assert!(
+            relay_invites.contains("max_uses     INTEGER     CHECK (max_uses BETWEEN 1 AND 10000)")
+        );
+        assert!(relay_invites.contains("CHECK (max_uses IS NULL OR use_count <= max_uses)"));
+        assert!(relay_invites.contains("role = 'member'"));
+        assert!(relay_invites
+            .contains("CREATE INDEX relay_invites_expires_at_idx ON relay_invites (expires_at)"));
+        assert!(!relay_invites.contains("_operator_global_tables"));
+
+        let desired_schema = include_str!("../../../schema/schema.sql");
+        assert!(
+            desired_schema.contains("CREATE TABLE join_policy_acceptances"),
+            "desired-state schema must include join-policy evidence used by invite claims",
+        );
+
         // Zion Watch approval delegation and mention wakes are an additive
         // brownfield migration: approval history gains a terminal delegated
         // state and the gated matcher admits direct mention events.
-        assert_eq!(migrations[24].version, 25);
-        let zion_watch = migrations[24].sql.as_str();
+        assert_eq!(migrations[25].version, 26);
+        let zion_watch = migrations[25].sql.as_str();
         assert!(
             zion_watch.contains("ALTER TYPE approval_status ADD VALUE IF NOT EXISTS 'delegated'")
         );

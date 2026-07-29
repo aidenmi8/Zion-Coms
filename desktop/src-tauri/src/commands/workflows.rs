@@ -346,9 +346,7 @@ fn approvals_from_events(
         };
         let replace = terminal_by_digest
             .get(&digest)
-            .is_none_or(|current| {
-                (event.created_at, event.id) > (current.created_at, current.id)
-            });
+            .is_none_or(|current| (event.created_at, event.id) > (current.created_at, current.id));
         if replace {
             terminal_by_digest.insert(digest, event);
         }
@@ -392,7 +390,7 @@ fn approvals_from_events(
             })
         })
         .collect::<Vec<_>>();
-    approvals.sort_by(|left, right| right.created_at.cmp(&left.created_at));
+    approvals.sort_by_key(|approval| std::cmp::Reverse(approval.created_at));
     approvals
 }
 

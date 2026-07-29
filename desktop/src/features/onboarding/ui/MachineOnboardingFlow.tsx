@@ -11,7 +11,8 @@ import { StartupWindowDragRegion } from "@/shared/ui/StartupWindowDragRegion";
 import { BackupStep } from "./BackupStep";
 import { DefaultConfigStep } from "./DefaultConfigStep";
 import { IdentityKeyHelpDialog } from "./IdentityKeyHelpDialog";
-import { LandingBees } from "./LandingBees";
+import { ZionBrandField } from "@/shared/ui/zion-brand/ZionBrandField";
+import { ZionMark } from "@/shared/ui/zion-brand/ZionMark";
 import { NostrKeyImportForm } from "./NostrKeyImportForm";
 import {
   ONBOARDING_LANDING_CTA_CLASS,
@@ -28,18 +29,32 @@ export type MachineOnboardingPage =
   | "setup"
   | "config";
 
+/** A pending navigation the parent should execute after RouterProvider mounts. */
+export type PostOnboardingNavigation = {
+  to: string;
+  search?: Record<string, string>;
+};
+
 export function MachineOnboardingFlow({
   complete,
   continueWithIdentity,
   identityLost,
   initialPage,
   queryClient,
+  navigateAfterComplete,
 }: {
   complete: (pubkey?: string) => void;
   continueWithIdentity: (pubkey: string) => void;
   identityLost: boolean;
   initialPage?: MachineOnboardingPage;
   queryClient: QueryClient;
+  /**
+   * Called when the user finishes onboarding and requests navigation to a
+   * specific route (e.g. Settings → Agents). The parent owns the RouterProvider,
+   * so navigation must be deferred to it — calling router.navigate() here races
+   * with RouterProvider mounting.
+   */
+  navigateAfterComplete?: (nav: PostOnboardingNavigation) => void;
 }) {
   const [page, setPage] = React.useState<MachineOnboardingPage>(
     identityLost ? "key-import" : (initialPage ?? "identity"),
@@ -119,7 +134,7 @@ export function MachineOnboardingFlow({
       data-testid="machine-onboarding-gate"
     >
       <StartupWindowDragRegion />
-      {page === "identity" ? <LandingBees /> : null}
+      {page === "identity" ? <ZionBrandField /> : null}
       {page !== "identity" ? (
         <OnboardingChrome
           current={page === "config" ? 4 : page === "setup" ? 3 : 2}
@@ -138,10 +153,10 @@ export function MachineOnboardingFlow({
               effect="mask-reveal-up"
               transitionKey="machine-identity"
             >
-              <img
-                alt="Zion"
+              <ZionMark
+                ariaLabel="Zion"
                 className="w-full max-w-[600px]"
-                src="/landing/buzz-wordmark.png"
+                decorative={false}
               />
               <p className="mt-2 max-w-[560px] text-center text-2xl font-normal leading-none text-foreground">
                 Your people, your agents, your projects —<br />
@@ -157,7 +172,11 @@ export function MachineOnboardingFlow({
                   onClick={() => void loadFreshIdentity()}
                   type="button"
                 >
-                  {isPending ? "Saving identity…" : "Create a new identity key"}
+                  {isPending
+                    ? "Loading identity…"
+                    : selectedPubkey
+                      ? "Continue setup"
+                      : "Create a new identity key"}
                 </Button>
                 <Button
                   className="h-9 rounded-full bg-foreground/10 px-5 hover:bg-foreground/15"
@@ -166,7 +185,9 @@ export function MachineOnboardingFlow({
                   type="button"
                   variant="ghost"
                 >
-                  Use an existing key
+                  {selectedPubkey
+                    ? "Use a different key instead"
+                    : "Use an existing key"}
                 </Button>
               </div>
               <IdentityKeyHelpDialog />
@@ -224,6 +245,17 @@ export function MachineOnboardingFlow({
                     return;
                   }
                   setPage("config");
+                },
+                navigateToAgentSettings: () => {
+                  // Complete onboarding first, then delegate the Settings → Agents
+                  // navigation to the parent.  The parent owns RouterProvider, so
+                  // navigation from within the onboarding flow races with the
+                  // router mounting — calling router.navigate() here is unsafe.
+                  complete(selectedPubkey ?? undefined);
+                  navigateAfterComplete?.({
+                    to: "/settings",
+                    search: { section: "agents" },
+                  });
                 },
               }}
               direction="forward"

@@ -556,7 +556,7 @@ pub async fn accept(
             .max_by_key(|class| class_rank(class))
             .expect("non-empty subscriptions");
         capability = endpoint.to_owned();
-        subscriptions = serde_json::to_value(&normalized_subscriptions)
+        subscriptions = serde_json::to_value(normalized_subscriptions)
             .map_err(|_| "invalid subscriptions".to_string())?;
         Some(buzz_db::push::ActiveLease {
             app_profile: body.app_profile.as_deref().expect("validated profile"),
@@ -711,7 +711,7 @@ mod tests {
             .collect::<Vec<_>>()
             .join(", ");
         let predicate = format!("NEW.kind IN ({kinds})");
-        let migration = include_str!("../../../../migrations/0025_zion_watch_approvals_push.sql");
+        let migration = include_str!("../../../../migrations/0026_zion_watch_approvals_push.sql");
         assert!(
             migration.contains(&predicate),
             "migration trigger must use PUSH_KINDS exactly: {predicate}"

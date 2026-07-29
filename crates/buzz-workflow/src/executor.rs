@@ -517,17 +517,29 @@ fn resolve_send_message_channel(
 ///
 /// `RequestApproval` returns `StepResult::Suspended` — the caller must
 /// persist state and stop the execution loop.
-pub async fn dispatch_action(
+struct DispatchContext<'a> {
+    engine: &'a WorkflowEngine,
+    community_id: CommunityId,
+    run_id: Uuid,
+    trigger_ctx: &'a TriggerContext,
+    execution_trace: &'a [JsonValue],
+}
+
+async fn dispatch_action(
     step_id: &str,
     step_index: usize,
     action: &ActionDef,
-    engine: &WorkflowEngine,
-    community_id: CommunityId,
-    run_id: Uuid,
-    trigger_ctx: &TriggerContext,
-    execution_trace: &[JsonValue],
+    context: DispatchContext<'_>,
 ) -> Result<StepResult, WorkflowError> {
     use ActionDef::*;
+
+    let DispatchContext {
+        engine,
+        community_id,
+        run_id,
+        trigger_ctx,
+        execution_trace,
+    } = context;
 
     match action {
         SendMessage { text, channel } => {
@@ -858,6 +870,9 @@ async fn call_webhook_impl(
     // different address than the one validated above (DNS rebinding TOCTOU).
     let client = Client::builder()
         .timeout(Duration::from_secs(10))
+        // A system proxy would resolve the original hostname itself, bypassing
+        // the validated and pinned address above.
+        .no_proxy()
         // Disable redirects — a redirect to an internal host bypasses the SSRF check.
         .redirect(reqwest::redirect::Policy::none())
         .resolve(host, std::net::SocketAddr::new(safe_ip, port))
@@ -1192,11 +1207,13 @@ async fn execute_steps(
                 &step.id,
                 i,
                 &resolved_action,
-                engine,
-                community_id,
-                run_id,
-                trigger_ctx,
-                &trace,
+                DispatchContext {
+                    engine,
+                    community_id,
+                    run_id,
+                    trigger_ctx,
+                    execution_trace: &trace,
+                },
             ),
         )
         .await;

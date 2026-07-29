@@ -5,6 +5,7 @@ import '../channels/channel_management_provider.dart';
 import '../profile/user_cache_provider.dart';
 import '../profile/user_profile.dart';
 import 'channels_provider.dart';
+import 'channel_messages_provider.dart';
 
 /// Sends messages by signing an event with the user's nsec and publishing it
 /// over the relay's NIP-42-authenticated WebSocket session.
@@ -13,6 +14,9 @@ class SendMessage {
   final Future<List<ChannelMember>> Function(String channelId) _fetchMembers;
   final Map<String, UserProfile> Function() _readUserCache;
   final bool Function(String channelId) _isDirectMessage;
+  final void Function(String channelId, NostrEvent event) _addLocalMessage;
+  final void Function(String channelId, String eventId) _completeLocalMessage;
+  final void Function(String channelId, String eventId) _removeLocalMessage;
 
   SendMessage({
     required SignedEventRelay signedEventRelay,
@@ -20,10 +24,17 @@ class SendMessage {
     fetchMembers,
     required Map<String, UserProfile> Function() readUserCache,
     required bool Function(String channelId) isDirectMessage,
+    required void Function(String channelId, NostrEvent event) addLocalMessage,
+    required void Function(String channelId, String eventId)
+    completeLocalMessage,
+    required void Function(String channelId, String eventId) removeLocalMessage,
   }) : _signedEventRelay = signedEventRelay,
        _fetchMembers = fetchMembers,
        _readUserCache = readUserCache,
-       _isDirectMessage = isDirectMessage;
+       _isDirectMessage = isDirectMessage,
+       _addLocalMessage = addLocalMessage,
+       _completeLocalMessage = completeLocalMessage,
+       _removeLocalMessage = removeLocalMessage;
 
   /// Send a text message to a channel.
   ///
@@ -74,11 +85,24 @@ class SendMessage {
       ...mediaTags,
     ];
 
-    await _signedEventRelay.submit(
-      kind: EventKind.streamMessage,
-      content: content,
-      tags: tags,
-    );
+    NostrEvent? localMessage;
+    try {
+      await _signedEventRelay.submit(
+        kind: EventKind.streamMessage,
+        content: content,
+        tags: tags,
+        onSigned: (event) {
+          localMessage = event;
+          _addLocalMessage(channelId, event);
+        },
+      );
+      final event = localMessage;
+      if (event != null) _completeLocalMessage(channelId, event.id);
+    } catch (_) {
+      final event = localMessage;
+      if (event != null) _removeLocalMessage(channelId, event.id);
+      rethrow;
+    }
   }
 
   /// Resolve @mentions to pubkeys, scoped to channel members.
@@ -170,5 +194,14 @@ final sendMessageProvider = Provider<SendMessage>((ref) {
           ) ??
           false;
     },
+    addLocalMessage: (channelId, event) => ref
+        .read(channelMessagesProvider(channelId).notifier)
+        .addLocalMessage(event),
+    completeLocalMessage: (channelId, eventId) => ref
+        .read(channelMessagesProvider(channelId).notifier)
+        .completeLocalMessage(eventId),
+    removeLocalMessage: (channelId, eventId) => ref
+        .read(channelMessagesProvider(channelId).notifier)
+        .removeLocalMessage(eventId),
   );
 });

@@ -33,6 +33,7 @@ import { CommunityOnboardingFlow } from "@/features/onboarding/ui/CommunityOnboa
 import {
   MachineOnboardingFlow,
   type MachineOnboardingPage,
+  type PostOnboardingNavigation,
 } from "@/features/onboarding/ui/MachineOnboardingFlow";
 import { OnboardingFlow } from "@/features/onboarding/ui/OnboardingFlow";
 import { PendingInviteGate } from "@/features/onboarding/ui/PendingInviteGate";
@@ -63,16 +64,14 @@ import {
   listenForDeepLinks,
 } from "@/shared/deep-link";
 import { cn } from "@/shared/lib/cn";
-import { BuzzMark } from "@/shared/ui/buzz-logo/BuzzMark";
-import { FlappingBee } from "@/shared/ui/buzz-logo/FlappingBee";
-import { FuzzyLogo } from "@/shared/ui/buzz-logo/FuzzyLogo";
+import { ZionMotion } from "@/shared/ui/zion-brand/ZionMotion";
 import { StartupWindowDragRegion } from "@/shared/ui/StartupWindowDragRegion";
 
 const LOADING_TEXT = "Setting up your community...";
 
 // Minimum time the cold-boot splash stays on screen. A real boot resolves the
 // community in well under 100ms, and the native window setup plus first paint
-// can take longer than that — without a hold, the bee is unmounted before it is
+// can take longer than that — without a hold, the Zion motion is unmounted before it is
 // ever visible. The hold runs as an overlay above the already-mounted app, so
 // time-to-interactive is unchanged; only the reveal waits.
 const BOOT_SPLASH_MIN_VISIBLE_MS = 1_200;
@@ -129,12 +128,9 @@ function useBootSplashHold(): BootSplashPhase {
   return phase;
 }
 
-// Animated Buzz mark for the loading gates. The static BuzzMark renders in
-// normal flow and sizes the box — it's plain SVG (no JS/SMIL), so it paints on
-// the very first frame even before scripting starts, avoiding a blank flash on
-// hard reload. The animated FuzzyLogo is layered on top and takes over once it
-// begins playing.
-function BeeLoader({
+// The inline Zion motion mark paints on the first frame and respects
+// reduced-motion preferences without layering duplicate artwork.
+function BrandLoader({
   ariaLabel,
   className,
   tintClassName = "text-foreground",
@@ -145,21 +141,18 @@ function BeeLoader({
 }) {
   return (
     <div className={cn("relative", tintClassName, className)}>
-      <BuzzMark className="block h-auto w-full" />
-      <FuzzyLogo
+      <ZionMotion
         ariaLabel={ariaLabel}
-        className="absolute inset-0 h-full! w-full! [&>svg]:h-full [&>svg]:w-full [&>svg]:max-w-full"
-        fuzz
+        className="h-auto! w-full! motion-reduce:[&_.zion-motion__mark]:animate-none"
         loop
-        loopRestSeconds={0}
+        variant="loader"
       />
     </div>
   );
 }
 
 // Cold boot gate: the theme-adaptive grainient background with a single
-// centered Buzz bee flying over it — the same static mark as before, now with
-// its wings flapping (ported from the Buzz website's wing-flap). Replaces the
+// centered Zion mark. Replaces the
 // old "Setting up your community" text, which stays as an sr-only caption.
 function AppLoadingGate() {
   return (
@@ -171,7 +164,10 @@ function AppLoadingGate() {
       <StartupWindowDragRegion />
       <ThemeGrainientBackground />
       <span className="sr-only">{LOADING_TEXT}</span>
-      <FlappingBee className="relative z-10 h-auto w-28" />
+      <BrandLoader
+        ariaLabel={LOADING_TEXT}
+        className="relative z-10 h-auto w-28"
+      />
     </div>
   );
 }
@@ -195,7 +191,7 @@ function CommunitySwitchGate() {
       <StartupWindowDragRegion />
       <span className="sr-only">Switching community…</span>
       {showSpinner ? (
-        <BeeLoader
+        <BrandLoader
           ariaLabel="Switching community…"
           className="h-auto w-20"
           tintClassName="text-muted-foreground"
@@ -488,7 +484,7 @@ function CommunityApp({
   const isEnteringCurtain = transaction?.stage === "entering";
 
   // The app mounts (and starts loading data) beneath the splash overlay; the
-  // overlay just keeps the bee on screen long enough to be seen, then fades.
+  // overlay keeps the Zion motion on screen long enough to be seen, then fades.
   // Community switches keep their quiet gate.
   const showBootSplashOverlay =
     bootSplashPhase !== "done" && !isCommunitySwitch;
@@ -592,6 +588,8 @@ function MachineBootstrap({ sharedIdentity }: { sharedIdentity: boolean }) {
   });
   const [machineInitialPage, setMachineInitialPage] =
     useState<MachineOnboardingPage>();
+  const [postOnboardingNav, setPostOnboardingNav] =
+    useState<PostOnboardingNavigation | null>(null);
 
   const reopenMachineConfig = useCallback(() => {
     setMachineInitialPage("config");
@@ -605,6 +603,27 @@ function MachineBootstrap({ sharedIdentity }: { sharedIdentity: boolean }) {
     },
     [machine.complete],
   );
+
+  const navigateAfterOnboarding = useCallback(
+    (nav: PostOnboardingNavigation) => {
+      setPostOnboardingNav(nav);
+    },
+    [],
+  );
+
+  // Execute the pending navigation once the RouterProvider is mounted (i.e.
+  // machine.stage transitions to "ready").  We wait for the ready stage rather
+  // than using setTimeout(0) so the router is guaranteed to exist before we call
+  // router.navigate().
+  useEffect(() => {
+    if (machine.stage === "ready" && postOnboardingNav) {
+      void router.navigate({
+        to: postOnboardingNav.to,
+        search: postOnboardingNav.search ?? {},
+      });
+      setPostOnboardingNav(null);
+    }
+  }, [machine.stage, postOnboardingNav]);
 
   const openAddCommunity = useCallback(
     (payload: AddCommunityDeepLinkPayload & { requestId: string }) =>
@@ -664,6 +683,7 @@ function MachineBootstrap({ sharedIdentity }: { sharedIdentity: boolean }) {
         continueWithIdentity={machine.continueWithIdentity}
         identityLost={machine.identityLost}
         initialPage={machineInitialPage}
+        navigateAfterComplete={navigateAfterOnboarding}
         queryClient={machine.queryClient}
       />
       {shouldAcknowledgeDeepLink ? <PendingInviteGate /> : null}

@@ -12,6 +12,8 @@ import 'features/channels/deep_link_dispatcher.dart';
 import 'features/profile/user_status_cache_provider.dart';
 import 'app/push_companion_provider.dart';
 import 'app/watch_companion_coordinator.dart';
+import 'features/profile/settings_profile_header.dart';
+import 'features/settings/settings_page.dart';
 import 'shared/auth/auth.dart';
 import 'shared/branding/sentra_liquid_orbit.dart';
 import 'shared/deeplink/pending_deep_link_provider.dart';
@@ -28,12 +30,24 @@ class App extends HookConsumerWidget {
     final schemeName = ref.watch(schemeProvider);
     final authState = ref.watch(authProvider);
 
-    final resolved = resolveSchemes(schemeName);
+    final resolved = resolveSchemes(schemeName, themeMode);
     final lightScheme = applyAccent(resolved.light, accentIndex);
     final darkScheme = applyAccent(resolved.dark, accentIndex);
-    // Default and named schemes can force light or dark mode; otherwise
-    // respect the user's ThemeMode preference.
+    // Light/Dark modes pin the brightness; System leaves it null so Flutter
+    // follows the OS across the selected theme and its pair.
     final effectiveMode = resolved.forcedMode ?? themeMode;
+
+    // Derive the gradient from the themes that produced each color scheme.
+    // This keeps fallbacks and pinned brightness changes aligned with the
+    // rendered palette rather than the raw persisted selection.
+    final buzzLightGradient = buzzTopSectionGradient(
+      resolved.lightTheme?.name ?? '',
+      lightScheme.brightness,
+    );
+    final buzzDarkGradient = buzzTopSectionGradient(
+      resolved.darkTheme?.name ?? '',
+      darkScheme.brightness,
+    );
 
     // Eagerly initialize websocket session and lifecycle observer when
     // authenticated. These providers connect and manage the websocket.
@@ -70,15 +84,21 @@ class App extends HookConsumerWidget {
 
     return MaterialApp(
       title: 'Zion',
-      theme: AppTheme.light(colorScheme: lightScheme),
-      darkTheme: AppTheme.dark(colorScheme: darkScheme),
+      theme: AppTheme.light(
+        colorScheme: lightScheme,
+        topSectionGradient: buzzLightGradient,
+      ),
+      darkTheme: AppTheme.dark(
+        colorScheme: darkScheme,
+        topSectionGradient: buzzDarkGradient,
+      ),
       themeMode: effectiveMode,
       home: authState.when(
         loading: () => const _SplashScreen(),
         error: (_, _) => const PairingPage(),
         data: (state) => switch (state.status) {
           AuthStatus.authenticated => const DeepLinkDispatcher(
-            child: HomePage(),
+            child: HomePage(settingsPageBuilder: _buildSettingsPage),
           ),
           _ => const DeepLinkDispatcher(
             dispatchMessageLinks: false,
@@ -89,6 +109,9 @@ class App extends HookConsumerWidget {
     );
   }
 }
+
+Widget _buildSettingsPage(BuildContext context) =>
+    const SettingsPage(profileHeader: SettingsProfileHeader());
 
 class _SplashScreen extends StatelessWidget {
   const _SplashScreen();

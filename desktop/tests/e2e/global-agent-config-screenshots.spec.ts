@@ -701,7 +701,7 @@ test.describe("global agent config screenshots", () => {
         .locator("p")
         .filter({ hasText: "Zion Agent is not installed." }),
     ).toContainText(
-      "Zion Agent is not installed. Visit Settings > Agents to set it up.",
+      "Zion Agent is not installed. Ships with the Zion desktop app. Visit Settings > Agents to set it up.",
     );
     await expect(page.getByTestId("persona-dialog-submit")).toBeDisabled();
   });

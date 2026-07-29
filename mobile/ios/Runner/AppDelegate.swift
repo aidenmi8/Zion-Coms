@@ -7,6 +7,9 @@ import UserNotifications
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var mediaUploadChannel: FlutterMethodChannel?
   private var appleCompanionPlugin: AppleCompanionPlugin?
+  private var qrScannerChannel: FlutterMethodChannel?
+  private var inlinePhotoPickerSupportChannel: FlutterMethodChannel?
+  private var nativeAttachmentPopoverCoordinator: NativeAttachmentPopoverCoordinator?
 
   override func application(
     _ application: UIApplication,
@@ -17,9 +20,10 @@ import UserNotifications
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    let messenger = engineBridge.applicationRegistrar.messenger()
     mediaUploadChannel = FlutterMethodChannel(
       name: "buzz/media_upload",
-      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+      binaryMessenger: messenger
     )
     mediaUploadChannel?.setMethodCallHandler { [weak self] call, result in
       self?.handleMediaUploadMethodCall(call, result: result)
@@ -27,6 +31,7 @@ import UserNotifications
     appleCompanionPlugin = AppleCompanionPlugin(
       binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
+    configureNativeSurfaces(engineBridge)
   }
 
   override func application(
@@ -67,6 +72,102 @@ import UserNotifications
 
   static func shouldPresentForegroundNotification(body: String) -> Bool {
     body == "Zion needs attention"
+  }
+
+  private func configureNativeSurfaces(_ engineBridge: FlutterImplicitEngineBridge) {
+    let messenger = engineBridge.applicationRegistrar.messenger()
+    qrScannerChannel = FlutterMethodChannel(
+      name: "buzz/qr_scanner",
+      binaryMessenger: messenger
+    )
+    qrScannerChannel?.setMethodCallHandler { call, result in
+      Self.handleQrScannerMethodCall(call, result: result)
+    }
+    inlinePhotoPickerSupportChannel = FlutterMethodChannel(
+      name: "buzz/inline_photo_picker",
+      binaryMessenger: messenger
+    )
+    inlinePhotoPickerSupportChannel?.setMethodCallHandler { call, result in
+      guard call.method == "isSupported" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      if #available(iOS 17.0, *) {
+        result(true)
+      } else {
+        result(false)
+      }
+    }
+
+    if let inlinePhotoPickerRegistrar = engineBridge.pluginRegistry.registrar(
+      forPlugin: "BuzzInlinePhotoPicker"
+    ) {
+      inlinePhotoPickerRegistrar.register(
+        InlinePhotoPickerFactory(
+          messenger: messenger,
+          parentViewController: inlinePhotoPickerRegistrar.viewController
+        ),
+        withId: "buzz/inline_photo_picker"
+      )
+    }
+
+    let nativeAttachmentRegistrar = engineBridge.pluginRegistry.registrar(
+      forPlugin: "BuzzNativeAttachmentPopover"
+    )
+    nativeAttachmentPopoverCoordinator = NativeAttachmentPopoverCoordinator(
+      messenger: messenger,
+      parentViewController: nativeAttachmentRegistrar?.viewController
+    )
+  }
+
+  private static func handleQrScannerMethodCall(
+    _ call: FlutterMethodCall,
+    result: @escaping FlutterResult
+  ) {
+    switch call.method {
+    case "usesDynamicIslandQrScannerPortal":
+      result(
+        UIDevice.current.userInterfaceIdiom == .phone
+          && usesDynamicIslandQrScannerPortal(
+            safeAreaTopInset: activeWindowSafeAreaTopInset()
+          )
+      )
+    case "setDynamicIslandScannerStatusBarHidden":
+      guard let hidden = call.arguments as? Bool else {
+        result(
+          FlutterError(
+            code: "invalid_arguments",
+            message: "Expected a Bool status-bar visibility value.",
+            details: nil
+          )
+        )
+        return
+      }
+      UIApplication.shared.setStatusBarHidden(hidden, with: .fade)
+      result(nil)
+    case "performDynamicIslandQrScanSuccessHaptic":
+      let generator = UINotificationFeedbackGenerator()
+      generator.prepare()
+      generator.notificationOccurred(.success)
+      result(nil)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  static func usesDynamicIslandQrScannerPortal(
+    safeAreaTopInset: CGFloat
+  ) -> Bool {
+    safeAreaTopInset > 50
+  }
+
+  private static func activeWindowSafeAreaTopInset() -> CGFloat {
+    UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .filter { $0.activationState == .foregroundActive }
+      .flatMap(\.windows)
+      .first(where: \.isKeyWindow)?
+      .safeAreaInsets.top ?? 0
   }
 
   private func handleMediaUploadMethodCall(
@@ -216,10 +317,12 @@ import UserNotifications
     let sourceURL = URL(fileURLWithPath: sourcePath)
     let asset = AVURLAsset(url: sourceURL)
 
-    guard let exportSession = AVAssetExportSession(
-      asset: asset,
-      presetName: AVAssetExportPresetPassthrough
-    ) else {
+    guard
+      let exportSession = AVAssetExportSession(
+        asset: asset,
+        presetName: AVAssetExportPresetPassthrough
+      )
+    else {
       result(
         FlutterError(
           code: "transcode_failed",
@@ -244,7 +347,8 @@ import UserNotifications
       case .completed:
         result(outputURL.path)
       default:
-        let errorMessage = exportSession.error?.localizedDescription
+        let errorMessage =
+          exportSession.error?.localizedDescription
           ?? "Video transcoding failed with status \(exportSession.status.rawValue)."
         result(
           FlutterError(

@@ -1,40 +1,19 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:buzz/features/pairing/pairing_page.dart';
 import 'package:buzz/features/pairing/pairing_provider.dart';
-import 'package:buzz/shared/branding/sentra_branding.dart';
+import 'package:buzz/shared/brand/zion_brand_motion.dart';
+import 'package:buzz/shared/brand/zion_brand_tokens.dart';
 import 'package:buzz/shared/branding/sentra_liquid_orbit.dart';
+import 'package:buzz/shared/theme/theme.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../helpers/widget_helpers.dart';
 
 void main() {
   group('PairingPage', () {
-    testWidgets('renders branding, scan button, divider, and text field', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        WidgetHelpers.testable(child: const PairingPage()),
-      );
-
-      expect(find.text('Welcome to Zion'), findsOneWidget);
-      expect(find.bySemanticsLabel('Sentra'), findsOneWidget);
-      final wordmark = tester.widget<Image>(
-        find.descendant(
-          of: find.bySemanticsLabel('Sentra'),
-          matching: find.byType(Image),
-        ),
-      );
-      expect(wordmark.image, const AssetImage(sentraBlackWordmarkAsset));
-      expect(find.text('Scan QR Code'), findsOneWidget);
-      expect(find.text('or paste pairing code'), findsOneWidget);
-      expect(find.text('Paste a pairing link or code'), findsOneWidget);
-      expect(find.textContaining('buzz://'), findsNothing);
-      expect(find.text('Connect'), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
-    });
-
-    testWidgets('keeps pairing controls visible with the liquid-orb welcome', (
+    testWidgets('renders Zion liquid-orbit branding and progressive actions', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -42,29 +21,82 @@ void main() {
       );
 
       expect(find.byType(SentraLiquidOrbit), findsOneWidget);
+      expect(find.byType(ZionBrandMotion), findsNothing);
+      expect(find.bySemanticsLabel('Zion welcome mark'), findsOneWidget);
       expect(find.text('Welcome to Zion'), findsOneWidget);
-      final pageBounds = tester.getRect(
-        find.descendant(
-          of: find.byType(PairingPage),
-          matching: find.byType(Scaffold),
+      expect(find.text('Scan a QR code'), findsOneWidget);
+      expect(find.text('Use pairing code'), findsOneWidget);
+      expect(find.text('Connect'), findsNothing);
+      expect(find.byType(TextField), findsNothing);
+    });
+
+    testWidgets('uses compact desktop-style onboarding actions', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        WidgetHelpers.testable(child: const PairingPage()),
+      );
+
+      final scanButton = tester.getSize(
+        find.widgetWithText(FilledButton, 'Scan a QR code'),
+      );
+      final pairingCodeButton = tester.getSize(
+        find.widgetWithText(TextButton, 'Use pairing code'),
+      );
+
+      expect(scanButton.width, lessThan(440));
+      expect(pairingCodeButton.width, lessThan(440));
+      expect(find.byType(OutlinedButton), findsNothing);
+    });
+
+    testWidgets('uses dark status-bar icons on the onboarding surface', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        WidgetHelpers.testable(child: const PairingPage()),
+      );
+
+      final overlay = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+        find.byKey(const Key('pairing-onboarding-system-overlay')),
+      );
+
+      expect(overlay.value.statusBarIconBrightness, Brightness.dark);
+      expect(overlay.value.statusBarColor, Colors.transparent);
+    });
+
+    testWidgets('uses light status-bar icons for dark-theme SAS verification', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            pairingProvider.overrideWith(() => _ConfirmingSasPairingNotifier()),
+          ],
+          child: MaterialApp(theme: AppTheme.dark(), home: const PairingPage()),
         ),
       );
-      final scanButton = find.widgetWithText(FilledButton, 'Scan QR Code');
-      final textField = find.byType(TextField);
-      final connectButton = find.widgetWithText(FilledButton, 'Connect');
 
-      for (final control in [scanButton, textField, connectButton]) {
-        expect(control, findsOneWidget);
-        expect(control.hitTestable(), findsOneWidget);
-        final bounds = tester.getRect(control);
-        expect(bounds.top, greaterThanOrEqualTo(pageBounds.top));
-        expect(bounds.bottom, lessThanOrEqualTo(pageBounds.bottom));
-      }
+      final overlay = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+        find.byKey(const Key('pairing-sas-system-overlay')),
+      );
 
-      expect(tester.widget<TextField>(textField).enabled, isTrue);
-      expect(tester.widget<FilledButton>(scanButton).onPressed, isNotNull);
-      expect(tester.widget<FilledButton>(connectButton).onPressed, isNotNull);
-      expect(tester.takeException(), isNull);
+      expect(overlay.value.statusBarIconBrightness, Brightness.light);
+      expect(overlay.value.statusBarColor, Colors.transparent);
+      expect(find.text('Verify Security Code'), findsOneWidget);
+    });
+
+    testWidgets('reveals pairing code field and connect action', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        WidgetHelpers.testable(child: const PairingPage()),
+      );
+
+      await _expandPairingCode(tester);
+
+      expect(find.text('Hide pairing code'), findsOneWidget);
+      expect(find.text('Connect'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
     });
 
     testWidgets('connect button is below text field, not beside it', (
@@ -73,13 +105,13 @@ void main() {
       await tester.pumpWidget(
         WidgetHelpers.testable(child: const PairingPage()),
       );
+      await _expandPairingCode(tester);
 
       final textField = tester.getBottomLeft(find.byType(TextField));
       final connectButton = tester.getTopLeft(
         find.widgetWithText(FilledButton, 'Connect'),
       );
 
-      // The connect button should be below the text field.
       expect(connectButton.dy, greaterThan(textField.dy));
     });
 
@@ -87,13 +119,13 @@ void main() {
       await tester.pumpWidget(
         WidgetHelpers.testable(child: const PairingPage()),
       );
+      await _expandPairingCode(tester);
 
       final connectButton = tester.getSize(
         find.widgetWithText(FilledButton, 'Connect'),
       );
       final textField = tester.getSize(find.byType(TextField));
 
-      // Button width should be close to the text field width (both full-width).
       expect(connectButton.width, closeTo(textField.width, 2.0));
     });
 
@@ -113,7 +145,7 @@ void main() {
       expect(find.text('Invalid pairing code: bad input'), findsOneWidget);
     });
 
-    testWidgets('shows spinner when connecting', (tester) async {
+    testWidgets('uses the pairing pulse when connecting', (tester) async {
       await tester.pumpWidget(
         WidgetHelpers.testable(
           overrides: [
@@ -124,14 +156,75 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      // Connect text should be replaced by spinner.
+      final motion = tester.widget<ZionBrandMotion>(
+        find.byType(ZionBrandMotion),
+      );
+
+      expect(motion.variant, ZionBrandMotionVariants.pairing);
+      expect(motion.playing, isTrue);
+      expect(find.text('Connecting…'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(find.text('Connect'), findsNothing);
     });
 
-    testWidgets('text field and buttons disabled when connecting', (
-      tester,
-    ) async {
+    testWidgets('uses the loader motion while transferring', (tester) async {
+      await tester.pumpWidget(
+        WidgetHelpers.testable(
+          overrides: [
+            pairingProvider.overrideWith(() => _LoadingPairingNotifier()),
+          ],
+          child: const PairingPage(),
+        ),
+      );
+      await tester.pump();
+
+      final motion = tester.widget<ZionBrandMotion>(
+        find.byType(ZionBrandMotion),
+      );
+
+      expect(motion.variant, ZionBrandMotionVariants.loader);
+      expect(motion.playing, isTrue);
+      expect(find.text('Syncing…'), findsOneWidget);
+    });
+
+    testWidgets(
+      'parent status region owns semantics and motion stays decorative',
+      (tester) async {
+        await tester.pumpWidget(
+          WidgetHelpers.testable(
+            overrides: [
+              pairingProvider.overrideWith(() => _ConnectingPairingNotifier()),
+            ],
+            child: const PairingPage(),
+          ),
+        );
+        await tester.pump();
+
+        final statusRegion = tester.widget<Semantics>(
+          find.byKey(const ValueKey('pairing-brand-status-region')),
+        );
+        final motion = tester.widget<ZionBrandMotion>(
+          find.byType(ZionBrandMotion),
+        );
+
+        expect(statusRegion.properties.label, 'Zion pairing in progress');
+        expect(statusRegion.properties.liveRegion, isTrue);
+        expect(motion.label, isNull);
+        expect(
+          find.descendant(
+            of: find.byType(ZionBrandMotion),
+            matching: find.byType(ExcludeSemantics),
+          ),
+          findsWidgets,
+        );
+        expect(
+          find.bySemanticsLabel('Zion pairing in progress'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('pairing actions are disabled when connecting', (tester) async {
       await tester.pumpWidget(
         WidgetHelpers.testable(
           overrides: [
@@ -142,10 +235,20 @@ void main() {
       );
       await tester.pump();
 
-      final textField = tester.widget<TextField>(find.byType(TextField));
-      expect(textField.enabled, isFalse);
+      final scanButton = tester.widget<FilledButton>(find.byType(FilledButton));
+      final pairingCodeButton = tester.widget<TextButton>(
+        find.widgetWithText(TextButton, 'Use pairing code'),
+      );
+
+      expect(scanButton.onPressed, isNull);
+      expect(pairingCodeButton.onPressed, isNull);
     });
   });
+}
+
+Future<void> _expandPairingCode(WidgetTester tester) async {
+  await tester.tap(find.text('Use pairing code'));
+  await tester.pumpAndSettle();
 }
 
 class _ErrorPairingNotifier extends Notifier<PairingState>
@@ -174,6 +277,46 @@ class _ConnectingPairingNotifier extends Notifier<PairingState>
     implements PairingNotifier {
   @override
   PairingState build() => const PairingState(status: PairingStatus.connecting);
+
+  @override
+  Future<void> pair(String rawInput) async {}
+
+  @override
+  void reset() {}
+
+  @override
+  void confirmSas() {}
+
+  @override
+  void denySas() {}
+}
+
+class _LoadingPairingNotifier extends Notifier<PairingState>
+    implements PairingNotifier {
+  @override
+  PairingState build() =>
+      const PairingState(status: PairingStatus.transferring);
+
+  @override
+  Future<void> pair(String rawInput) async {}
+
+  @override
+  void reset() {}
+
+  @override
+  void confirmSas() {}
+
+  @override
+  void denySas() {}
+}
+
+class _ConfirmingSasPairingNotifier extends Notifier<PairingState>
+    implements PairingNotifier {
+  @override
+  PairingState build() => const PairingState(
+    status: PairingStatus.confirmingSas,
+    sasCode: '123456',
+  );
 
   @override
   Future<void> pair(String rawInput) async {}

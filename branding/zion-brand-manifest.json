@@ -1,0 +1,542 @@
+{
+  "version": 1,
+  "sourceDirectory": "/private/tmp/zion-brand-source",
+  "assets": {
+    "sentraV2_2": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-2.png",
+      "outputPath": "desktop/public/branding/sentra-v2-2.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-2.png",
+      "format": "png",
+      "sha256": "c52e77b57c3e24284bd0794fa917da612a3d953a8725eece6fc4798d43a62e6a",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_3": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-3.png",
+      "outputPath": "desktop/public/branding/sentra-v2-3.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-3.png",
+      "format": "png",
+      "sha256": "6af0cd4ab5b72e52e4aa2712e0dae003aaaf2ccef774b95e669a3bc75d3b9cd7",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_4": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-4.png",
+      "outputPath": "desktop/public/branding/sentra-v2-4.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-4.png",
+      "format": "png",
+      "sha256": "f6ef000cad2cc1dddbd68bc86ca93336ae5299e8f1f0c591bb6053f46cd1de45",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_5": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-5.png",
+      "outputPath": "desktop/public/branding/sentra-v2-5.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-5.png",
+      "format": "png",
+      "sha256": "f44dfea9e6e9b423729ac76f47a7366ae19df304da6a77204b81599c8ff9850f",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_6": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-6.png",
+      "outputPath": "desktop/public/branding/sentra-v2-6.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-6.png",
+      "format": "png",
+      "sha256": "9836d450544705316dc4b0bc894b89922b6470d9006835558ad0227e28bce43f",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_7": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-7.png",
+      "outputPath": "desktop/public/branding/sentra-v2-7.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-7.png",
+      "format": "png",
+      "sha256": "88acc7498b4532393b837b53c89cbe3cbf0dde7d5c887ae49ef28c66eb0da16d",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "appIcon": {
+      "role": "appIcon",
+      "canonicalPath": "/branding/zion-app-icon-1024.png",
+      "outputPath": "desktop/public/branding/zion-app-icon-1024.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-8.png",
+      "format": "png",
+      "sha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": false,
+      "colorSpace": "RGB",
+      "compatibilityPaths": [
+        "/app-icon@2x.png",
+        "/app-icon@3x.png"
+      ]
+    },
+    "appIcon2x": {
+      "role": "appIcon",
+      "canonicalPath": "/branding/zion-app-icon@2x.png",
+      "outputPath": "desktop/public/branding/zion-app-icon@2x.png",
+      "aliases": [
+        "desktop/public/app-icon@2x.png"
+      ],
+      "sourceFile": "Logos-sentra-v2-8.png",
+      "format": "png",
+      "sha256": "ce3220c0502d51544d0a393ac4d1a366e7af702e132e96708dffc0f1898fb50f",
+      "width": 2048,
+      "height": 2048,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "appIcon3x": {
+      "role": "appIcon",
+      "canonicalPath": "/branding/zion-app-icon@3x.png",
+      "outputPath": "desktop/public/branding/zion-app-icon@3x.png",
+      "aliases": [
+        "desktop/public/app-icon@3x.png",
+        "web/src/assets/zion-app-icon@3x.png",
+        "web/src/assets/app-icon@3x.png"
+      ],
+      "sourceFile": "Logos-sentra-v2-8.png",
+      "format": "png",
+      "sha256": "b9b1b8cad55b1f42db611296ad6d908442b916c79107b5b811fb3a59e4c3f23f",
+      "width": 3072,
+      "height": 3072,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "dmgBackground": {
+      "role": "dmgBackground",
+      "canonicalPath": "/branding/sentra-dmg-background-1200x800.png",
+      "outputPath": "desktop/public/branding/sentra-dmg-background-1200x800.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-9.png",
+      "format": "png",
+      "sha256": "9a410e738605f7a3ad0a04ccc8df0f87e4875c9634a182768ab509bdad02890f",
+      "width": 1200,
+      "height": 800,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "dmgBackgroundSmall": {
+      "role": "dmgBackground",
+      "canonicalPath": "/branding/sentra-dmg-background-600x400.png",
+      "outputPath": "desktop/public/branding/sentra-dmg-background-600x400.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-9.png",
+      "format": "png",
+      "sha256": "7b571fff21fb8028883f6c576eba5bec317e122f94b901d72fc29e0ee6369195",
+      "width": 600,
+      "height": 400,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraV2_10": {
+      "role": "sentraV2",
+      "canonicalPath": "/branding/sentra-v2-10.png",
+      "outputPath": "desktop/public/branding/sentra-v2-10.png",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-10.png",
+      "format": "png",
+      "sha256": "8b171011068555e7a6e89cce1355480ce46dc180df2a1b484117601fe4ab3433",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentraWordmark": {
+      "role": "sentraWordmark",
+      "canonicalPath": "/branding/sentra-wordmark.svg",
+      "outputPath": "desktop/public/branding/sentra-wordmark.svg",
+      "aliases": [
+        "desktop/public/landing/buzz-wordmark.png"
+      ],
+      "sourceFile": "logo-TW-wordmark.png",
+      "format": "svg",
+      "sha256": "6928f865105f6a15b2786ad59d8a0fa8c2f6dcfb921ee35b9699a9c1c273b4a8",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "sentraLockup": {
+      "role": "sentraLockup",
+      "canonicalPath": "/branding/sentra-lockup-horizontal.svg",
+      "outputPath": "desktop/public/branding/sentra-lockup-horizontal.svg",
+      "aliases": [],
+      "sourceFile": "logo-TW2-wordmark.png",
+      "format": "svg",
+      "sha256": "fe7a257f666946b064571bcd73700f30ebf33e0bcd5076f47790bda076c9b01d",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "sentraLockupLight": {
+      "role": "sentraLockupLight",
+      "canonicalPath": "/branding/sentra-lockup-light.svg",
+      "outputPath": "desktop/public/branding/sentra-lockup-light.svg",
+      "aliases": [],
+      "sourceFile": "logo-TW2-wordmark.png",
+      "format": "svg",
+      "sha256": "fe7a257f666946b064571bcd73700f30ebf33e0bcd5076f47790bda076c9b01d",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "sentraLockupDark": {
+      "role": "sentraLockupDark",
+      "canonicalPath": "/branding/sentra-lockup-dark.svg",
+      "outputPath": "desktop/public/branding/sentra-lockup-dark.svg",
+      "aliases": [],
+      "sourceFile": "logo-TB-wordmark.png",
+      "format": "svg",
+      "sha256": "087a92c1efdaba769e851fc72638f777e8f89adb8530f6661428536ee4b0c9d5",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "zionMark": {
+      "role": "mark",
+      "canonicalPath": "/branding/zion-mark.svg",
+      "outputPath": "desktop/public/branding/zion-mark.svg",
+      "aliases": [
+        "desktop/public/buzz.svg",
+        "admin-web/public/zion-mark.svg",
+        "admin-web/public/favicon.svg"
+      ],
+      "sourceFile": "Logos-sentra-v2-2.png",
+      "format": "svg",
+      "sha256": "fd0d912d30cb3b817df0b3167b7c77f6929cfa0d0b8f1407c9b1d6d9e7acd124",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB",
+      "compatibilityPaths": [
+        "/buzz.svg",
+        "/favicon.svg"
+      ]
+    },
+    "sentraStatusGlyph": {
+      "role": "status",
+      "canonicalPath": "/branding/sentra-status-glyph.svg",
+      "outputPath": "desktop/public/branding/sentra-status-glyph.svg",
+      "aliases": [],
+      "sourceFile": "Logos-sentra-v2-2.png",
+      "format": "svg",
+      "sha256": "11eb0f043a2fa5ae10804d9c6b3f96acc41a8958075852b701f65255e6a0338d",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    }
+  },
+  "aliasInventory": {
+    "desktop/public/app-icon@2x.png": {
+      "sourceAsset": "appIcon2x",
+      "sourceFile": "Logos-sentra-v2-8.png",
+      "publicPath": "/app-icon@2x.png",
+      "format": "png",
+      "sha256": "ce3220c0502d51544d0a393ac4d1a366e7af702e132e96708dffc0f1898fb50f",
+      "width": 2048,
+      "height": 2048,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "desktop/public/app-icon@3x.png": {
+      "sourceAsset": "appIcon3x",
+      "sourceFile": "Logos-sentra-v2-8.png",
+      "publicPath": "/app-icon@3x.png",
+      "format": "png",
+      "sha256": "b9b1b8cad55b1f42db611296ad6d908442b916c79107b5b811fb3a59e4c3f23f",
+      "width": 3072,
+      "height": 3072,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "web/src/assets/zion-app-icon@3x.png": {
+      "sourceAsset": "appIcon3x",
+      "sourceFile": "Logos-sentra-v2-8.png",
+      "format": "png",
+      "sha256": "b9b1b8cad55b1f42db611296ad6d908442b916c79107b5b811fb3a59e4c3f23f",
+      "width": 3072,
+      "height": 3072,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "web/src/assets/app-icon@3x.png": {
+      "sourceAsset": "appIcon3x",
+      "sourceFile": "Logos-sentra-v2-8.png",
+      "format": "png",
+      "sha256": "b9b1b8cad55b1f42db611296ad6d908442b916c79107b5b811fb3a59e4c3f23f",
+      "width": 3072,
+      "height": 3072,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "desktop/public/landing/buzz-wordmark.png": {
+      "sourceAsset": "sentraWordmark",
+      "sourceFile": "logo-TW-wordmark.png",
+      "publicPath": "/landing/buzz-wordmark.png",
+      "format": "png",
+      "sha256": "9b44ba56ecde2204c2f05c8dcde8274c3618b91ae3ae7a739054a7ff8289e0d6",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "desktop/public/buzz.svg": {
+      "sourceAsset": "zionMark",
+      "sourceFile": "Logos-sentra-v2-2.png",
+      "publicPath": "/buzz.svg",
+      "format": "svg",
+      "sha256": "fd0d912d30cb3b817df0b3167b7c77f6929cfa0d0b8f1407c9b1d6d9e7acd124",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "admin-web/public/zion-mark.svg": {
+      "sourceAsset": "zionMark",
+      "sourceFile": "Logos-sentra-v2-2.png",
+      "publicPath": "/zion-mark.svg",
+      "format": "svg",
+      "sha256": "fd0d912d30cb3b817df0b3167b7c77f6929cfa0d0b8f1407c9b1d6d9e7acd124",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "admin-web/public/favicon.svg": {
+      "sourceAsset": "zionMark",
+      "sourceFile": "Logos-sentra-v2-2.png",
+      "publicPath": "/favicon.svg",
+      "format": "svg",
+      "sha256": "fd0d912d30cb3b817df0b3167b7c77f6929cfa0d0b8f1407c9b1d6d9e7acd124",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    }
+  },
+  "sources": {
+    "Logos-sentra-v2-2.png": {
+      "disposition": "shipped",
+      "relativePath": "Logos-sentra-v2-2.png",
+      "format": "png",
+      "sha256": "c52e77b57c3e24284bd0794fa917da612a3d953a8725eece6fc4798d43a62e6a",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "Logos-sentra-v2-3.png": {
+      "disposition": "shipped",
+      "relativePath": "Logos-sentra-v2-3.png",
+      "format": "png",
+      "sha256": "6af0cd4ab5b72e52e4aa2712e0dae003aaaf2ccef774b95e669a3bc75d3b9cd7",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "Logos-sentra-v2-4.png": {
+      "disposition": "shipped",
+      "relativePath": "Logos-sentra-v2-4.png",
+      "format": "png",
+      "sha256": "f6ef000cad2cc1dddbd68bc86ca93336ae5299e8f1f0c591bb6053f46cd1de45",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "Logos-sentra-v2-5.png": {
+      "disposition": "shipped",
+      "relativePath": "Logos-sentra-v2-5.png",
+      "format": "png",
+      "sha256": "f44dfea9e6e9b423729ac76f47a7366ae19df304da6a77204b81599c8ff9850f",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "Logos-sentra-v2-6.png": {
+      "disposition": "shipped",
+      "relativePath": "Logos-sentra-v2-6.png",
+      "format": "png",
+      "sha256": "9836d450544705316dc4b0bc894b89922b6470d9006835558ad0227e28bce43f",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "Logos-sentra-v2-7.png": {
+      "disposition": "shipped",
+      "relativePath": "Logos-sentra-v2-7.png",
+      "format": "png",
+      "sha256": "88acc7498b4532393b837b53c89cbe3cbf0dde7d5c887ae49ef28c66eb0da16d",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "Logos-sentra-v2-8.png": {
+      "disposition": "shipped",
+      "relativePath": "Logos-sentra-v2-8.png",
+      "format": "png",
+      "sha256": "9dd5bcf31e3b8d531d9e2df38edd3b61fc41cf579541b6fda41713c76b6e5b1b",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "Logos-sentra-v2-9.png": {
+      "disposition": "shipped",
+      "relativePath": "Logos-sentra-v2-9.png",
+      "format": "png",
+      "sha256": "bf47cb14de31ceec35e9e55ec1fb583f1e2c5c03f181dd366ae0d6b4830d0e28",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "Logos-sentra-v2-10.png": {
+      "disposition": "shipped",
+      "relativePath": "Logos-sentra-v2-10.png",
+      "format": "png",
+      "sha256": "8b171011068555e7a6e89cce1355480ce46dc180df2a1b484117601fe4ab3433",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "logo-TW-wordmark.png": {
+      "disposition": "shipped",
+      "relativePath": "transparent -logos/logo-TW-wordmark.png",
+      "format": "png",
+      "sha256": "9b44ba56ecde2204c2f05c8dcde8274c3618b91ae3ae7a739054a7ff8289e0d6",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "logo-TW2-wordmark.png": {
+      "disposition": "shipped",
+      "relativePath": "transparent -logos/logo-TW2-wordmark.png",
+      "format": "png",
+      "sha256": "afee3e2b37ba84cfb8e6d0c9b586a93916356bd7a91b0641707bb0e17486ac64",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "logo-TB-wordmark.png": {
+      "disposition": "shipped",
+      "relativePath": "transparent -logos/logo-TB-wordmark.png",
+      "format": "png",
+      "sha256": "111af13d62c2496724450142d051b060caae63c3bd4f04d6e39aa2085400bedb",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "colorSpace": "RGB"
+    },
+    "Logos-sentra-v2-1.png": {
+      "disposition": "reference-only",
+      "relativePath": "Logos-sentra-v2-1.png",
+      "format": "png",
+      "sha256": "6ea0657ae83db6980ff107a8fc0c3c4d051769fdd288aa83b307dfbc893d7550",
+      "width": 1254,
+      "height": 1254,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentra-agent-ARQ-and Agents.png": {
+      "disposition": "reference-only",
+      "relativePath": "sentra-agent-ARQ-and Agents.png",
+      "format": "png",
+      "sha256": "3ebee76d004961e4b3d0b4822f3dc4af0cb4ed53c8d6e71ec092af8ea22666b1",
+      "width": 1536,
+      "height": 1024,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    },
+    "sentra-logo-branding -jul-2026.png": {
+      "disposition": "reference-only",
+      "relativePath": "sentra-logo-branding -jul-2026.png",
+      "format": "png",
+      "sha256": "372a8039d93f0ed94709903e5771da87eb21120c97e6629acb1e1b05702d2ddd",
+      "width": 1210,
+      "height": 1300,
+      "hasAlpha": false,
+      "colorSpace": "RGB"
+    }
+  },
+  "motion": {
+    "frameSourcePolicy": "dedicated-frame-or-code-native",
+    "variants": [
+      "loader",
+      "onboarding",
+      "liveness",
+      "pairing",
+      "agent-entrance"
+    ],
+    "loader": {
+      "durationMs": 1800,
+      "loop": true,
+      "mode": "code-native",
+      "reducedMotion": "static"
+    },
+    "onboarding": {
+      "durationMs": 900,
+      "settleMs": 2400,
+      "loop": false,
+      "mode": "code-native",
+      "reducedMotion": "settled"
+    },
+    "liveness": {
+      "durationMs": 1400,
+      "loop": true,
+      "mode": "code-native",
+      "reducedMotion": "static"
+    },
+    "pairing": {
+      "durationMs": 1800,
+      "loop": false,
+      "mode": "code-native",
+      "reducedMotion": "settled"
+    },
+    "agent-entrance": {
+      "durationMs": 900,
+      "staggerMs": 320,
+      "loop": false,
+      "mode": "code-native",
+      "reducedMotion": "settled"
+    }
+  }
+}

@@ -127,23 +127,29 @@ Each participating repository stores the following files:
 .upstream-intake/
   config.json
   state.json
+  tools/
+    upstream_intake.py
   batches/
     open/
       YYYY-MM-DD-<pinned-short-sha>.json
     archive/
 .github/
   workflows/
-    upstream-discovery.yml
+    upstream-sync.yml
   PULL_REQUEST_TEMPLATE/
     upstream-intake.md
 scripts/
-  upstream-intake.mjs
-  upstream-intake.test.mjs
+  test_upstream_intake.py
+tools/
+  codex-skills/
+    upstream-fork-intake/
 ```
 
 JSON is used for the portable schema because it can be parsed with standard
 libraries without adding a YAML dependency. Projects may render Markdown
-reports from these files, but generated reports are not authoritative.
+reports from these files, but generated reports are not authoritative. The
+repository-local tool is an exact validated copy of the portable skill's
+canonical Python tool so CI never depends on a user's personal Codex profile.
 
 ### Configuration
 

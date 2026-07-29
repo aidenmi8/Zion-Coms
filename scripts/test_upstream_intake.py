@@ -1176,5 +1176,162 @@ class InitializationTests(unittest.TestCase):
         self.assertFalse((self.repo / ".upstream-intake").exists())
 
 
+class ZionProfileTests(unittest.TestCase):
+    """Zion's checked-in profile preserves fork identity and compatibility."""
+
+    REVIEWED_SHA = "60158fce3e670f11bb35d42627857ccaea50ff06"
+
+    def setUp(self) -> None:
+        self.tool = load_tool()
+        self.config_path = REPO_ROOT / ".upstream-intake/config.json"
+        self.state_path = REPO_ROOT / ".upstream-intake/state.json"
+
+    def test_zion_profile_pins_provenance_platforms_and_license(self) -> None:
+        self.assertTrue(self.config_path.is_file())
+        self.assertTrue(self.state_path.is_file())
+        config = json.loads(self.config_path.read_text(encoding="utf-8"))
+        state = json.loads(self.state_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            {
+                "branch": "main",
+                "remote": "upstream",
+                "repository": "block/buzz",
+            },
+            config["upstream"],
+        )
+        self.assertEqual(
+            {
+                "main_branch": "main",
+                "repository": "aidenmi8/Zion-Coms",
+            },
+            config["fork"],
+        )
+        self.assertEqual(
+            ["ios", "macos"], config["execution"]["target_platforms"]
+        )
+        self.assertEqual(
+            ["flutter-ios", "tauri-macos"],
+            config["execution"]["project_profiles"],
+        )
+        self.assertEqual("Apache-2.0", config["licensing"]["upstream_spdx"])
+        self.assertEqual("Apache-2.0", config["licensing"]["fork_spdx"])
+        self.assertEqual(["LICENSE"], config["licensing"]["license_files"])
+        self.assertEqual(self.REVIEWED_SHA, state["reviewed_through"])
+        self.assertEqual(self.REVIEWED_SHA, state["last_discovered"])
+
+        self.tool.validate_config(REPO_ROOT, config)
+        self.tool.validate_state(state)
+
+    def test_zion_profile_protects_all_fork_owned_contracts(self) -> None:
+        config = json.loads(self.config_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            {
+                "admin-brand-routes",
+                "compatibility-identifiers",
+                "desktop-sidecars",
+                "mobile-permissions",
+                "platform-brand",
+                "protocols-and-routes",
+                "visible-brand",
+            },
+            set(config["protected_contracts"]),
+        )
+        surfaces = "\n".join(config["compatibility_surfaces"])
+        for required in (
+            "BUZZ_*",
+            "buzz://",
+            "buzz-*",
+            "xyz.block.buzz.app",
+            "mobile bundle identifiers",
+            "relay paths",
+            "Docker",
+            "legacy URLs",
+        ):
+            self.assertIn(required, surfaces)
+
+    def test_zion_vendored_tool_is_byte_identical_to_skill_tool(self) -> None:
+        vendored = REPO_ROOT / ".upstream-intake/tools/upstream_intake.py"
+
+        self.assertTrue(vendored.is_file())
+        self.assertEqual(TOOL_PATH.read_bytes(), vendored.read_bytes())
+
+    def test_zion_repository_state_validates_without_open_batch(self) -> None:
+        self.tool.validate_repository(REPO_ROOT)
+
+
+class WorkflowSafetyTests(unittest.TestCase):
+    """Scheduled discovery can report but cannot integrate or publish."""
+
+    def setUp(self) -> None:
+        self.workflow_path = REPO_ROOT / ".github/workflows/upstream-sync.yml"
+        self.workflow = self.workflow_path.read_text(encoding="utf-8")
+        self.justfile = (REPO_ROOT / "Justfile").read_text(encoding="utf-8")
+
+    def test_workflow_has_read_only_credentials_and_single_upstream_fetch(
+        self,
+    ) -> None:
+        self.assertRegex(
+            self.workflow, r"(?m)^permissions:\n  contents: read$"
+        )
+        self.assertIn("persist-credentials: false", self.workflow)
+        self.assertEqual(
+            1,
+            self.workflow.count("git fetch --no-tags upstream main"),
+        )
+        self.assertIn(
+            "--upstream-ref upstream/main", self.workflow
+        )
+
+    def test_workflow_has_no_integration_publication_or_delivery_action(
+        self,
+    ) -> None:
+        forbidden = (
+            "contents: write",
+            "pull-requests: write",
+            "issues: write",
+            "persist-credentials: true",
+            "GH_TOKEN",
+            "git merge",
+            "git push",
+            "git switch",
+            "git checkout -b",
+            "git cherry-pick",
+            "git rebase",
+            "gh pr",
+            "deploy",
+            "release",
+            "install",
+        )
+        for token in forbidden:
+            self.assertNotIn(token, self.workflow)
+
+    def test_workflow_only_publishes_report_to_job_summary(self) -> None:
+        self.assertIn("workflow_dispatch:", self.workflow)
+        self.assertIn('cron: "17 5 * * 1"', self.workflow)
+        self.assertEqual(1, self.workflow.count("$GITHUB_STEP_SUMMARY"))
+        self.assertIn(
+            '--format markdown >> "$GITHUB_STEP_SUMMARY"', self.workflow
+        )
+
+    def test_just_check_runs_upstream_intake_gate(self) -> None:
+        check_line = next(
+            line for line in self.justfile.splitlines() if line.startswith("check:")
+        )
+        self.assertIn("upstream-intake-check", check_line)
+        self.assertLess(
+            check_line.index("upstream-intake-check"),
+            check_line.index("fmt-check"),
+        )
+        self.assertIn(
+            "upstream-intake-check:\n"
+            "    python3 -m unittest scripts/test_upstream_intake.py\n"
+            "    python3 .upstream-intake/tools/upstream_intake.py "
+            "validate --repo .",
+            self.justfile,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

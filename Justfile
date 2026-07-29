@@ -92,7 +92,12 @@ build-release:
     cargo build --workspace --release
 
 # Run repo lint, formatting, and visible-brand checks
-check: visible-brand-check compose-healthcheck-test fmt-check clippy desktop-check desktop-tauri-fmt-check desktop-tauri-clippy web-check mobile-check
+check: upstream-intake-check visible-brand-check compose-healthcheck-test fmt-check clippy desktop-check desktop-tauri-fmt-check desktop-tauri-clippy web-check mobile-check
+
+# Validate the selective upstream intake distribution and durable state.
+upstream-intake-check:
+    python3 -m unittest scripts/test_upstream_intake.py
+    python3 .upstream-intake/tools/upstream_intake.py validate --repo .
 
 # Fail closed if a product surface is missing from the visible-brand scan.
 visible-brand-check:

@@ -4,7 +4,7 @@
   "previous_reviewed_sha": "9752b816a95e88751b9c7e4d3343fe3210de5d43",
   "pinned_upstream_sha": "9beb3b8c6ebc3e2fb0c17f4ca4d522731b81434c",
   "kind": "security",
-  "status": "implementing",
+  "status": "reviewed",
   "topics": [
     {
       "topic_id": "segment-9beb3b8",
@@ -52,7 +52,8 @@
         "CARGO_TARGET_DIR=/private/tmp/zion-security-cargo-target CARGO_INCREMENTAL=0 just ci: passed",
         "python3 -m unittest scripts/test_upstream_intake.py: 69 passed",
         "git diff --check: passed",
-        "just test: pending because the local Docker Engine API timed out and PostgreSQL/Redis were unavailable; Docker Desktop was not restarted without separate approval"
+        "just test: passed all 8 reported unit and integration groups in 64 seconds",
+        "docker compose down: passed; project containers and network removed while all 7 service images and 3 named development-data volumes were preserved"
       ],
       "revisit": null
     }

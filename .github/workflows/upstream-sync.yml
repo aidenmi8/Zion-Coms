@@ -1,4 +1,4 @@
-name: Sync upstream
+name: Discover upstream changes
 
 on:
   schedule:
@@ -6,44 +6,26 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
-  sync:
+  discover:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout fork
+      - name: Check out fork
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
-          persist-credentials: true
-
-      - name: Merge upstream main and open a PR
-        env:
-          GH_TOKEN: ${{ github.token }}
+          persist-credentials: false
+      - name: Fetch configured upstream branch
         shell: bash
         run: |
-          set -euo pipefail
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/block/buzz.git
           git fetch --no-tags upstream main
-
-          upstream_commits=$(git rev-list --count HEAD..upstream/main)
-          if [[ "$upstream_commits" == "0" ]]; then
-            echo "Fork main already contains all upstream commits."
-            exit 0
-          fi
-
-          branch="sync/upstream-$(date -u +%Y%m%d-%H%M%S)"
-          git switch --create "$branch"
-          git merge --no-edit --no-ff upstream/main
-          git push --set-upstream origin "$branch"
-
-          gh pr create \
-            --base main \
-            --head "$branch" \
-            --title "Sync upstream block/buzz" \
-            --body $'This PR merges the latest block/buzz main into Zion-Coms.\n\nReview conflicts and upstream behavior changes before merging.'
+      - name: Report capped upstream discovery
+        shell: bash
+        run: |
+          python3 .upstream-intake/tools/upstream_intake.py discover \
+            --repo . \
+            --upstream-ref upstream/main \
+            --format markdown >> "$GITHUB_STEP_SUMMARY"

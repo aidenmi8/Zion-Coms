@@ -6,8 +6,13 @@ import { fileURLToPath } from "node:url";
 
 const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const REPOSITORY_ROOT = path.resolve(path.dirname(SCRIPT_PATH), "..");
+const ZION_RELEASE_VERSION = "0.0.9";
+const ZION_RELEASE_BUILD_NUMBER = "1";
 
 const REQUIRED_FILES = [
+  "desktop/package.json",
+  "desktop/src/features/settings/ui/SettingsView.tsx",
+  "desktop/src/shared/constants/zionRelease.ts",
   "desktop/src-tauri/Cargo.toml",
   "desktop/src-tauri/Info.plist",
   "desktop/src-tauri/tauri.conf.json",
@@ -17,7 +22,10 @@ const REQUIRED_FILES = [
   "mobile/ios/Flutter/Release.xcconfig",
   "mobile/ios/Flutter/Watch.xcconfig",
   "mobile/ios/Runner/Info.plist",
+  "mobile/lib/features/settings/settings_page.dart",
+  "mobile/lib/shared/brand/zion_release.dart",
   "mobile/lib/app.dart",
+  "mobile/pubspec.yaml",
   "scripts/mobile-worktree-overrides.sh",
 ];
 
@@ -123,18 +131,34 @@ export function validatePlatformBrandSources(sources) {
     }
   };
 
+  const desktopPackagePath = "desktop/package.json";
+  const desktopPackageSource = source(desktopPackagePath);
+  if (desktopPackageSource) {
+    try {
+      const desktopPackage = JSON.parse(desktopPackageSource);
+      if (desktopPackage.version !== ZION_RELEASE_VERSION) {
+        failures.push(
+          `${desktopPackagePath}: Zion release version must be ${ZION_RELEASE_VERSION}`,
+        );
+      }
+    } catch (error) {
+      failures.push(`${desktopPackagePath}: invalid JSON (${error.message})`);
+    }
+  }
+
+  const desktopCargoPath = "desktop/src-tauri/Cargo.toml";
   mustContain(
-    "desktop/src-tauri/Cargo.toml",
+    desktopCargoPath,
     'name = "buzz-desktop"',
     "desktop package compatibility name changed",
   );
   mustContain(
-    "desktop/src-tauri/Cargo.toml",
-    'version = "0.5.0"',
-    "desktop package version must track upstream 0.5.0",
+    desktopCargoPath,
+    `version = "${ZION_RELEASE_VERSION}"`,
+    `Zion release version must be ${ZION_RELEASE_VERSION}`,
   );
   mustContain(
-    "desktop/src-tauri/Cargo.toml",
+    desktopCargoPath,
     'description = "Zion desktop app"',
     "desktop package description must remain visibly Zion",
   );
@@ -147,8 +171,10 @@ export function validatePlatformBrandSources(sources) {
       if (tauri.productName !== "Zion") {
         failures.push(`${tauriPath}: productName must be Zion`);
       }
-      if (tauri.version !== "0.5.0") {
-        failures.push(`${tauriPath}: version must be 0.5.0`);
+      if (tauri.version !== ZION_RELEASE_VERSION) {
+        failures.push(
+          `${tauriPath}: Zion release version must be ${ZION_RELEASE_VERSION}`,
+        );
       }
       if (tauri.identifier !== "xyz.block.buzz.app") {
         failures.push(`${tauriPath}: compatibility identifier changed`);
@@ -201,6 +227,21 @@ export function validatePlatformBrandSources(sources) {
     "<string>Buzz",
     "desktop metadata restored visible Buzz branding",
   );
+  mustContain(
+    "desktop/src/features/settings/ui/SettingsView.tsx",
+    "formatZionReleaseLabel(",
+    "desktop Settings must render the shared Zion release label",
+  );
+  mustContain(
+    "desktop/src/shared/constants/zionRelease.ts",
+    "VITE_ZION_RELEASE_CHANNEL",
+    "desktop release channel must remain build-configurable",
+  );
+  mustContain(
+    "desktop/src/shared/constants/zionRelease.ts",
+    'Developer: "developer"',
+    "desktop release channel must default to the developer contract",
+  );
 
   const androidGradle = "mobile/android/app/build.gradle.kts";
   mustContain(
@@ -232,6 +273,14 @@ export function validatePlatformBrandSources(sources) {
     "mobile/android/app/src/main/AndroidManifest.xml",
     'android:label="@string/app_name"',
     "Android manifest must use the display-name indirection",
+  );
+  mustMatch(
+    "mobile/pubspec.yaml",
+    new RegExp(
+      `^version:\\s*${ZION_RELEASE_VERSION.replaceAll(".", "\\.")}\\+${ZION_RELEASE_BUILD_NUMBER}$`,
+      "m",
+    ),
+    `Zion release version must be ${ZION_RELEASE_VERSION}+${ZION_RELEASE_BUILD_NUMBER}`,
   );
 
   for (const xcconfig of [
@@ -307,6 +356,21 @@ export function validatePlatformBrandSources(sources) {
     "mobile/lib/app.dart",
     "title: 'Zion'",
     "Flutter application title must be Zion",
+  );
+  mustContain(
+    "mobile/lib/features/settings/settings_page.dart",
+    "formatZionReleaseLabel(version, currentZionReleaseChannel)",
+    "mobile Settings must render the shared Zion release label",
+  );
+  mustContain(
+    "mobile/lib/shared/brand/zion_release.dart",
+    "'ZION_RELEASE_CHANNEL'",
+    "mobile release channel must remain build-configurable",
+  );
+  mustContain(
+    "mobile/lib/shared/brand/zion_release.dart",
+    "defaultValue: 'developer'",
+    "mobile release channel must default to the developer contract",
   );
   mustContain(
     "scripts/mobile-worktree-overrides.sh",

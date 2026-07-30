@@ -1,0 +1,14 @@
+{
+  "last_discovered": "f95fdc1a102e17c6718a44323d9a2feaed702db7",
+  "open_batches": [
+    "2026-07-29-01-normal-90e058e",
+    "2026-07-29-02-security-22be8bb",
+    "2026-07-29-03-normal-9752b81",
+    "2026-07-29-04-security-9beb3b8",
+    "2026-07-29-05-normal-259de6a",
+    "2026-07-29-06-security-047533c",
+    "2026-07-29-07-normal-f95fdc1"
+  ],
+  "reviewed_through": "f95fdc1a102e17c6718a44323d9a2feaed702db7",
+  "schema_version": 1
+}

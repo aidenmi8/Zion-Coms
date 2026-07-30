@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-07-29-05-normal-259de6a",
+  "previous_reviewed_sha": "9beb3b8c6ebc3e2fb0c17f4ca4d522731b81434c",
+  "pinned_upstream_sha": "259de6afbe0cc0d106e57ebdb2323064990e4122",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "segment-4a1ebf2",
+      "title": "Support Gemini and MLflow-routed models",
+      "upstream_pr": null,
+      "entry_shas": [
+        "4a1ebf25c782fc6a68f0a69e6f866f793a259a1f"
+      ]
+    },
+    {
+      "topic_id": "segment-ddd4687",
+      "title": "Remove dead Goose scheduler injection",
+      "upstream_pr": null,
+      "entry_shas": [
+        "ddd468723ac1f0663abd19d23ca3484b2dd40bf5"
+      ]
+    },
+    {
+      "topic_id": "segment-7e9b77f",
+      "title": "Fix inline raster avatars in agent catalog",
+      "upstream_pr": null,
+      "entry_shas": [
+        "7e9b77f72d82e019a99f074f1c9829be30c57ae1"
+      ]
+    },
+    {
+      "topic_id": "segment-324bd6b",
+      "title": "Fix shared-agent avatar import profiles",
+      "upstream_pr": null,
+      "entry_shas": [
+        "324bd6b464de5751e12abbd155376046ce3d2afc"
+      ]
+    },
+    {
+      "topic_id": "segment-259de6a",
+      "title": "Improve emoji autocomplete matching",
+      "upstream_pr": null,
+      "entry_shas": [
+        "259de6afbe0cc0d106e57ebdb2323064990e4122"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "4a1ebf25c782fc6a68f0a69e6f866f793a259a1f",
+      "topic_id": "segment-4a1ebf2",
+      "title": "Support Gemini and MLflow-routed models",
+      "areas": [
+        "agents",
+        "network"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The provider route support is useful and compatible with Zion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "ddd468723ac1f0663abd19d23ca3484b2dd40bf5",
+      "topic_id": "segment-ddd4687",
+      "title": "Remove dead Goose scheduler injection",
+      "areas": [
+        "acp"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This is cleanup for the already rejected no-op Goose injection and has no independent Zion value.",
+      "dependencies": [
+        "1d4f97b959a0d91f7bac0e1f97189e5c10347712"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "7e9b77f72d82e019a99f074f1c9829be30c57ae1",
+      "topic_id": "segment-7e9b77f",
+      "title": "Fix inline raster avatars in agent catalog",
+      "areas": [
+        "desktop",
+        "catalog",
+        "branding"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Avatar compatibility is wanted in the queued Zion catalog lane.",
+      "dependencies": [
+        "a35771fc441cdc3c6f517f419037206783b502d2"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "324bd6b464de5751e12abbd155376046ce3d2afc",
+      "topic_id": "segment-324bd6b",
+      "title": "Fix shared-agent avatar import profiles",
+      "areas": [
+        "desktop",
+        "catalog",
+        "branding"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Hosted avatar import belongs with the queued Zion catalog and fidelity adaptation.",
+      "dependencies": [
+        "a35771fc441cdc3c6f517f419037206783b502d2",
+        "f7a3988ba13b590d9a55a7e8413fc3fb5ffbef18"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "259de6afbe0cc0d106e57ebdb2323064990e4122",
+      "topic_id": "segment-259de6a",
+      "title": "Improve emoji autocomplete matching",
+      "areas": [
+        "desktop"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The matching behavior is wanted with the fork's E2E bridge retained.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

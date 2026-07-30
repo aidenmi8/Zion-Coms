@@ -88,3 +88,35 @@ test("restoring a legacy production bee component fails closed", () => {
     ),
   );
 });
+
+test("desktop and mobile release versions cannot drift from Zion 0.0.9", () => {
+  const sources = loadPlatformBrandSources(repositoryRoot);
+  sources["desktop/package.json"] = (
+    sources["desktop/package.json"] ?? ""
+  ).replace(
+    '"version": "0.0.9"',
+    '"version": "0.0.10"',
+  );
+  sources["mobile/pubspec.yaml"] = (
+    sources["mobile/pubspec.yaml"] ?? ""
+  ).replace(
+    "version: 0.0.9+1",
+    "version: 0.0.10+1",
+  );
+
+  const failures = validatePlatformBrandSources(sources);
+  assert.ok(
+    failures.some(
+      (failure) =>
+        failure.includes("desktop/package.json") &&
+        failure.includes("Zion release version"),
+    ),
+  );
+  assert.ok(
+    failures.some(
+      (failure) =>
+        failure.includes("mobile/pubspec.yaml") &&
+        failure.includes("Zion release version"),
+    ),
+  );
+});

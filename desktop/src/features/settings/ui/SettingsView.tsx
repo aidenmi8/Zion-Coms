@@ -7,6 +7,10 @@ import {
   canManageCommunityMembers,
   shouldWarnMissingMembershipSnapshot,
 } from "@/shared/api/relayMembers";
+import {
+  currentZionReleaseChannel,
+  formatZionReleaseLabel,
+} from "@/shared/constants/zionRelease";
 import { getFeature } from "@/shared/features/manifest";
 import {
   resolveEnabled,
@@ -300,7 +304,7 @@ export function SettingsView({
               data-buzz-sidebar-secondary
               data-testid="settings-version"
             >
-              v{appVersion}
+              {formatZionReleaseLabel(appVersion, currentZionReleaseChannel)}
             </p>
           ) : null}
         </SidebarFooter>

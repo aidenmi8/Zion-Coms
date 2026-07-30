@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "__REQUIRED__UPSTREAM_REPOSITORY__",
+    "remote": "__REQUIRED__UPSTREAM_REMOTE__",
+    "branch": "__REQUIRED__UPSTREAM_BRANCH__"
+  },
+  "fork": {
+    "repository": "__REQUIRED__FORK_REPOSITORY__",
+    "main_branch": "__REQUIRED__FORK_MAIN_BRANCH__"
+  },
+  "execution": {
+    "host_os": "macos",
+    "target_platforms": [
+      "__REQUIRED__TARGET_PLATFORM__"
+    ],
+    "project_profiles": [
+      "__REQUIRED__PROJECT_PROFILE__"
+    ]
+  },
+  "licensing": {
+    "upstream_spdx": "__REQUIRED__UPSTREAM_SPDX__",
+    "fork_spdx": "__REQUIRED__FORK_SPDX__",
+    "license_files": [
+      "__REQUIRED__LICENSE_FILE__"
+    ],
+    "notice_files": [],
+    "compatibility_review": ""
+  },
+  "batch_limits": {
+    "max_commits": 25,
+    "max_changed_files": 250
+  },
+  "protected_contracts": [
+    "__REQUIRED__PROTECTED_CONTRACTS__"
+  ],
+  "checks": {
+    "always": [
+      "__REQUIRED__ALWAYS_CHECKS__"
+    ]
+  },
+  "commands": {
+    "authorized": [
+      "__REQUIRED__AUTHORIZED_COMMANDS__"
+    ],
+    "prohibited": [
+      "__REQUIRED__PROHIBITED_COMMANDS__"
+    ]
+  }
+}

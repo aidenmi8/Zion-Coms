@@ -1,0 +1,338 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-07-29-07-normal-f95fdc1",
+  "previous_reviewed_sha": "047533c56c2a2d03f23ef3edb990e58405767aac",
+  "pinned_upstream_sha": "f95fdc1a102e17c6718a44323d9a2feaed702db7",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "segment-b42a8d4",
+      "title": "Reconcile thread arrivals at bottom",
+      "upstream_pr": null,
+      "entry_shas": [
+        "b42a8d447e3a2b85b2313dc4fdd123731fd8bba3"
+      ]
+    },
+    {
+      "topic_id": "segment-66e7054",
+      "title": "Deduplicate relay outage notification",
+      "upstream_pr": null,
+      "entry_shas": [
+        "66e7054928cc29395f828467c3e8c81b7408dd29"
+      ]
+    },
+    {
+      "topic_id": "segment-7adc462",
+      "title": "Mirror desktop mention delivery in CLI",
+      "upstream_pr": null,
+      "entry_shas": [
+        "7adc46268d5e93f0b1d4dc8e700af22815dcac1b"
+      ]
+    },
+    {
+      "topic_id": "segment-581baa6",
+      "title": "Update Linux AppImage build container",
+      "upstream_pr": null,
+      "entry_shas": [
+        "581baa625400f72316776ba726f533735acf22db"
+      ]
+    },
+    {
+      "topic_id": "segment-005b5b8",
+      "title": "Correlate trace IDs in relay logs",
+      "upstream_pr": null,
+      "entry_shas": [
+        "005b5b819a98ce85d4d80cd81b258fb6f9b8d51e"
+      ]
+    },
+    {
+      "topic_id": "segment-5aeed7c",
+      "title": "Discover Bun-installed agent CLIs",
+      "upstream_pr": null,
+      "entry_shas": [
+        "5aeed7c7a2f89f9ae201624ffd431ca12de624f9"
+      ]
+    },
+    {
+      "topic_id": "segment-b18e559",
+      "title": "Add Linux rendering troubleshooting guide",
+      "upstream_pr": null,
+      "entry_shas": [
+        "b18e559ae2fbbb0a064f59afbdf1e2675fe86ea3"
+      ]
+    },
+    {
+      "topic_id": "segment-3e48f1b",
+      "title": "Release Buzz Desktop 0.5.2",
+      "upstream_pr": null,
+      "entry_shas": [
+        "3e48f1b2365d326ee1c9582448d86a99b44ecd5d"
+      ]
+    },
+    {
+      "topic_id": "segment-f95fdc1",
+      "title": "Wire provider total_tokens through NIP-AM",
+      "upstream_pr": null,
+      "entry_shas": [
+        "f95fdc1a102e17c6718a44323d9a2feaed702db7"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "b42a8d447e3a2b85b2313dc4fdd123731fd8bba3",
+      "topic_id": "segment-b42a8d4",
+      "title": "Reconcile thread arrivals at bottom",
+      "areas": [
+        "desktop"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The timeline correction is compatible with Zion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "66e7054928cc29395f828467c3e8c81b7408dd29",
+      "topic_id": "segment-66e7054",
+      "title": "Deduplicate relay outage notification",
+      "areas": [
+        "desktop",
+        "relay"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The notification fix avoids duplicate user-facing outage messages.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "7adc46268d5e93f0b1d4dc8e700af22815dcac1b",
+      "topic_id": "segment-7adc462",
+      "title": "Mirror desktop mention delivery in CLI",
+      "areas": [
+        "cli",
+        "acp"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Explicit mention delivery is wanted while preserving Zion's local ACP prompt policy.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "581baa625400f72316776ba726f533735acf22db",
+      "topic_id": "segment-581baa6",
+      "title": "Update Linux AppImage build container",
+      "areas": [
+        "ci",
+        "linux"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Linux AppImage packaging is outside Zion's Apple-platform delivery scope.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "005b5b819a98ce85d4d80cd81b258fb6f9b8d51e",
+      "topic_id": "segment-005b5b8",
+      "title": "Correlate trace IDs in relay logs",
+      "areas": [
+        "relay",
+        "observability"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Trace correlation improves relay diagnostics without changing external compatibility.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "5aeed7c7a2f89f9ae201624ffd431ca12de624f9",
+      "topic_id": "segment-5aeed7c",
+      "title": "Discover Bun-installed agent CLIs",
+      "areas": [
+        "desktop",
+        "macos",
+        "agents"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Bun CLI discovery is relevant to the supported macOS host.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "b18e559ae2fbbb0a064f59afbdf1e2675fe86ea3",
+      "topic_id": "segment-b18e559",
+      "title": "Add Linux rendering troubleshooting guide",
+      "areas": [
+        "documentation",
+        "linux"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Linux rendering guidance is outside Zion's supported platform scope.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "3e48f1b2365d326ee1c9582448d86a99b44ecd5d",
+      "topic_id": "segment-3e48f1b",
+      "title": "Release Buzz Desktop 0.5.2",
+      "areas": [
+        "desktop",
+        "release"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Zion owns its release identity and must not ingest Buzz 0.5.2 metadata.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "f95fdc1a102e17c6718a44323d9a2feaed702db7",
+      "topic_id": "segment-f95fdc1",
+      "title": "Wire provider total_tokens through NIP-AM",
+      "areas": [
+        "agents",
+        "acp",
+        "protocol"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Provider token accounting is useful and compatible with the NIP-AM surface.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

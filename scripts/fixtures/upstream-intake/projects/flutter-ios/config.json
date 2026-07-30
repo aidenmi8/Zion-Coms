@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "example/flutter-upstream",
+    "remote": "upstream",
+    "branch": "main"
+  },
+  "fork": {
+    "repository": "example/flutter-fork",
+    "main_branch": "main"
+  },
+  "execution": {
+    "host_os": "macos",
+    "target_platforms": [
+      "ios"
+    ],
+    "project_profiles": [
+      "flutter-ios"
+    ]
+  },
+  "licensing": {
+    "upstream_spdx": "Apache-2.0",
+    "fork_spdx": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "notice_files": [],
+    "compatibility_review": ""
+  },
+  "batch_limits": {
+    "max_commits": 25,
+    "max_changed_files": 250
+  },
+  "project_metadata": {
+    "manifest": "pubspec.yaml",
+    "ios_project": "ios/Runner.xcodeproj",
+    "bundle_identifiers": [
+      "com.example.flutter"
+    ],
+    "privacy_surfaces": [
+      "camera",
+      "photo-library",
+      "notifications"
+    ]
+  },
+  "protected_contracts": [
+    "brand-and-theme",
+    "accessibility-and-reduced-motion",
+    "mobile-privacy-permissions",
+    "bundle-identifiers"
+  ],
+  "checks": {
+    "always": [
+      "git diff --check",
+      "dart format --output=none --set-exit-if-changed .",
+      "flutter analyze",
+      "flutter test"
+    ]
+  },
+  "commands": {
+    "authorized": [
+      "dart format --output=none --set-exit-if-changed .",
+      "flutter analyze",
+      "flutter test"
+    ],
+    "prohibited": [
+      "flutter run",
+      "flutter build",
+      "flutter clean",
+      "flutter upgrade",
+      "git push"
+    ]
+  }
+}

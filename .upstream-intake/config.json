@@ -1,0 +1,106 @@
+{
+  "batch_limits": {
+    "max_changed_files": 250,
+    "max_commits": 25
+  },
+  "checks": {
+    "admin": [
+      "pnpm --dir admin-web check"
+    ],
+    "always": [
+      "git diff --check",
+      "python3 -m unittest scripts/test_upstream_intake.py",
+      "python3 .upstream-intake/tools/upstream_intake.py validate --repo .",
+      "just ci"
+    ],
+    "mobile": [
+      "just mobile-check",
+      "just mobile-test"
+    ],
+    "relay": [
+      "just test"
+    ]
+  },
+  "commands": {
+    "authorized": [
+      ". ./bin/activate-hermit",
+      "git status --short --branch",
+      "git worktree list",
+      "git fetch --no-tags upstream main",
+      "git diff --check",
+      "python3 .upstream-intake/tools/upstream_intake.py discover",
+      "python3 .upstream-intake/tools/upstream_intake.py validate",
+      "python3 -m unittest scripts/test_upstream_intake.py",
+      "just ci",
+      "just test",
+      "just visible-brand-check",
+      "just compose-healthcheck-test",
+      "just mobile-check",
+      "just mobile-test",
+      "pnpm --dir admin-web check"
+    ],
+    "prohibited": [
+      "git push",
+      "gh pr create",
+      "git merge",
+      "git cherry-pick",
+      "git rebase",
+      "flutter run",
+      "flutter build",
+      "flutter clean",
+      "flutter upgrade",
+      "deploy",
+      "release",
+      "install application"
+    ]
+  },
+  "compatibility_surfaces": [
+    "BUZZ_* environment variables",
+    "buzz:// deep links",
+    "buzz-* package and binary names",
+    "xyz.block.buzz.app",
+    "existing mobile bundle identifiers",
+    "relay paths and protocol routes",
+    "Docker image and service names",
+    "legacy URLs and asset aliases"
+  ],
+  "execution": {
+    "host_os": "macos",
+    "project_profiles": [
+      "flutter-ios",
+      "tauri-macos"
+    ],
+    "target_platforms": [
+      "ios",
+      "macos"
+    ]
+  },
+  "fork": {
+    "main_branch": "main",
+    "repository": "aidenmi8/Zion-Coms"
+  },
+  "licensing": {
+    "compatibility_review": "",
+    "fork_spdx": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "notice_files": [],
+    "upstream_spdx": "Apache-2.0"
+  },
+  "protected_contracts": [
+    "admin-brand-routes",
+    "compatibility-identifiers",
+    "desktop-sidecars",
+    "mobile-permissions",
+    "platform-brand",
+    "protocols-and-routes",
+    "visible-brand"
+  ],
+  "schema_version": 1,
+  "upstream": {
+    "branch": "main",
+    "remote": "upstream",
+    "repository": "block/buzz"
+  }
+}

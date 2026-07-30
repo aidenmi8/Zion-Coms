@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "block/buzz",
+    "remote": "upstream",
+    "branch": "main"
+  },
+  "fork": {
+    "repository": "example/apache-fork",
+    "main_branch": "main"
+  },
+  "execution": {
+    "host_os": "macos",
+    "target_platforms": [
+      "ios",
+      "macos"
+    ],
+    "project_profiles": [
+      "flutter-ios",
+      "tauri-macos"
+    ]
+  },
+  "licensing": {
+    "upstream_spdx": "Apache-2.0",
+    "fork_spdx": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "notice_files": [],
+    "compatibility_review": ""
+  },
+  "batch_limits": {
+    "max_commits": 25,
+    "max_changed_files": 250
+  },
+  "protected_contracts": [
+    "visible-brand",
+    "compatibility-identifiers"
+  ],
+  "checks": {
+    "always": [
+      "git diff --check"
+    ]
+  },
+  "commands": {
+    "authorized": [
+      "git status --short"
+    ],
+    "prohibited": [
+      "git push",
+      "flutter build"
+    ]
+  }
+}

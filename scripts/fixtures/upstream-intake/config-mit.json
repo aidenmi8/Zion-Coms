@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "example/upstream",
+    "remote": "upstream",
+    "branch": "main"
+  },
+  "fork": {
+    "repository": "example/mit-fork",
+    "main_branch": "main"
+  },
+  "execution": {
+    "host_os": "macos",
+    "target_platforms": [
+      "ios"
+    ],
+    "project_profiles": [
+      "native-xcode"
+    ]
+  },
+  "licensing": {
+    "upstream_spdx": "MIT",
+    "fork_spdx": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "notice_files": [],
+    "compatibility_review": ""
+  },
+  "batch_limits": {
+    "max_commits": 20,
+    "max_changed_files": 200
+  },
+  "protected_contracts": [
+    "bundle-identifiers",
+    "signing-boundaries"
+  ],
+  "checks": {
+    "always": [
+      "git diff --check"
+    ]
+  },
+  "commands": {
+    "authorized": [
+      "xcodebuild test"
+    ],
+    "prohibited": [
+      "git push",
+      "xcodebuild archive"
+    ]
+  }
+}

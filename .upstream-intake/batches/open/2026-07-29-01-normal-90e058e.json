@@ -1,0 +1,694 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-07-29-01-normal-90e058e",
+  "previous_reviewed_sha": "60158fce3e670f11bb35d42627857ccaea50ff06",
+  "pinned_upstream_sha": "90e058ebf68137e048a409aec6616519379ff726",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "segment-4e3998f",
+      "title": "Codex ACP minimum version gate",
+      "upstream_pr": null,
+      "entry_shas": [
+        "4e3998f36e36d68b9a93dcbd85f0864450bb8f5f"
+      ]
+    },
+    {
+      "topic_id": "segment-00ede2e",
+      "title": "Restore Inbox icon",
+      "upstream_pr": null,
+      "entry_shas": [
+        "00ede2e7aa7eb95571b7db3ebbd163adbf6cf74e"
+      ]
+    },
+    {
+      "topic_id": "segment-a772128",
+      "title": "Unify mobile loading spinners",
+      "upstream_pr": null,
+      "entry_shas": [
+        "a77212875aea299350d01d94b0f6d9c22a8fce5f"
+      ]
+    },
+    {
+      "topic_id": "segment-35305bf",
+      "title": "Restructure DCO guidance",
+      "upstream_pr": null,
+      "entry_shas": [
+        "35305bfc8fd456ca9a17caa1ddbfaabd87d46981"
+      ]
+    },
+    {
+      "topic_id": "segment-3afa129",
+      "title": "Keep drafts out of Inbox All",
+      "upstream_pr": null,
+      "entry_shas": [
+        "3afa129ee785cc74d921d0ba969254a8255c4cc0"
+      ]
+    },
+    {
+      "topic_id": "segment-a35771f",
+      "title": "Refine agent catalog sharing",
+      "upstream_pr": null,
+      "entry_shas": [
+        "a35771fc441cdc3c6f517f419037206783b502d2"
+      ]
+    },
+    {
+      "topic_id": "segment-1e307e1",
+      "title": "Remove stale Typesense environment variables",
+      "upstream_pr": null,
+      "entry_shas": [
+        "1e307e178a7b7fc157cde1ef0721ba1a69cbc274"
+      ]
+    },
+    {
+      "topic_id": "segment-b0503d8",
+      "title": "Add custom harness inline from agent dialogs",
+      "upstream_pr": null,
+      "entry_shas": [
+        "b0503d80c298b1ece3b0a43b41d316829a3379e7"
+      ]
+    },
+    {
+      "topic_id": "segment-1d4f97b",
+      "title": "Disable Goose scheduler in managed children",
+      "upstream_pr": null,
+      "entry_shas": [
+        "1d4f97b959a0d91f7bac0e1f97189e5c10347712"
+      ]
+    },
+    {
+      "topic_id": "segment-1d3b810",
+      "title": "Paint community rail full height",
+      "upstream_pr": null,
+      "entry_shas": [
+        "1d3b810ad70d6325718ed91e723f32c4a376d5e1"
+      ]
+    },
+    {
+      "topic_id": "segment-4fcd55a",
+      "title": "Document Linux CI libraries",
+      "upstream_pr": null,
+      "entry_shas": [
+        "4fcd55a9991a02dd41c0637b14e5cb0cd88b992e"
+      ]
+    },
+    {
+      "topic_id": "segment-913d564",
+      "title": "Stabilize DM expansion E2E ordering",
+      "upstream_pr": null,
+      "entry_shas": [
+        "913d564ce0f35924291bf3eeab6508517a6d8d1f"
+      ]
+    },
+    {
+      "topic_id": "segment-3ece446",
+      "title": "Apply Linux WebKit rendering workarounds",
+      "upstream_pr": null,
+      "entry_shas": [
+        "3ece4461df8a7b9663a8e68327483b8377d4086d"
+      ]
+    },
+    {
+      "topic_id": "segment-f25e6dd",
+      "title": "Steer Claude Code and Codex ACP sessions",
+      "upstream_pr": null,
+      "entry_shas": [
+        "f25e6dd6aa4a1c5eff0facc260b8e25d05a2b02a"
+      ]
+    },
+    {
+      "topic_id": "segment-12d63c6",
+      "title": "Publish upstream Helm chart 0.1.7",
+      "upstream_pr": null,
+      "entry_shas": [
+        "12d63c67be276d9d11a436374b61469a00bb3808"
+      ]
+    },
+    {
+      "topic_id": "segment-826bed4",
+      "title": "Increase desktop smoke E2E timeout",
+      "upstream_pr": null,
+      "entry_shas": [
+        "826bed4821f035841193b7660655736171e66211"
+      ]
+    },
+    {
+      "topic_id": "segment-9227bdf",
+      "title": "Ratchet file sizes against the base tree",
+      "upstream_pr": null,
+      "entry_shas": [
+        "9227bdf58ad6664ae3c1078888f2181ec19c4da4"
+      ]
+    },
+    {
+      "topic_id": "segment-55a3ed7",
+      "title": "Clear stale thread new-message pill",
+      "upstream_pr": null,
+      "entry_shas": [
+        "55a3ed7b9217cee5b23e0a5441947dc929b2a38c"
+      ]
+    },
+    {
+      "topic_id": "segment-90e058e",
+      "title": "Add claude-opus-5 model configuration",
+      "upstream_pr": null,
+      "entry_shas": [
+        "90e058ebf68137e048a409aec6616519379ff726"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "4e3998f36e36d68b9a93dcbd85f0864450bb8f5f",
+      "topic_id": "segment-4e3998f",
+      "title": "Codex ACP minimum version gate",
+      "areas": [
+        "desktop",
+        "acp"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The supported-version gate prevents known-incompatible Codex ACP launches.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "00ede2e7aa7eb95571b7db3ebbd163adbf6cf74e",
+      "topic_id": "segment-00ede2e",
+      "title": "Restore Inbox icon",
+      "areas": [
+        "desktop"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The icon restoration is a focused desktop usability fix.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "a77212875aea299350d01d94b0f6d9c22a8fce5f",
+      "topic_id": "segment-a772128",
+      "title": "Unify mobile loading spinners",
+      "areas": [
+        "mobile",
+        "ios",
+        "branding"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Zion wants consistent loaders, adapted to ZionBrandMotion and Zion copy.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "35305bfc8fd456ca9a17caa1ddbfaabd87d46981",
+      "topic_id": "segment-35305bf",
+      "title": "Restructure DCO guidance",
+      "areas": [
+        "documentation"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The DCO guidance improves contribution clarity without changing fork behavior.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "3afa129ee785cc74d921d0ba969254a8255c4cc0",
+      "topic_id": "segment-3afa129",
+      "title": "Keep drafts out of Inbox All",
+      "areas": [
+        "desktop"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Draft exclusion fixes the Inbox product behavior Zion wants.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "a35771fc441cdc3c6f517f419037206783b502d2",
+      "topic_id": "segment-a35771f",
+      "title": "Refine agent catalog sharing",
+      "areas": [
+        "desktop",
+        "database",
+        "catalog"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The catalog behavior is wanted, but migration scope and Zion presentation require a dedicated later adaptation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "1e307e178a7b7fc157cde1ef0721ba1a69cbc274",
+      "topic_id": "segment-1e307e1",
+      "title": "Remove stale Typesense environment variables",
+      "areas": [
+        "relay",
+        "compose"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Remove stale runtime configuration while avoiding unrelated benchmark-only churn.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "b0503d80c298b1ece3b0a43b41d316829a3379e7",
+      "topic_id": "segment-b0503d8",
+      "title": "Add custom harness inline from agent dialogs",
+      "areas": [
+        "desktop",
+        "agents"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Inline custom harness creation is useful and compatible with Zion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "1d4f97b959a0d91f7bac0e1f97189e5c10347712",
+      "topic_id": "segment-1d4f97b",
+      "title": "Disable Goose scheduler in managed children",
+      "areas": [
+        "acp"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The injection is superseded and becomes a no-op before later upstream cleanup.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "1d3b810ad70d6325718ed91e723f32c4a376d5e1",
+      "topic_id": "segment-1d3b810",
+      "title": "Paint community rail full height",
+      "areas": [
+        "desktop"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The focused layout fix is compatible with Zion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "4fcd55a9991a02dd41c0637b14e5cb0cd88b992e",
+      "topic_id": "segment-4fcd55a",
+      "title": "Document Linux CI libraries",
+      "areas": [
+        "documentation",
+        "linux"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Zion targets macOS and iOS; Linux application setup documentation is outside scope.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "913d564ce0f35924291bf3eeab6508517a6d8d1f",
+      "topic_id": "segment-913d564",
+      "title": "Stabilize DM expansion E2E ordering",
+      "areas": [
+        "desktop",
+        "tests"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The test stabilization protects relevant desktop behavior.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "3ece4461df8a7b9663a8e68327483b8377d4086d",
+      "topic_id": "segment-3ece446",
+      "title": "Apply Linux WebKit rendering workarounds",
+      "areas": [
+        "desktop",
+        "linux"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Linux-only startup behavior is outside Zion's Apple-platform target contract.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "f25e6dd6aa4a1c5eff0facc260b8e25d05a2b02a",
+      "topic_id": "segment-f25e6dd",
+      "title": "Steer Claude Code and Codex ACP sessions",
+      "areas": [
+        "acp",
+        "agents"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Session steering is wanted while retaining Zion's answer-first and direct-response policy.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "12d63c67be276d9d11a436374b61469a00bb3808",
+      "topic_id": "segment-12d63c6",
+      "title": "Publish upstream Helm chart 0.1.7",
+      "areas": [
+        "helm",
+        "release"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Zion owns its server release metadata and deployment sequencing.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "826bed4821f035841193b7660655736171e66211",
+      "topic_id": "segment-826bed4",
+      "title": "Increase desktop smoke E2E timeout",
+      "areas": [
+        "desktop",
+        "ci"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The timeout change reduces false CI failures.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "9227bdf58ad6664ae3c1078888f2181ec19c4da4",
+      "topic_id": "segment-9227bdf",
+      "title": "Ratchet file sizes against the base tree",
+      "areas": [
+        "ci",
+        "desktop",
+        "mobile"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The guard is wanted with fork-aware base selection and existing Zion limits.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "55a3ed7b9217cee5b23e0a5441947dc929b2a38c",
+      "topic_id": "segment-55a3ed7",
+      "title": "Clear stale thread new-message pill",
+      "areas": [
+        "desktop"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The focused timeline fix is compatible with Zion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "90e058ebf68137e048a409aec6616519379ff726",
+      "topic_id": "segment-90e058e",
+      "title": "Add claude-opus-5 model configuration",
+      "areas": [
+        "agents",
+        "configuration"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The explicit model entry is useful and does not alter protected identities.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": "https://linear.app/mi8/document/zion-upstream-intake-and-release-version-policy-0f3ad8db06f2",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

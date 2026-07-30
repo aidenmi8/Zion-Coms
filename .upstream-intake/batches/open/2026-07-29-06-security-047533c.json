@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-07-29-06-security-047533c",
+  "previous_reviewed_sha": "259de6afbe0cc0d106e57ebdb2323064990e4122",
+  "pinned_upstream_sha": "047533c56c2a2d03f23ef3edb990e58405767aac",
+  "kind": "security",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "segment-047533c",
+      "title": "Keep TLS on relays joined by invite",
+      "upstream_pr": null,
+      "entry_shas": [
+        "047533c56c2a2d03f23ef3edb990e58405767aac"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "047533c56c2a2d03f23ef3edb990e58405767aac",
+      "topic_id": "segment-047533c",
+      "title": "Keep TLS on relays joined by invite",
+      "areas": [
+        "mobile",
+        "ios",
+        "transport",
+        "security"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "Invite handling must not downgrade secure relay origins and must migrate identity-scoped preferences safely.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "transport security and identity-scoped storage"
+      ],
+      "tracking": {
+        "issue": "https://linear.app/mi8/issue/MI8-15/upstream-intake-implement-buzz-f95fdc1-security-lane",
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+          "f37da895f689d282e4469e39cf527b88c7d222fc"
+        ]
+      },
+      "verification": [
+        "flutter test relay_config, identity_scoped_prefs, compose_drafts_provider, and recent_searches_provider: 30 passed",
+        "just mobile-check: passed",
+        "just mobile-test: 943 passed, 1 skipped, 0 failed",
+        "CARGO_TARGET_DIR=/private/tmp/zion-security-cargo-target CARGO_INCREMENTAL=0 just ci: passed",
+        "just visible-brand-check: passed with 0 forbidden visible hits",
+        "python3 -m unittest scripts/test_upstream_intake.py: 69 passed",
+        "git diff --check: passed",
+        "just test: passed all 8 reported unit and integration groups in 64 seconds",
+        "docker compose down: passed; project containers and network removed while all 7 service images and 3 named development-data volumes were preserved"
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

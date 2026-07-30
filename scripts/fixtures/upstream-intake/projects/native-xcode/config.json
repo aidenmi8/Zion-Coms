@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "example/native-upstream",
+    "remote": "upstream",
+    "branch": "main"
+  },
+  "fork": {
+    "repository": "example/native-fork",
+    "main_branch": "main"
+  },
+  "execution": {
+    "host_os": "macos",
+    "target_platforms": [
+      "ios"
+    ],
+    "project_profiles": [
+      "native-xcode"
+    ]
+  },
+  "licensing": {
+    "upstream_spdx": "MIT",
+    "fork_spdx": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "notice_files": [],
+    "compatibility_review": ""
+  },
+  "batch_limits": {
+    "max_commits": 20,
+    "max_changed_files": 200
+  },
+  "project_metadata": {
+    "project": "Example.xcodeproj",
+    "scheme": "Example",
+    "bundle_identifiers": [
+      "com.example.native"
+    ],
+    "extensions": [
+      "ShareExtension"
+    ]
+  },
+  "protected_contracts": [
+    "design-system",
+    "bundle-identifiers",
+    "signing-boundaries",
+    "extensions"
+  ],
+  "checks": {
+    "always": [
+      "git diff --check",
+      "xcodebuild -project Example.xcodeproj -scheme Example test"
+    ]
+  },
+  "commands": {
+    "authorized": [
+      "xcodebuild -project Example.xcodeproj -scheme Example test"
+    ],
+    "prohibited": [
+      "xcodebuild archive",
+      "git push"
+    ]
+  }
+}

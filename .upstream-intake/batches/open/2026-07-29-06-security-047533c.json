@@ -29,7 +29,7 @@
       "risk": "high",
       "decision": "accept",
       "integration_method": "take",
-      "delivery": "queued",
+      "delivery": "included",
       "rationale": "Invite handling must not downgrade secure relay origins and must migrate identity-scoped preferences safely.",
       "dependencies": [],
       "blocked_by_rejected": [],
@@ -43,9 +43,20 @@
         "pull_request": null,
         "local_backlog": null,
         "implementation_plan": null,
-        "fork_commits": []
+        "fork_commits": [
+          "f37da895f689d282e4469e39cf527b88c7d222fc"
+        ]
       },
-      "verification": [],
+      "verification": [
+        "flutter test relay_config, identity_scoped_prefs, compose_drafts_provider, and recent_searches_provider: 30 passed",
+        "just mobile-check: passed",
+        "just mobile-test: 943 passed, 1 skipped, 0 failed",
+        "CARGO_TARGET_DIR=/private/tmp/zion-security-cargo-target CARGO_INCREMENTAL=0 just ci: passed",
+        "just visible-brand-check: passed with 0 forbidden visible hits",
+        "python3 -m unittest scripts/test_upstream_intake.py: 69 passed",
+        "git diff --check: passed",
+        "just test: pending because the local Docker Engine API timed out and PostgreSQL/Redis were unavailable; Docker Desktop was not restarted without separate approval"
+      ],
       "revisit": null
     }
   ],

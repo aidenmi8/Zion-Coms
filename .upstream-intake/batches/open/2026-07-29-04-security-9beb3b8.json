@@ -29,7 +29,7 @@
       "risk": "high",
       "decision": "accept",
       "integration_method": "take",
-      "delivery": "queued",
+      "delivery": "included",
       "rationale": "Secret environment values must not appear in recursive CLI or ACP help output.",
       "dependencies": [],
       "blocked_by_rejected": [],
@@ -43,9 +43,17 @@
         "pull_request": null,
         "local_backlog": null,
         "implementation_plan": null,
-        "fork_commits": []
+        "fork_commits": [
+          "f37da895f689d282e4469e39cf527b88c7d222fc"
+        ]
       },
-      "verification": [],
+      "verification": [
+        "cargo test -p buzz-acp -p buzz-cli secret_env_args_hide_their_values_in_help: 2 passed",
+        "CARGO_TARGET_DIR=/private/tmp/zion-security-cargo-target CARGO_INCREMENTAL=0 just ci: passed",
+        "python3 -m unittest scripts/test_upstream_intake.py: 69 passed",
+        "git diff --check: passed",
+        "just test: pending because the local Docker Engine API timed out and PostgreSQL/Redis were unavailable; Docker Desktop was not restarted without separate approval"
+      ],
       "revisit": null
     }
   ],

@@ -826,6 +826,7 @@ dependencies = [
  "async-trait",
  "axum",
  "base64",
+ "buzz-core",
  "getrandom 0.4.3",
  "hex",
  "nix 0.31.3",

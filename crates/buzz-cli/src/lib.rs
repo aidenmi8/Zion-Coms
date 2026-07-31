@@ -64,10 +64,20 @@ where
     I: IntoIterator<Item = S>,
     S: Into<std::ffi::OsString> + Clone,
 {
+    args_with_environment_aliases_from(args, buzz_core::branding::env_alias)
+}
+
+fn args_with_environment_aliases_from<I, S, F>(args: I, mut env_alias: F) -> Vec<std::ffi::OsString>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<std::ffi::OsString> + Clone,
+    F: FnMut(&str, &str) -> Option<String>,
+{
     let mut args = args.into_iter().map(Into::into).collect::<Vec<_>>();
     if let Some(argv0) = args.first_mut() {
         *argv0 = "zion".into();
     }
+    let mut environment_args = Vec::new();
     for (flag, canonical, legacy) in [
         ("--relay", "ZION_RELAY_URL", "BUZZ_RELAY_URL"),
         ("--private-key", "ZION_PRIVATE_KEY", "BUZZ_PRIVATE_KEY"),
@@ -80,12 +90,13 @@ where
                     .is_some_and(|arg| arg.starts_with(&format!("{flag}=")))
         });
         if !explicit {
-            if let Some(value) = buzz_core::branding::env_alias(canonical, legacy) {
-                args.push(flag.into());
-                args.push(value.into());
+            if let Some(value) = env_alias(canonical, legacy) {
+                environment_args.push(flag.into());
+                environment_args.push(value.into());
             }
         }
     }
+    args.splice(1..1, environment_args);
     args
 }
 
@@ -1839,6 +1850,54 @@ async fn run(cli: Cli) -> Result<(), CliError> {
 mod tests {
     use super::*;
     use clap::CommandFactory;
+
+    fn parse_channels_list_with_env(values: &[(&str, &str)]) -> Result<Cli, clap::error::Error> {
+        let args = args_with_environment_aliases_from(
+            ["zion", "channels", "list"],
+            |canonical, legacy| {
+                values
+                    .iter()
+                    .find_map(|(key, value)| (*key == canonical).then(|| (*value).to_owned()))
+                    .or_else(|| {
+                        values
+                            .iter()
+                            .find_map(|(key, value)| (*key == legacy).then(|| (*value).to_owned()))
+                    })
+            },
+        );
+        Cli::try_parse_from(args)
+    }
+
+    #[test]
+    fn zion_environment_aliases_precede_legacy_values_on_a_real_subcommand_parse() {
+        let cli = parse_channels_list_with_env(&[
+            ("ZION_RELAY_URL", "http://zion.example"),
+            ("BUZZ_RELAY_URL", "http://legacy.example"),
+            ("ZION_PRIVATE_KEY", "zion-private-key"),
+            ("BUZZ_PRIVATE_KEY", "legacy-private-key"),
+            ("ZION_AUTH_TAG", "zion-auth-tag"),
+            ("BUZZ_AUTH_TAG", "legacy-auth-tag"),
+        ])
+        .expect("Zion aliases must parse as parent options before the subcommand");
+
+        assert_eq!(cli.relay, "http://zion.example");
+        assert_eq!(cli.private_key.as_deref(), Some("zion-private-key"));
+        assert_eq!(cli.auth_tag.as_deref(), Some("zion-auth-tag"));
+    }
+
+    #[test]
+    fn legacy_environment_aliases_fall_back_on_a_real_subcommand_parse() {
+        let cli = parse_channels_list_with_env(&[
+            ("BUZZ_RELAY_URL", "http://legacy.example"),
+            ("BUZZ_PRIVATE_KEY", "legacy-private-key"),
+            ("BUZZ_AUTH_TAG", "legacy-auth-tag"),
+        ])
+        .expect("legacy aliases must parse as parent options before the subcommand");
+
+        assert_eq!(cli.relay, "http://legacy.example");
+        assert_eq!(cli.private_key.as_deref(), Some("legacy-private-key"));
+        assert_eq!(cli.auth_tag.as_deref(), Some("legacy-auth-tag"));
+    }
 
     /// Smoke test: CLI definition is valid and parseable.
     #[test]

@@ -743,7 +743,7 @@ impl Config {
         let databricks_host = env("DATABRICKS_HOST");
         let databricks_model = env("DATABRICKS_MODEL");
         let provider = resolve_provider(
-            env("BUZZ_AGENT_PROVIDER").as_deref(),
+            buzz_core::branding::env_alias("ZION_AGENT_PROVIDER", "BUZZ_AGENT_PROVIDER").as_deref(),
             env("ANTHROPIC_API_KEY").as_deref(),
             env("OPENAI_COMPAT_API_KEY").as_deref(),
         )?;
@@ -752,7 +752,7 @@ impl Config {
         // env vars (ANTHROPIC_MODEL, OPENAI_COMPAT_MODEL, DATABRICKS_MODEL) when
         // present. Set by the desktop from the persona/record to express explicit
         // user intent; provider-specific vars serve as defaults for CLI/standalone use.
-        let buzz_agent_model = env("BUZZ_AGENT_MODEL");
+        let agent_model = buzz_core::branding::env_alias("ZION_AGENT_MODEL", "BUZZ_AGENT_MODEL");
 
         // OPENAI_COMPAT_API is only read when provider=openai, so a stray
         // bad value can't break an Anthropic-only deployment.
@@ -763,18 +763,15 @@ impl Config {
         let (api_key, model, base_url, openai_api) = match provider {
             Provider::Anthropic => (
                 req("ANTHROPIC_API_KEY")?,
-                resolve_model(
-                    buzz_agent_model.as_deref(),
-                    env("ANTHROPIC_MODEL").as_deref(),
-                )
-                .ok_or_else(|| "config: ANTHROPIC_MODEL required".to_string())?,
+                resolve_model(agent_model.as_deref(), env("ANTHROPIC_MODEL").as_deref())
+                    .ok_or_else(|| "config: ANTHROPIC_MODEL required".to_string())?,
                 env_or("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
                 OpenAiApi::Auto, // unused for Anthropic
             ),
             Provider::OpenAi => (
                 req("OPENAI_COMPAT_API_KEY")?,
                 resolve_model(
-                    buzz_agent_model.as_deref(),
+                    agent_model.as_deref(),
                     env("OPENAI_COMPAT_MODEL").as_deref(),
                 )
                 .ok_or_else(|| "config: OPENAI_COMPAT_MODEL required".to_string())?,
@@ -783,7 +780,7 @@ impl Config {
             ),
             Provider::Databricks | Provider::DatabricksV2 => (
                 env("DATABRICKS_TOKEN").unwrap_or_default(),
-                resolve_model(buzz_agent_model.as_deref(), databricks_model.as_deref())
+                resolve_model(agent_model.as_deref(), databricks_model.as_deref())
                     .ok_or_else(|| "config: DATABRICKS_MODEL required".to_string())?,
                 databricks_host.ok_or_else(|| "config: DATABRICKS_HOST required".to_string())?,
                 OpenAiApi::Chat, // only read by OpenAI/legacy Databricks dispatch
@@ -806,7 +803,11 @@ impl Config {
             openai_api,
             prefer_mesh_for_auto: parse_env("BUZZ_AGENT_PREFER_MESH_FOR_AUTO", 0u8)? != 0,
             max_rounds: parse_env("BUZZ_AGENT_MAX_ROUNDS", 0)?,
-            max_output_tokens: parse_env("BUZZ_AGENT_MAX_OUTPUT_TOKENS", 32_768)?,
+            max_output_tokens: parse_env_alias(
+                "ZION_AGENT_MAX_OUTPUT_TOKENS",
+                "BUZZ_AGENT_MAX_OUTPUT_TOKENS",
+                32_768,
+            )?,
             llm_timeout: Duration::from_secs(parse_env("BUZZ_AGENT_LLM_TIMEOUT_SECS", 240)?),
             tool_timeout: Duration::from_secs(parse_env("BUZZ_AGENT_TOOL_TIMEOUT_SECS", 660)?),
             mcp_init_timeout: Duration::from_secs(parse_env(
@@ -823,14 +824,24 @@ impl Config {
                 "BUZZ_AGENT_MAX_TOOL_RESULT_TEXT_BYTES",
                 DEFAULT_TOOL_RESULT_TEXT_BYTES,
             )?,
-            max_context_tokens: parse_env("BUZZ_AGENT_MAX_CONTEXT_TOKENS", 200_000u64)?,
+            max_context_tokens: parse_env_alias(
+                "ZION_AGENT_MAX_CONTEXT_TOKENS",
+                "BUZZ_AGENT_MAX_CONTEXT_TOKENS",
+                200_000u64,
+            )?,
             max_handoffs: parse_env("BUZZ_AGENT_MAX_HANDOFFS", 10)?,
             max_parallel_tools: parse_env("BUZZ_AGENT_MAX_PARALLEL_TOOLS", 8usize)?,
             hook_timeout: Duration::from_millis(parse_env("BUZZ_AGENT_HOOK_TIMEOUT_MS", 2500u64)?),
             stop_max_rejections: parse_env("BUZZ_AGENT_STOP_MAX_REJECTIONS", 3u32)?,
             hook_servers: parse_hook_servers_env("MCP_HOOK_SERVERS"),
             hints_enabled: parse_env("BUZZ_AGENT_NO_HINTS", 0u8)? == 0,
-            thinking_effort: parse_thinking_effort(env("BUZZ_AGENT_THINKING_EFFORT").as_deref())?,
+            thinking_effort: parse_thinking_effort(
+                buzz_core::branding::env_alias(
+                    "ZION_AGENT_THINKING_EFFORT",
+                    "BUZZ_AGENT_THINKING_EFFORT",
+                )
+                .as_deref(),
+            )?,
         };
         cfg.validate()?;
         Ok(cfg)
@@ -1052,6 +1063,23 @@ where
 {
     env(key)
         .map(|v| v.parse().map_err(|e| format!("config: {key}: {e}")))
+        .unwrap_or(Ok(default))
+}
+
+fn parse_env_alias<T: std::str::FromStr>(
+    canonical: &str,
+    legacy: &str,
+    default: T,
+) -> Result<T, String>
+where
+    T::Err: std::fmt::Display,
+{
+    buzz_core::branding::env_alias(canonical, legacy)
+        .map(|value| {
+            value
+                .parse()
+                .map_err(|error| format!("config: {canonical}: {error}"))
+        })
         .unwrap_or(Ok(default))
 }
 

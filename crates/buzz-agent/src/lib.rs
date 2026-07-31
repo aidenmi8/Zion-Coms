@@ -144,12 +144,20 @@ async fn auth_subcommand(args: &[String]) -> Result<(), Box<dyn std::error::Erro
             };
             let src = auth::PkceOAuthTokenSource::new(pkce)?;
             src.interactive_login().await?;
-            eprintln!("Authenticated. Token cached under ~/.config/buzz-agent/oauth/databricks/.");
+            eprintln!("{}", auth_cache_success_copy());
             Ok(())
         }
         Some(other) => Err(format!("auth: unknown provider {other:?}").into()),
-        None => Err("auth: provider required (try: buzz-agent auth databricks)".into()),
+        None => Err(auth_provider_required_copy().into()),
     }
+}
+
+fn auth_cache_success_copy() -> &'static str {
+    "Authenticated with Zion Agent."
+}
+
+fn auth_provider_required_copy() -> &'static str {
+    "auth: provider required (try: zion-agent auth databricks)"
 }
 
 async fn async_main() {
@@ -282,22 +290,19 @@ async fn initialize(id: Value, params: Value, wire_tx: &WireSender) {
     // RFD. Revisit when that RFD merges; otherwise a genuine upstream-v2 agent
     // would silently lose `[Base]`.
     let negotiated_version = p.protocol_version.min(PROTOCOL_VERSION);
-    wire::send(
-        wire_tx,
-        wire::ok(
-            id,
-            json!({
-                "protocolVersion": negotiated_version,
-                "agentCapabilities": {
-                    "loadSession": false,
-                    "promptCapabilities": { "image": false, "audio": false, "embeddedContext": false },
-                    "mcpCapabilities": { "http": false, "sse": false },
-                },
-                "agentInfo": { "name": "buzz-agent", "version": env!("CARGO_PKG_VERSION") },
-            }),
-        ),
-    )
-    .await;
+    wire::send(wire_tx, wire::ok(id, initialize_result(negotiated_version))).await;
+}
+
+fn initialize_result(protocol_version: u32) -> Value {
+    json!({
+        "protocolVersion": protocol_version,
+        "agentCapabilities": {
+            "loadSession": false,
+            "promptCapabilities": { "image": false, "audio": false, "embeddedContext": false },
+            "mcpCapabilities": { "http": false, "sse": false },
+        },
+        "agentInfo": { "name": "zion-agent", "version": env!("CARGO_PKG_VERSION") },
+    })
 }
 
 /// Resolve the Databricks model catalog for one `session/new` call.
@@ -826,9 +831,25 @@ fn session_token() -> Result<String, String> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::catalog::{discovery_failure_fallback, ModelEntry, DATABRICKS_V2_KNOWN_MODELS};
     use crate::config::Provider;
     use crate::types::AgentError;
+
+    #[test]
+    fn initialize_metadata_identifies_zion_agent() {
+        let result = initialize_result(2);
+        assert_eq!(result["agentInfo"]["name"], "zion-agent");
+        assert!(!result.to_string().to_ascii_lowercase().contains("buzz"));
+    }
+
+    #[test]
+    fn auth_cli_copy_uses_canonical_zion_launcher_without_exposing_legacy_storage() {
+        for copy in [auth_cache_success_copy(), auth_provider_required_copy()] {
+            assert!(!copy.to_ascii_lowercase().contains("buzz"), "{copy}");
+        }
+        assert!(auth_provider_required_copy().contains("zion-agent auth databricks"));
+    }
 
     /// Regression: a discovery error must not pin the models_cache for the process lifetime.
     ///

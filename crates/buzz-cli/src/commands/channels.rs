@@ -491,7 +491,7 @@ fn apply_cardinality_rule(
                 return Err(CliError::Usage(format!(
                     "persona '{slug}' has {} live instances for this owner ({}); \
                      pass a template with a single instance per persona, or resolve \
-                     the duplicate in Buzz Desktop before creating the channel",
+                     the duplicate in Zion Desktop before creating the channel",
                     many.len(),
                     candidates.join(", ")
                 )));
@@ -1018,7 +1018,10 @@ pub async fn cmd_set_add_policy(client: &BuzzClient, policy: &str) -> Result<(),
     // this check. Full enforcement requires relay-side validation, which is
     // intentionally out of scope for this change (see team decision: no
     // relay-side enforcement of client behavior).
-    if let Ok(allowed_raw) = std::env::var("BUZZ_ACP_ALLOWED_CHANNEL_ADD_POLICIES") {
+    if let Some(allowed_raw) = buzz_core::branding::env_alias(
+        "ZION_ACP_ALLOWED_CHANNEL_ADD_POLICIES",
+        "BUZZ_ACP_ALLOWED_CHANNEL_ADD_POLICIES",
+    ) {
         let allowed: Vec<&str> = allowed_raw
             .split(',')
             .map(str::trim)
@@ -1027,7 +1030,7 @@ pub async fn cmd_set_add_policy(client: &BuzzClient, policy: &str) -> Result<(),
         if !allowed.is_empty() && !allowed.contains(&policy) {
             return Err(CliError::Usage(format!(
                 "channel_add_policy '{policy}' is not permitted on this deployment \
-                 (BUZZ_ACP_ALLOWED_CHANNEL_ADD_POLICIES={allowed_raw})"
+                 (ZION_ACP_ALLOWED_CHANNEL_ADD_POLICIES={allowed_raw})"
             )));
         }
     }

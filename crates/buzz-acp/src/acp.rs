@@ -126,7 +126,7 @@ fn build_initialize_params() -> serde_json::Value {
         "protocolVersion": 2,
         "clientCapabilities": build_client_capabilities(),
         "clientInfo": {
-            "name": "buzz-acp",
+            "name": "zion-acp",
             "version": env!("CARGO_PKG_VERSION")
         },
     })
@@ -2162,32 +2162,18 @@ mod tests {
 
     #[test]
     fn initialize_request_format() {
-        let msg = serde_json::json!({
-            "jsonrpc": "2.0",
-            "id": 0u64,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": 2,
-                "clientCapabilities": build_client_capabilities(),
-                "clientInfo": {
-                    "name": "buzz-acp",
-                    "version": "0.1.0"
-                }
-            }
-        });
-        assert_eq!(msg["params"]["protocolVersion"].as_u64(), Some(2));
+        let params = build_initialize_params();
+        assert_eq!(params["protocolVersion"].as_u64(), Some(2));
+        assert_eq!(params["clientInfo"]["name"].as_str(), Some("zion-acp"));
+        assert!(!params.to_string().to_ascii_lowercase().contains("buzz"));
+        assert!(params["clientCapabilities"].is_object());
         assert_eq!(
-            msg["params"]["clientInfo"]["name"].as_str(),
-            Some("buzz-acp")
-        );
-        assert!(msg["params"]["clientCapabilities"].is_object());
-        assert_eq!(
-            msg["params"]["clientCapabilities"]["auth"]["terminal"].as_bool(),
+            params["clientCapabilities"]["auth"]["terminal"].as_bool(),
             Some(true),
             "terminal auth capability must be advertised so adapters can expose terminal login methods"
         );
         assert_eq!(
-            msg["params"]["clientCapabilities"]["_meta"]["goose"]["customNotifications"].as_bool(),
+            params["clientCapabilities"]["_meta"]["goose"]["customNotifications"].as_bool(),
             Some(true),
             "goose customNotifications capability must be advertised"
         );

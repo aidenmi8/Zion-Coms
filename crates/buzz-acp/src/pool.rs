@@ -2540,7 +2540,7 @@ pub(crate) fn render_canvas_section(event_id: &str, timestamp: &str, channel_uui
         "[Channel Canvas]\n\
          Canvas revision (event ID): {event_id}\n\
          Last modified: {timestamp}\n\
-         Fetch current content with: buzz canvas get --channel {channel_uuid}"
+         Fetch current content with: zion canvas get --channel {channel_uuid}"
     )
 }
 
@@ -5386,8 +5386,9 @@ mod tests {
             "[Channel Canvas]\n\
              Canvas revision (event ID): a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2\n\
              Last modified: 2024-01-15T10:30:00+00:00\n\
-             Fetch current content with: buzz canvas get --channel 00f1ccaf-1506-4dd7-9a0e-fa67e9e486ae"
+             Fetch current content with: zion canvas get --channel 00f1ccaf-1506-4dd7-9a0e-fa67e9e486ae"
         );
+        assert!(!section.to_ascii_lowercase().contains("buzz"));
     }
 
     // ── with_canvas ──────────────────────────────────────────────────────────
@@ -5496,7 +5497,7 @@ mod tests {
         let result = canvas_section_from_query_response(&[ev], CHANNEL_UUID);
         let section = result.expect("expected Some");
         assert!(section.contains(&id), "section must contain the event id");
-        assert!(section.contains("buzz canvas get --channel"));
+        assert!(section.contains("zion canvas get --channel"));
         assert!(section.contains(CHANNEL_UUID));
         assert!(section.starts_with("[Channel Canvas]"));
         // Timestamp must use Z suffix, not +00:00

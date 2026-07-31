@@ -1149,7 +1149,7 @@ pub(crate) fn format_event_block(
 fn append_reply_instruction(s: &mut String, event_id: &str) {
     s.push_str(&format!(
         "\nIMPORTANT: For ordinary replies in this turn, use `--reply-to {event_id}` \
-         on `buzz messages send` so the conversation stays threaded. \
+         on `zion messages send` so the conversation stays threaded. \
          If the human explicitly asks for a channel-root, top-level, \
          or broadcast post, send that message without `--reply-to`. \
          If the requested destination is ambiguous, ask before sending."
@@ -1164,7 +1164,7 @@ fn append_reply_instruction(s: &mut String, event_id: &str) {
 fn append_new_thread_reply_instruction(s: &mut String, event_id: &str) {
     s.push_str(&format!(
         "\nIMPORTANT: This is a new top-level message. For ordinary replies in \
-         this turn, use `--reply-to {event_id}` on `buzz messages send` — the \
+         this turn, use `--reply-to {event_id}` on `zion messages send` — the \
          triggering message is the thread root. Do NOT reply into any other \
          (older) thread. If the human explicitly asks for a channel-root, \
          top-level, or broadcast post, send that message without `--reply-to`."
@@ -1250,13 +1250,13 @@ fn format_context_hints(
         // DM replies use thread command because /messages excludes thread replies.
         // DM non-replies use get for recent conversation.
         let ctx_hint = if has_conversation_context && is_reply {
-            "Thread context included below. Use `buzz messages thread --channel <UUID> --event <ID>` for full history if truncated."
+            "Thread context included below. Use `zion messages thread --channel <UUID> --event <ID>` for full history if truncated."
         } else if has_conversation_context {
-            "Conversation context included below. Use `buzz messages get --channel <UUID>` for full history if truncated."
+            "Conversation context included below. Use `zion messages get --channel <UUID>` for full history if truncated."
         } else if is_reply {
-            "Use `buzz messages thread --channel <UUID> --event <ID>` to fetch the reply chain."
+            "Use `zion messages thread --channel <UUID> --event <ID>` to fetch the reply chain."
         } else {
-            "Use `buzz messages get --channel <UUID>` for conversation context."
+            "Use `zion messages get --channel <UUID>` for conversation context."
         };
         let mut s = format!(
             "[Context]\n\
@@ -1279,9 +1279,9 @@ fn format_context_hints(
         s
     } else if let Some(ref root) = thread_tags.root_event_id {
         let ctx_hint = if has_conversation_context {
-            "Thread context included below. Use `buzz messages thread --channel <UUID> --event <ID>` for full history if truncated."
+            "Thread context included below. Use `zion messages thread --channel <UUID> --event <ID>` for full history if truncated."
         } else {
-            "Use `buzz messages thread --channel <UUID> --event <ID>` to fetch thread context."
+            "Use `zion messages thread --channel <UUID> --event <ID>` to fetch thread context."
         };
         let mut s = format!(
             "[Context]\n\
@@ -1304,7 +1304,7 @@ fn format_context_hints(
             "[Context]\n\
              Scope: channel\n\
              Channel: {channel_display}\n\
-             Hint: Use `buzz messages get --channel <UUID>` for recent messages if needed."
+             Hint: Use `zion messages get --channel <UUID>` for recent messages if needed."
         );
         if let Some(event_id) = reply_anchor {
             append_new_thread_reply_instruction(&mut s, event_id);
@@ -1383,6 +1383,14 @@ pub(crate) fn base_section(base_prompt: &str) -> String {
     format!("[Base]\n{}", base_prompt.trim_end())
 }
 
+/// Canonical framing for a single event delivered to an agent.
+///
+/// Keep every dispatch path on this helper so native steering cannot drift
+/// from normal queue delivery.
+pub(crate) fn zion_event_frame(prompt_tag: &str, event_block: &str) -> String {
+    format!("[Zion event: {prompt_tag}]\n{event_block}")
+}
+
 /// Format a [`FlushBatch`] into the per-section prompt blocks for the agent.
 ///
 /// Produces a stable prompt with these sections (in order):
@@ -1391,7 +1399,7 @@ pub(crate) fn base_section(base_prompt: &str) -> String {
 /// 2. `[Agent Memory — core]` — if agent core memory is set
 /// 3. `[Context]` — scope, channel name, and contextual hints for the agent
 /// 4. `[Thread Context]` or `[Conversation Context]` — if fetched
-/// 5. `[Event]` / `[Buzz events]` — the triggering event(s)
+/// 5. `[Event]` / `[Zion events]` — the triggering event(s)
 ///
 /// Each section is returned as its own block rather than one joined string so
 /// the observer frame's size trimmer (`fit_observer_event_to_budget`) elides
@@ -1526,10 +1534,9 @@ pub fn format_prompt(batch: &FlushBatch, args: &FormatPromptArgs<'_>) -> Vec<Str
                 format_event_block(batch.channel_id, args.channel_info, be, args.profile_lookup)
             )
         } else {
-            format!(
-                "[Buzz event: {}]\n{}",
-                be.prompt_tag,
-                format_event_block(batch.channel_id, args.channel_info, be, args.profile_lookup)
+            zion_event_frame(
+                &be.prompt_tag,
+                &format_event_block(batch.channel_id, args.channel_info, be, args.profile_lookup),
             )
         }
     } else {
@@ -1540,7 +1547,7 @@ pub fn format_prompt(batch: &FlushBatch, args: &FormatPromptArgs<'_>) -> Vec<Str
                 batch.events.len()
             )
         } else {
-            format!("[Buzz events — {} events]", batch.events.len())
+            format!("[Zion events — {} events]", batch.events.len())
         };
         let mut s = header;
         for (i, be) in batch.events.iter().enumerate() {
@@ -1638,6 +1645,51 @@ mod tests {
             .tags([])
             .sign_with_keys(&keys)
             .unwrap()
+    }
+
+    #[test]
+    fn canonical_event_frames_and_prompt_guidance_are_zion_only() {
+        let channel_id = Uuid::new_v4();
+        let one = FlushBatch {
+            channel_id,
+            events: vec![BatchEvent {
+                event: make_event("hello"),
+                prompt_tag: "stream message".into(),
+                received_at: Instant::now(),
+            }],
+            cancelled_events: vec![],
+            cancel_reason: None,
+        };
+        let one_prompt = format_prompt(&one, &FormatPromptArgs::default()).join("\n\n");
+        assert!(one_prompt.contains("[Zion event: stream message]"));
+        assert!(
+            !one_prompt.to_ascii_lowercase().contains("buzz"),
+            "{one_prompt}"
+        );
+
+        let two = FlushBatch {
+            channel_id,
+            events: vec![
+                BatchEvent {
+                    event: make_event("first"),
+                    prompt_tag: "one".into(),
+                    received_at: Instant::now(),
+                },
+                BatchEvent {
+                    event: make_event("second"),
+                    prompt_tag: "two".into(),
+                    received_at: Instant::now(),
+                },
+            ],
+            cancelled_events: vec![],
+            cancel_reason: None,
+        };
+        let two_prompt = format_prompt(&two, &FormatPromptArgs::default()).join("\n\n");
+        assert!(two_prompt.contains("[Zion events — 2 events]"));
+        assert!(
+            !two_prompt.to_ascii_lowercase().contains("buzz"),
+            "{two_prompt}"
+        );
     }
 
     /// Build a QueuedEvent for the given channel.
@@ -1882,7 +1934,7 @@ mod tests {
         // Should contain [Context] section before the event.
         assert!(prompt.contains("[Context]"));
         assert!(prompt.contains("Scope: channel"));
-        assert!(prompt.contains("[Buzz event: @mention]\n"));
+        assert!(prompt.contains("[Zion event: @mention]\n"));
         assert!(prompt.contains(&format!("Channel: {}", ch)));
         assert!(prompt.contains(&format!("From: {}", npub)));
         assert!(prompt.contains("Content: Hello @agent"));
@@ -2202,7 +2254,7 @@ mod tests {
         let prompt = format_prompt(&batch, &FormatPromptArgs::default()).join("\n\n");
 
         assert!(prompt.contains("[Context]"));
-        assert!(prompt.contains("[Buzz events — 3 events]"));
+        assert!(prompt.contains("[Zion events — 3 events]"));
         assert!(prompt.contains("--- Event 1 (tag-a) ---"));
         assert!(prompt.contains("--- Event 2 (tag-b) ---"));
         assert!(prompt.contains("--- Event 3 (tag-c) ---"));
@@ -3401,8 +3453,8 @@ mod tests {
         );
         // Hint should point to the thread command, not get.
         assert!(
-            prompt.contains("buzz messages thread"),
-            "DM reply hint should mention `buzz messages thread`, got:\n{prompt}"
+            prompt.contains("zion messages thread"),
+            "DM reply hint should mention `zion messages thread`, got:\n{prompt}"
         );
         // Thread structural info should be present.
         assert!(
@@ -3443,12 +3495,12 @@ mod tests {
         .join("\n\n");
         assert!(prompt.contains("Scope: dm"));
         assert!(
-            prompt.contains("buzz messages get"),
-            "DM non-reply hint should mention `buzz messages get`"
+            prompt.contains("zion messages get"),
+            "DM non-reply hint should mention `zion messages get`"
         );
         assert!(
-            !prompt.contains("buzz messages thread"),
-            "DM non-reply should NOT mention `buzz messages thread`"
+            !prompt.contains("zion messages thread"),
+            "DM non-reply should NOT mention `zion messages thread`"
         );
     }
 

@@ -57,6 +57,52 @@ pub struct RelayInfo {
     pub relay_self: Option<String>,
 }
 
+/// Product-authored NIP-11 branding, with deployment overrides kept separate
+/// from protocol and operator-supplied fields.
+#[derive(Debug, Clone)]
+pub struct RelayBranding {
+    /// Human-visible relay name.
+    pub name: String,
+    /// Human-visible relay description.
+    pub description: String,
+    /// Public source repository URL.
+    pub software: String,
+}
+
+impl Default for RelayBranding {
+    fn default() -> Self {
+        Self {
+            name: buzz_core::branding::RELAY_NAME.to_string(),
+            description: buzz_core::branding::RELAY_DESCRIPTION.to_string(),
+            software: buzz_core::branding::RELEASE_REPOSITORY_URL.to_string(),
+        }
+    }
+}
+
+impl RelayBranding {
+    fn from_env() -> Self {
+        let mut branding = Self::default();
+        if let Some(value) = buzz_core::branding::env_alias("ZION_NIP11_NAME", "BUZZ_NIP11_NAME")
+            .filter(|value| !value.trim().is_empty())
+        {
+            branding.name = value;
+        }
+        if let Some(value) =
+            buzz_core::branding::env_alias("ZION_NIP11_DESCRIPTION", "BUZZ_NIP11_DESCRIPTION")
+                .filter(|value| !value.trim().is_empty())
+        {
+            branding.description = value;
+        }
+        if let Some(value) =
+            buzz_core::branding::env_alias("ZION_NIP11_SOFTWARE_URL", "BUZZ_NIP11_SOFTWARE_URL")
+                .filter(|value| !value.trim().is_empty())
+        {
+            branding.software = value;
+        }
+        branding
+    }
+}
+
 /// Protocol and resource limits advertised in the NIP-11 document.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RelayLimitation {
@@ -140,6 +186,25 @@ impl RelayInfo {
         max_message_length: usize,
         pairing_relay_url: Option<&str>,
     ) -> Self {
+        Self::build_with_branding(
+            relay_self,
+            icon,
+            advertise_nip43,
+            max_message_length,
+            pairing_relay_url,
+            RelayBranding::default(),
+        )
+    }
+
+    /// Build relay information with explicit deployment branding overrides.
+    pub fn build_with_branding(
+        relay_self: Option<&str>,
+        icon: Option<&str>,
+        advertise_nip43: bool,
+        max_message_length: usize,
+        pairing_relay_url: Option<&str>,
+        branding: RelayBranding,
+    ) -> Self {
         debug_assert!(
             !advertise_nip43 || relay_self.is_some(),
             "advertise_nip43=true requires relay_self=Some — NIP-43 events are verified against `self`"
@@ -151,15 +216,15 @@ impl RelayInfo {
         }
 
         Self {
-            name: "Buzz Relay".to_string(),
-            description: "Buzz — private team communication relay".to_string(),
+            name: branding.name,
+            description: branding.description,
             icon: icon.filter(|s| !s.is_empty()).map(|s| s.to_string()),
             pubkey: None,
             contact: None,
             supported_nips,
             supported_extensions: Some(vec!["nip-er".to_string()]),
             push: None,
-            software: "https://github.com/block/buzz".to_string(),
+            software: branding.software,
             version: env!("CARGO_PKG_VERSION").to_string(),
             limitation: Some(relay_limitation(max_message_length)),
             pairing_relay_url: pairing_relay_url.map(str::to_string),
@@ -238,12 +303,13 @@ fn push_descriptor(
 pub(crate) async fn nip11_document(state: &crate::state::AppState, raw_host: &str) -> RelayInfo {
     let (relay_self, advertise_nip43) = nip11_facts(state);
     let icon = workspace_icon_for_host(state, raw_host).await;
-    let mut info = RelayInfo::build(
+    let mut info = RelayInfo::build_with_branding(
         relay_self.as_deref(),
         icon.as_deref(),
         advertise_nip43,
         state.config.max_frame_bytes,
         state.config.pairing_relay_url.as_deref(),
+        RelayBranding::from_env(),
     );
     let tenant_host = if state.config.push_gateway_delivery_url.is_some() {
         crate::tenant::bind_community(&state.db, raw_host)
@@ -406,9 +472,30 @@ mod tests {
     }
 
     #[test]
-    fn build_advertises_buzz_repository_url() {
+    fn build_advertises_zion_product_defaults() {
         let info = RelayInfo::build(None, None, false, DEFAULT_MAX_FRAME_BYTES, None);
-        assert_eq!(info.software, "https://github.com/block/buzz");
+        assert_eq!(info.name, "Zion Relay");
+        assert_eq!(info.description, "Zion — private team communication relay");
+        assert_eq!(info.software, "https://github.com/aidenmi8/Zion-Coms");
+    }
+
+    #[test]
+    fn build_retains_operator_branding_overrides() {
+        let info = RelayInfo::build_with_branding(
+            None,
+            None,
+            false,
+            DEFAULT_MAX_FRAME_BYTES,
+            None,
+            RelayBranding {
+                name: "Acme Relay".to_string(),
+                description: "Acme private relay".to_string(),
+                software: "https://example.com/relay".to_string(),
+            },
+        );
+        assert_eq!(info.name, "Acme Relay");
+        assert_eq!(info.description, "Acme private relay");
+        assert_eq!(info.software, "https://example.com/relay");
     }
 
     #[test]

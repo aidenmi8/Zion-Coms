@@ -75,6 +75,20 @@ pub struct GitAuth {
     pub tenant: TenantContext,
 }
 
+fn git_auth_challenge(method: &str, body: &'static str) -> Response {
+    Response::builder()
+        .status(StatusCode::UNAUTHORIZED)
+        .header(
+            "WWW-Authenticate",
+            format!(
+                "Nostr realm=\"{}\", method=\"{method}\"",
+                buzz_core::branding::GIT_AUTH_REALM
+            ),
+        )
+        .body(Body::from(body))
+        .unwrap()
+}
+
 impl axum::extract::FromRequestParts<Arc<AppState>> for GitAuth {
     type Rejection = Response;
 
@@ -88,27 +102,11 @@ impl axum::extract::FromRequestParts<Arc<AppState>> for GitAuth {
             .headers
             .get(header::AUTHORIZATION)
             .and_then(|v| v.to_str().ok())
-            .ok_or_else(|| {
-                Response::builder()
-                    .status(StatusCode::UNAUTHORIZED)
-                    .header(
-                        "WWW-Authenticate",
-                        format!("Nostr realm=\"buzz\", method=\"{method}\""),
-                    )
-                    .body(Body::from("missing Authorization header"))
-                    .unwrap()
-            })?;
+            .ok_or_else(|| git_auth_challenge(method, "missing Authorization header"))?;
 
-        let token = auth_header.strip_prefix("Nostr ").ok_or_else(|| {
-            Response::builder()
-                .status(StatusCode::UNAUTHORIZED)
-                .header(
-                    "WWW-Authenticate",
-                    format!("Nostr realm=\"buzz\", method=\"{method}\""),
-                )
-                .body(Body::from("expected Authorization: Nostr <base64>"))
-                .unwrap()
-        })?;
+        let token = auth_header
+            .strip_prefix("Nostr ")
+            .ok_or_else(|| git_auth_challenge(method, "expected Authorization: Nostr <base64>"))?;
 
         let event_bytes = base64::engine::general_purpose::STANDARD
             .decode(token)
@@ -593,9 +591,10 @@ fn build_upload_pack_advertisement(manifest: &super::manifest::Manifest) -> Vec<
         "multi_ack thin-pack side-band side-band-64k ofs-delta shallow \
          deepen-since deepen-not deepen-relative no-progress include-tag \
          multi_ack_detailed no-done symref=HEAD:{head} object-format={fmt} \
-         agent=buzz-git",
+         agent={agent}",
         head = manifest.head,
         fmt = object_format,
+        agent = buzz_core::branding::GIT_AGENT_CAPABILITY,
     );
 
     let mut out = Vec::new();
@@ -2395,6 +2394,8 @@ mod track_c_tests {
         assert!(caps.contains("symref=HEAD:refs/heads/main"));
         assert!(caps.contains("object-format=sha1"));
         assert!(caps.contains("side-band-64k"));
+        assert!(caps.contains("agent=zion-git"));
+        assert!(!caps.to_ascii_lowercase().contains("buzz"));
 
         // 3,4: refs sorted ascending — feature before main (BTreeMap order),
         // each "<oid> <refname>\n", no NUL.
@@ -2409,6 +2410,24 @@ mod track_c_tests {
 
         // 5: trailing flush
         assert!(frames[5].is_empty());
+    }
+
+    #[test]
+    fn git_auth_challenges_use_zion_realm_for_both_rejection_branches() {
+        for body in [
+            "missing Authorization header",
+            "expected Authorization: Nostr <base64>",
+        ] {
+            let response = git_auth_challenge("POST", body);
+            assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+            assert_eq!(
+                response
+                    .headers()
+                    .get("WWW-Authenticate")
+                    .and_then(|value| value.to_str().ok()),
+                Some("Nostr realm=\"zion\", method=\"POST\"")
+            );
+        }
     }
 
     #[test]

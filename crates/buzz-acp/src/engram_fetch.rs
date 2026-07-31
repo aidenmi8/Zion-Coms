@@ -22,10 +22,10 @@ const SECTION_LABEL: &str = "Agent Memory — core";
 
 /// Onboarding nudge for new agents with no core yet.
 ///
-/// Wording is from Tyler's brief: "No core memory found. Use `buzz mem`
+/// Wording is from Tyler's brief: "No core memory found. Use `zion mem`
 /// to create a core memory. Ask your user about yourself."
 pub const ONBOARDING_NUDGE: &str = "No core memory found. \
-Use `buzz mem set core \"…\"` to create one (it will hold your identity, \
+Use `zion mem set core \"…\"` to create one (it will hold your identity, \
 rules, and goals across sessions). Ask your user about yourself.";
 
 /// Build the rendered prompt section for the agent's core.
@@ -168,6 +168,12 @@ mod tests {
     use super::*;
     use buzz_core::engram::{build_event, Body};
     use serde_json::json;
+
+    #[test]
+    fn onboarding_nudge_uses_canonical_zion_launcher() {
+        assert!(ONBOARDING_NUDGE.contains("zion mem set core"));
+        assert!(!ONBOARDING_NUDGE.to_ascii_lowercase().contains("buzz"));
+    }
 
     /// Empty array → confirmed absence → Ok(None), so the caller emits the
     /// onboarding nudge. This is the only path that maps to "no core."

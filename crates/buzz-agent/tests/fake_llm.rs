@@ -251,7 +251,7 @@ async fn init_session(h: &mut Harness) -> String {
     .await;
     let r = h.recv().await;
     assert_eq!(r["result"]["protocolVersion"], 2);
-    assert_eq!(r["result"]["agentInfo"]["name"], "buzz-agent");
+    assert_eq!(r["result"]["agentInfo"]["name"], "zion-agent");
     h.send("session/new", json!({"cwd":"/tmp","mcpServers":[]}))
         .await;
     let r = h.recv().await;
@@ -568,7 +568,7 @@ async fn system_prompt_absent_no_canary() {
 
     // But the agent's default prompt should still be there.
     assert!(
-        system_content.contains("You are buzz-agent"),
+        system_content.contains("You are Zion agent"),
         "system message must still contain the agent's default prompt"
     );
 

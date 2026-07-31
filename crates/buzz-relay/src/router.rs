@@ -400,11 +400,15 @@ async fn readiness_handler(State(state): State<Arc<AppState>>) -> impl IntoRespo
 /// Status endpoint — service name, version, uptime.
 async fn status_handler(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let uptime_secs = state.started_at.elapsed().as_secs();
-    Json(json!({
-        "service": "buzz-relay",
+    Json(status_payload(uptime_secs))
+}
+
+fn status_payload(uptime_secs: u64) -> serde_json::Value {
+    json!({
+        "service": "zion-relay",
         "version": env!("CARGO_PKG_VERSION"),
         "uptime_seconds": uptime_secs,
-    }))
+    })
 }
 
 /// `/_mesh` — live mesh status: peer table, connection/phi state, per-peer
@@ -459,6 +463,18 @@ mod tests {
     use tracing_subscriber::prelude::*;
 
     use super::*;
+
+    #[test]
+    fn status_payload_identifies_zion_relay() {
+        assert_eq!(
+            status_payload(42),
+            json!({
+                "service": "zion-relay",
+                "version": env!("CARGO_PKG_VERSION"),
+                "uptime_seconds": 42,
+            })
+        );
+    }
 
     #[test]
     fn invite_landing_path_requires_exactly_one_nonempty_code_segment() {

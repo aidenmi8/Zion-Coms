@@ -67,6 +67,21 @@ test("parsePromptText extracts event id, content, hex pubkey, and a title-cased 
   );
 });
 
+test("parsePromptText accepts canonical Zion event framing", () => {
+  const text = [
+    "[Zion event: stream message]",
+    `Event ID: ${HEX}`,
+    `From: Wes (hex: ${HEX})`,
+    "Content: canonical frame",
+  ].join("\n");
+
+  const result = parsePromptText(text);
+  assert.equal(result.userText, "canonical frame");
+  assert.equal(result.userTitle, "Stream Message");
+  assert.equal(result.userPubkey, HEX);
+  assert.equal(result.userEventId, HEX);
+});
+
 test("parsePromptText preserves multiline event content in the user bubble text", () => {
   const text = [
     "[Buzz event: @mention]",

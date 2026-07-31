@@ -122,6 +122,35 @@ void main() {
     expect(items[1], isA<MetadataItem>());
     expect((items[1] as MetadataItem).sections, hasLength(2));
   });
+
+  test('parses canonical Zion prompt text into user message and metadata', () {
+    final items = buildTranscript([
+      ObserverFrame(
+        seq: 1,
+        timestamp: _timestamp(1),
+        kind: 'acp_write',
+        turnId: 'turn-1',
+        payload: {
+          'method': 'session/prompt',
+          'params': {
+            'prompt': [
+              {
+                'content':
+                    '[Zion event: stream message]\n'
+                    'Content: canonical frame',
+              },
+            ],
+          },
+        },
+      ),
+    ]);
+
+    expect(items, hasLength(2));
+    final message = items[0] as MessageItem;
+    expect(message.role, 'user');
+    expect(message.title, 'Stream Message');
+    expect(message.text, 'canonical frame');
+  });
 }
 
 ObserverFrame _updateFrame({

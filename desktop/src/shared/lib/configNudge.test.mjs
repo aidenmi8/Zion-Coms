@@ -8,6 +8,10 @@ function withSentinel(prose, payload) {
   return `${prose}\n\n\`\`\`buzz:config-nudge\n${JSON.stringify(payload)}\n\`\`\``;
 }
 
+function withZionSentinel(prose, payload) {
+  return `${prose}\n\n\`\`\`zion:config-nudge\n${JSON.stringify(payload)}\n\`\`\``;
+}
+
 const FIZZ_PUBKEY = "aabbccddeeff0011";
 const ATLAS_PUBKEY = "ddeeff00112233aa";
 const CODEX_PUBKEY = "112233aabbccddee";
@@ -43,6 +47,18 @@ test("extractConfigNudge parses env_key requirement", () => {
   ].join("\n");
 
   assert.deepEqual(extractConfigNudge(content), payload);
+});
+
+test("extractConfigNudge parses canonical Zion sentinel", () => {
+  const payload = {
+    agent_name: "Fizz",
+    agent_pubkey: FIZZ_PUBKEY,
+    requirements: [{ surface: "env_key", key: "ANTHROPIC_API_KEY" }],
+  };
+  assert.deepEqual(
+    extractConfigNudge(withZionSentinel("prose", payload)),
+    payload,
+  );
 });
 
 test("extractConfigNudge parses normalized_field requirement", () => {
@@ -213,6 +229,17 @@ test("stripConfigNudgeSentinel strips the sentinel block", () => {
   const stripped = stripConfigNudgeSentinel(content);
   assert.ok(!stripped.includes("buzz:config-nudge"), "sentinel must be gone");
   assert.ok(stripped.includes("needs configuration"), "prose must survive");
+});
+
+test("stripConfigNudgeSentinel strips canonical Zion sentinel", () => {
+  const payload = {
+    agent_name: "Fizz",
+    agent_pubkey: FIZZ_PUBKEY,
+    requirements: [],
+  };
+  const stripped = stripConfigNudgeSentinel(withZionSentinel("prose", payload));
+  assert.equal(stripped.trim(), "prose");
+  assert.ok(!stripped.includes("zion:config-nudge"));
 });
 
 test("stripConfigNudgeSentinel removes preceding blank line", () => {

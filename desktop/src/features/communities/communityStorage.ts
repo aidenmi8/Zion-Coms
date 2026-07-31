@@ -83,9 +83,17 @@ export function loadCommunities(): Community[] {
 }
 
 export function saveCommunities(communities: Community[]): boolean {
+  const cleaned = communities.map((community) => {
+    const {
+      nsec: _nsec,
+      token: _token,
+      ...rest
+    } = community as unknown as Record<string, unknown>;
+    return rest;
+  });
   return setLocalStorageItemWithRecovery(
     COMMUNITIES_KEY,
-    JSON.stringify(communities),
+    JSON.stringify(cleaned),
   );
 }
 

@@ -126,15 +126,20 @@ function assetPattern(platform: BuzzDownloadPlatform): RegExp | undefined {
   }
 }
 
-function isZionComsReleaseDownloadUrl(value: string): boolean {
+function isZionComsReleaseDownloadUrl(value: string, pattern: RegExp): boolean {
   try {
     const url = new URL(value);
+    const pathSegments = url.pathname.split("/");
+    const filename = decodeURIComponent(
+      pathSegments[pathSegments.length - 1] ?? "",
+    );
     return (
       url.protocol === "https:" &&
       url.hostname === "github.com" &&
       url.pathname
         .toLowerCase()
-        .startsWith("/aidenmi8/zion-coms/releases/download/")
+        .startsWith("/aidenmi8/zion-coms/releases/download/") &&
+      pattern.test(filename)
     );
   } catch {
     return false;
@@ -153,7 +158,7 @@ export function selectBuzzDownloadUrl(
     const asset = release.assets.find(
       ({ name, browser_download_url }) =>
         pattern.test(name) &&
-        isZionComsReleaseDownloadUrl(browser_download_url),
+        isZionComsReleaseDownloadUrl(browser_download_url, pattern),
     );
     if (asset) return asset.browser_download_url;
   }
@@ -163,6 +168,7 @@ export function selectBuzzDownloadUrl(
 export async function resolveBuzzDownloadUrlForPlatform(
   platform: BuzzDownloadPlatform,
 ): Promise<string | undefined> {
+  const pattern = assetPattern(platform);
   try {
     const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) ?? "null") as {
       expiresAt: number;
@@ -175,7 +181,10 @@ export async function resolveBuzzDownloadUrlForPlatform(
       cached.platform.operatingSystem === platform.operatingSystem &&
       cached.platform.architecture === platform.architecture
     ) {
-      return isZionComsReleaseDownloadUrl(cached.url) ? cached.url : undefined;
+      if (pattern && isZionComsReleaseDownloadUrl(cached.url, pattern)) {
+        return cached.url;
+      }
+      sessionStorage.removeItem(CACHE_KEY);
     }
   } catch {
     // Storage is only an optimization.

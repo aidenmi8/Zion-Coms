@@ -62,6 +62,80 @@ test("release discovery rejects Zion-named assets outside Zion-Coms", () => {
   );
 });
 
+test("release discovery rejects a Zion asset name whose URL basename is legacy-branded", () => {
+  assert.equal(
+    selectBuzzDownloadUrl(
+      [
+        {
+          draft: false,
+          prerelease: false,
+          assets: [
+            {
+              name: "Zion_0.4.9_x64-setup.exe",
+              browser_download_url:
+                "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Buzz_0.4.9_x64-setup.exe",
+            },
+          ],
+        },
+      ],
+      WINDOWS,
+    ),
+    undefined,
+  );
+});
+
+test("an invalid cached installer is removed before Zion release discovery continues", async () => {
+  const previousFetch = globalThis.fetch;
+  const previousSessionStorage = globalThis.sessionStorage;
+  const refreshedUrl =
+    "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.5.0/Zion_0.5.0_x64-setup.exe";
+  let cachedValue = JSON.stringify({
+    expiresAt: Date.now() + 60_000,
+    platform: WINDOWS,
+    url: "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Buzz_0.4.9_x64-setup.exe",
+  });
+  const removedKeys = [];
+  let fetchCount = 0;
+  globalThis.sessionStorage = {
+    getItem: () => cachedValue,
+    removeItem: (key) => {
+      removedKeys.push(key);
+      cachedValue = null;
+    },
+    setItem: () => {},
+  };
+  globalThis.fetch = async () => {
+    fetchCount += 1;
+    return {
+      ok: true,
+      json: async () => [
+        {
+          draft: false,
+          prerelease: false,
+          assets: [
+            {
+              name: "Zion_0.5.0_x64-setup.exe",
+              browser_download_url: refreshedUrl,
+            },
+          ],
+        },
+      ],
+    };
+  };
+
+  try {
+    assert.equal(
+      await resolveBuzzDownloadUrlForPlatform(WINDOWS),
+      refreshedUrl,
+    );
+    assert.deepEqual(removedKeys, ["zion.latestDownload.v1"]);
+    assert.equal(fetchCount, 1);
+  } finally {
+    globalThis.fetch = previousFetch;
+    globalThis.sessionStorage = previousSessionStorage;
+  }
+});
+
 test("release discovery returns no direct installer when no Zion asset matches", async () => {
   const previousFetch = globalThis.fetch;
   const previousSessionStorage = globalThis.sessionStorage;

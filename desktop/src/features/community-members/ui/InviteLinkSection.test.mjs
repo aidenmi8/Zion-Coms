@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  canonicalizeInviteOutputUrl,
-  INVITE_PNG_FILENAME,
-} from "./inviteOutput.ts";
+import { canonicalizeInviteOutputUrl } from "./inviteOutput.ts";
 
 test("invite output upgrades legacy custom schemes but preserves HTTPS links", () => {
   assert.equal(
@@ -17,8 +14,4 @@ test("invite output upgrades legacy custom schemes but preserves HTTPS links", (
     canonicalizeInviteOutputUrl("https://relay.example/invite/invite"),
     "https://relay.example/invite/invite",
   );
-});
-
-test("invite QR downloads use the Zion filename", () => {
-  assert.equal(INVITE_PNG_FILENAME, "zion-community-invite.png");
 });

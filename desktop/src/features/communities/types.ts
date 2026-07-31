@@ -23,9 +23,4 @@ export type Community = {
    * authoritative private key is the on-disk `identity.key` file.
    */
   nsec?: never;
-  /**
-   * @deprecated Never read. The relay now authenticates with Nostr keys, so
-   * new entries never set this field and storage loaders remove legacy values.
-   */
-  token?: never;
 };

@@ -36,4 +36,13 @@ grep -Fq '[[ -s "$SRC_DIR/' "$bundler" || fail "bundler does not reject zero-byt
 grep -Fq 'chmod 755 "$destination"' "$bundler" || fail "bundler does not set an executable sidecar mode"
 grep -Fq -- '--debug' "$bundler" || fail "bundler has no debug profile"
 
+for launcher in \
+    zion zion-acp zion-agent zion-dev-mcp \
+    buzz buzz-acp buzz-agent buzz-dev-mcp; do
+    grep -Eq "\"${launcher}(:|\\\")" "$bundler" ||
+        fail "bundler does not include $launcher"
+    grep -Fq "\"binaries/$launcher\"" "$repo_root/desktop/src-tauri/tauri.conf.json" ||
+        fail "Tauri externalBin does not include $launcher"
+done
+
 echo "sidecar build contract passed"

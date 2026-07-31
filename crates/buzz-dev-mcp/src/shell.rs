@@ -1,4 +1,5 @@
 use crate::shim::Shim;
+use buzz_core::branding;
 use rmcp::model::{CallToolResult, Content};
 use rmcp::ErrorData;
 use schemars::JsonSchema;
@@ -74,18 +75,19 @@ impl SharedState {
 
 fn build_bootstrap(cwd: &Path, shell_hint: &str) -> String {
     let stack = detect_stack(cwd);
-    let buzz_hint =
-        if std::env::var("BUZZ_RELAY_URL").is_ok() && std::env::var("BUZZ_PRIVATE_KEY").is_ok() {
-            "\nBuzz relay configured. Run `buzz --help` to see available commands.\n"
-        } else {
-            ""
-        };
+    let zion_hint = if branding::env_alias("ZION_RELAY_URL", "BUZZ_RELAY_URL").is_some()
+        && branding::env_alias("ZION_PRIVATE_KEY", "BUZZ_PRIVATE_KEY").is_some()
+    {
+        "\nZion relay configured. Run `zion --help` to see available commands.\n"
+    } else {
+        ""
+    };
     format!(
         "Working directory: {}\n\
          Detected stack: {}\n\
-         Shell: {shell_hint} (set BUZZ_SHELL to override) — write command strings in that shell's syntax.\n\
+         Shell: {shell_hint} (set ZION_SHELL to override) — write command strings in that shell's syntax.\n\
          Pass `workdir` per call rather than `cd`.\n\
-         {buzz_hint}",
+         {zion_hint}",
         cwd.display(),
         stack,
     )
@@ -113,6 +115,30 @@ fn detect_stack(cwd: &Path) -> String {
     } else {
         found.sort();
         found.join(", ")
+    }
+}
+
+#[cfg(all(test, not(windows)))]
+mod zion_shell_tests {
+    use super::*;
+    use std::sync::Mutex;
+
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+    #[test]
+    fn zion_shell_override_wins_over_legacy_fallback() {
+        let _guard = ENV_LOCK.lock().unwrap_or_else(|poison| poison.into_inner());
+        let dir = tempfile::tempdir().expect("tempdir");
+        let zion_shell = dir.path().join("zion-shell");
+        let legacy_shell = dir.path().join("legacy-shell");
+        std::fs::write(&zion_shell, "").expect("write Zion shell");
+        std::fs::write(&legacy_shell, "").expect("write legacy shell");
+        std::env::set_var("ZION_SHELL", &zion_shell);
+        std::env::set_var("BUZZ_SHELL", &legacy_shell);
+        let resolved = resolve_bash("").expect("resolve shell").0;
+        std::env::remove_var("ZION_SHELL");
+        std::env::remove_var("BUZZ_SHELL");
+        assert_eq!(resolved, zion_shell);
     }
 }
 
@@ -363,7 +389,7 @@ fn shell_name_from_path(p: &Path) -> String {
 #[cfg(not(windows))]
 fn resolve_bash(_path_env: &str) -> Result<(PathBuf, String), String> {
     // Honor BUZZ_SHELL on Unix so power users can opt into zsh or another shell.
-    if let Some(raw) = std::env::var_os("BUZZ_SHELL") {
+    if let Some(raw) = branding::env_alias("ZION_SHELL", "BUZZ_SHELL") {
         let p = PathBuf::from(&raw);
         // Absolute / rooted path: must exist as a file.
         if p.components().count() > 1 || p.has_root() {
@@ -408,7 +434,7 @@ fn resolve_bash(_path_env: &str) -> Result<(PathBuf, String), String> {
 /// No bash found -> actionable error pointing at the prerequisite.
 #[cfg(windows)]
 fn resolve_bash(path_env: &str) -> Result<(PathBuf, String), String> {
-    if let Some(raw) = std::env::var_os("BUZZ_SHELL") {
+    if let Some(raw) = branding::env_alias("ZION_SHELL", "BUZZ_SHELL") {
         let p = PathBuf::from(&raw);
         if p.components().count() > 1 || p.has_root() {
             if p.is_file() {

@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SIDECARS=(buzz-acp buzz-agent buzz-dev-mcp git-credential-nostr buzz)
+# destination:source — canonical Zion launchers and legacy compatibility names
+# point at the same compiled personalities.
+SIDECARS=(
+    "zion-acp:buzz-acp"
+    "zion-agent:buzz-agent"
+    "zion-dev-mcp:buzz-dev-mcp"
+    "zion:buzz"
+    "buzz-acp:buzz-acp"
+    "buzz-agent:buzz-agent"
+    "buzz-dev-mcp:buzz-dev-mcp"
+    "git-credential-nostr:git-credential-nostr"
+    "buzz:buzz"
+)
 HOST=$(rustc -vV | sed -n 's|host: ||p')
 PROFILE=release
 TARGET=""
@@ -52,8 +64,9 @@ else
 fi
 
 missing=()
-for bin in "${SIDECARS[@]}"; do
-    [[ -s "$SRC_DIR/${bin}${EXE}" ]] || missing+=("${bin}${EXE}")
+for pair in "${SIDECARS[@]}"; do
+    source_bin="${pair#*:}"
+    [[ -s "$SRC_DIR/${source_bin}${EXE}" ]] || missing+=("${source_bin}${EXE}")
 done
 if [[ ${#missing[@]} -gt 0 ]]; then
     echo "Error: missing or empty ${PROFILE} binaries in $SRC_DIR: ${missing[*]}" >&2
@@ -62,9 +75,11 @@ if [[ ${#missing[@]} -gt 0 ]]; then
 fi
 
 mkdir -p "$BINARIES_DIR"
-for bin in "${SIDECARS[@]}"; do
-    destination="$BINARIES_DIR/${bin}-${TARGET}${EXE}"
-    cp "$SRC_DIR/${bin}${EXE}" "$destination"
+for pair in "${SIDECARS[@]}"; do
+    destination_bin="${pair%%:*}"
+    source_bin="${pair#*:}"
+    destination="$BINARIES_DIR/${destination_bin}-${TARGET}${EXE}"
+    cp "$SRC_DIR/${source_bin}${EXE}" "$destination"
 
     # cp preserves the mode of an existing destination on macOS. Generated
     # sidecar placeholders may not be executable, so make the bundled Unix

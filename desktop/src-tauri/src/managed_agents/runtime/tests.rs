@@ -87,10 +87,10 @@ fn marker_entry_is_namespaced_by_instance_id() {
 }
 
 #[test]
-fn buzz_agent_has_mcp_hooks() {
+fn zion_agent_has_mcp_hooks() {
     let p = known_acp_runtime("buzz-agent").expect("should resolve");
     assert!(p.mcp_hooks);
-    assert_eq!(p.mcp_command, Some("buzz-dev-mcp"));
+    assert_eq!(p.mcp_command, Some("zion-dev-mcp"));
 }
 
 #[test]

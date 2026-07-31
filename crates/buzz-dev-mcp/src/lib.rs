@@ -39,7 +39,7 @@ impl DevMcp {
 
     #[tool(
         name = "shell",
-        description = "Run a shell command (bash by default; set `BUZZ_SHELL` to use cmd, PowerShell, or another shell). Ephemeral process per call. Output tail-truncated to ~8KB for the LLM; full output (first 10MB) saved to artifact file. timeout_ms defaults to 120000 (2 min) if omitted; capped at 600000 (10 min). For long-running commands (git push with hooks, cargo build, test suites), use 300000+. On PATH: rg (prefer over grep; flags: -n -i -l -g <glob> -C <n> --files), tree (flags: -d <depth>; shows line counts), and buzz (Buzz relay CLI — run buzz --help for commands)."
+        description = "Run a shell command (bash by default; set `ZION_SHELL` to use cmd, PowerShell, or another shell). Ephemeral process per call. Output tail-truncated to ~8KB for the LLM; full output (first 10MB) saved to artifact file. timeout_ms defaults to 120000 (2 min) if omitted; capped at 600000 (10 min). For long-running commands (git push with hooks, cargo build, test suites), use 300000+. On PATH: rg (prefer over grep; flags: -n -i -l -g <glob> -C <n> --files), tree (flags: -d <depth>; shows line counts), and zion (Zion relay CLI — run zion --help for commands)."
     )]
     async fn shell(
         &self,
@@ -128,7 +128,7 @@ impl ServerHandler for DevMcp {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(rmcp::model::Implementation::new(
-                "buzz-dev-mcp",
+                "zion-dev-mcp",
                 env!("CARGO_PKG_VERSION"),
             ))
             .with_instructions(self.state.bootstrap_instructions.clone())
@@ -165,8 +165,9 @@ async fn async_main(cmd: String) -> Result<(), Box<dyn std::error::Error>> {
     // repeated installation is harmless.
     let _ = rustls::crypto::ring::default_provider().install_default();
 
-    // buzz CLI needs tokio (async HTTP client).
-    if cmd == "buzz" {
+    // Zion CLI needs tokio (async HTTP client); the legacy launcher dispatches
+    // identically for compatibility.
+    if matches!(cmd.as_str(), "zion" | "buzz") {
         std::process::exit(buzz_cli::run_from_args(std::env::args()).await);
     }
 

@@ -53,6 +53,10 @@
     "active": true,
     "targets": "all",
     "externalBin": [
+      "binaries/zion-acp",
+      "binaries/zion-agent",
+      "binaries/zion-dev-mcp",
+      "binaries/zion",
       "binaries/buzz-acp",
       "binaries/buzz-agent",
       "binaries/buzz-dev-mcp",

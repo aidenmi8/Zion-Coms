@@ -171,7 +171,7 @@ _ensure-sidecar-stubs:
     set -euo pipefail
     TARGET=$(rustc -vV | sed -n 's|host: ||p')
     mkdir -p desktop/src-tauri/binaries
-    for bin in buzz-acp buzz-agent buzz-dev-mcp git-credential-nostr buzz; do
+    for bin in zion-acp zion-agent zion-dev-mcp zion buzz-acp buzz-agent buzz-dev-mcp git-credential-nostr buzz; do
         touch "desktop/src-tauri/binaries/${bin}-${TARGET}"
     done
 

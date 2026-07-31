@@ -183,6 +183,10 @@ export function validatePlatformBrandSources(sources) {
         failures.push(`${tauriPath}: buzz:// deep-link compatibility changed`);
       }
       const expectedSidecars = [
+        "binaries/zion-acp",
+        "binaries/zion-agent",
+        "binaries/zion-dev-mcp",
+        "binaries/zion",
         "binaries/buzz-acp",
         "binaries/buzz-agent",
         "binaries/buzz-dev-mcp",
@@ -193,7 +197,7 @@ export function validatePlatformBrandSources(sources) {
         JSON.stringify(tauri.bundle?.externalBin) !==
         JSON.stringify(expectedSidecars)
       ) {
-        failures.push(`${tauriPath}: five-sidecar compatibility set changed`);
+        failures.push(`${tauriPath}: Zion and legacy sidecar set changed`);
       }
     } catch (error) {
       failures.push(`${tauriPath}: invalid JSON (${error.message})`);

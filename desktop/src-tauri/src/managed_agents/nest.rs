@@ -50,7 +50,7 @@ const NEST_AGENTS_VERSION: u32 = 4;
 
 /// Template content version for SKILL.md.
 /// Bump this when changing `nest_skill.md` to trigger refresh on existing installs.
-const NEST_SKILL_VERSION: u32 = 4;
+const NEST_SKILL_VERSION: u32 = 5;
 
 const BEGIN_MARKER: &str = "<!-- BEGIN BUZZ MANAGED";
 const END_MARKER: &str = "<!-- END BUZZ MANAGED -->";
@@ -346,6 +346,15 @@ pub fn cli_link_name(is_dev: bool) -> &'static str {
     }
 }
 
+/// Canonical Zion CLI link followed by the legacy compatibility alias.
+pub fn cli_link_names(is_dev: bool) -> [&'static str; 2] {
+    if is_dev {
+        ["zion-dev", "buzz-dev"]
+    } else {
+        ["zion", "buzz"]
+    }
+}
+
 /// Ensures `~/.local/bin/buzz` (prod) or `~/.local/bin/buzz-dev` (dev) is a
 /// symlink to the bundled CLI binary.
 ///
@@ -362,33 +371,34 @@ pub fn cli_link_name(is_dev: bool) -> &'static str {
 /// for human Terminal use; agents find the CLI via PATH augmentation.
 #[cfg(unix)]
 pub fn ensure_cli_symlink(exe_parent: &Path, is_dev: bool) -> Result<(), String> {
-    let buzz_bin = exe_parent.join("buzz");
-    if !buzz_bin.exists() {
-        return Ok(()); // CLI not bundled (e.g., dev builds without sidecars).
-    }
-
     let local_bin = dirs::home_dir()
         .ok_or("cannot resolve home directory")?
         .join(".local")
         .join("bin");
     fs::create_dir_all(&local_bin).map_err(|e| format!("create {}: {e}", local_bin.display()))?;
 
-    let link = local_bin.join(cli_link_name(is_dev));
-    match link.symlink_metadata() {
-        Ok(meta) if meta.file_type().is_symlink() => {
-            let _ = fs::remove_file(&link);
-            create_symlink(&buzz_bin, &link)
-                .map_err(|e| format!("symlink {}: {e}", link.display()))?;
+    for (bundled_name, link_name) in ["zion", "buzz"].into_iter().zip(cli_link_names(is_dev)) {
+        let bundled_bin = exe_parent.join(bundled_name);
+        if !bundled_bin.exists() {
+            continue;
         }
-        Ok(_) => {
-            // Regular file or directory — don't clobber.
-        }
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            create_symlink(&buzz_bin, &link)
-                .map_err(|e| format!("symlink {}: {e}", link.display()))?;
-        }
-        Err(e) => {
-            return Err(format!("stat {}: {e}", link.display()));
+        let link = local_bin.join(link_name);
+        match link.symlink_metadata() {
+            Ok(meta) if meta.file_type().is_symlink() => {
+                let _ = fs::remove_file(&link);
+                create_symlink(&bundled_bin, &link)
+                    .map_err(|e| format!("symlink {}: {e}", link.display()))?;
+            }
+            Ok(_) => {
+                // Regular file or directory — don't clobber.
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                create_symlink(&bundled_bin, &link)
+                    .map_err(|e| format!("symlink {}: {e}", link.display()))?;
+            }
+            Err(e) => {
+                return Err(format!("stat {}: {e}", link.display()));
+            }
         }
     }
 

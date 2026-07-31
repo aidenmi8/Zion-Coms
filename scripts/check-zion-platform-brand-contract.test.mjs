@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -18,6 +19,45 @@ test("current platform files satisfy the Zion brand contract", () => {
     loadPlatformBrandSources(repositoryRoot),
   );
   assert.deepEqual(failures, []);
+});
+
+test("brand manifest publishes the canonical Zion compatibility facade", () => {
+  const manifest = JSON.parse(
+    fs.readFileSync(
+      path.join(repositoryRoot, "branding/zion-brand-manifest.json"),
+      "utf8",
+    ),
+  );
+
+  assert.deepEqual(manifest.publicContract, {
+    productName: "Zion",
+    relayName: "Zion Relay",
+    canonicalUrlScheme: "zion",
+    legacyUrlScheme: "buzz",
+    releaseRepositoryUrl: "https://github.com/aidenmi8/Zion-Coms",
+    canonicalLaunchers: ["zion", "zion-acp", "zion-agent", "zion-dev-mcp"],
+    legacyLaunchers: ["buzz", "buzz-acp", "buzz-agent", "buzz-dev-mcp"],
+    environmentAliases: [
+      { canonical: "ZION_RELAY_URL", legacy: "BUZZ_RELAY_URL" },
+      { canonical: "ZION_PRIVATE_KEY", legacy: "BUZZ_PRIVATE_KEY" },
+      { canonical: "ZION_AUTH_TAG", legacy: "BUZZ_AUTH_TAG" },
+      { canonical: "ZION_SHELL", legacy: "BUZZ_SHELL" },
+      { canonical: "ZION_AGENT_PROVIDER", legacy: "BUZZ_AGENT_PROVIDER" },
+      { canonical: "ZION_AGENT_MODEL", legacy: "BUZZ_AGENT_MODEL" },
+      {
+        canonical: "ZION_AGENT_THINKING_EFFORT",
+        legacy: "BUZZ_AGENT_THINKING_EFFORT",
+      },
+      {
+        canonical: "ZION_AGENT_MAX_OUTPUT_TOKENS",
+        legacy: "BUZZ_AGENT_MAX_OUTPUT_TOKENS",
+      },
+      {
+        canonical: "ZION_AGENT_MAX_CONTEXT_TOKENS",
+        legacy: "BUZZ_AGENT_MAX_CONTEXT_TOKENS",
+      },
+    ],
+  });
 });
 
 test("restoring an Android Buzz label fails closed", () => {

@@ -1,3 +1,4 @@
+use buzz_core::branding;
 use nostr::ToBech32;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
@@ -32,6 +33,7 @@ impl Shim {
         for name in [
             "rg",
             "tree",
+            "zion",
             "buzz",
             "git-credential-nostr",
             "git-sign-nostr",
@@ -152,8 +154,7 @@ fn write_keyfile_atomic(path: &Path, data: &[u8]) -> std::io::Result<()> {
 /// Format: `<hex_pubkey>@<relay_host>` (e.g., `ab12...cd@relay.buzz.dev`).
 /// Falls back to `<hex_pubkey>@buzz` if no relay URL is configured.
 fn derive_git_email(pubkey_hex: &str) -> String {
-    let host = std::env::var("BUZZ_RELAY_URL")
-        .ok()
+    let host = branding::env_alias("ZION_RELAY_URL", "BUZZ_RELAY_URL")
         .and_then(|url| {
             // Strip scheme, port, and trailing paths
             let stripped = url
@@ -361,13 +362,26 @@ pub fn artifact_dir(session_root: &Path) -> PathBuf {
 #[cfg(test)]
 mod git_user_name_tests {
     use super::{
-        build_git_env, is_git_crud, is_unicode_format, sanitize_git_user_name, KeyInfo,
+        build_git_env, is_git_crud, is_unicode_format, sanitize_git_user_name, KeyInfo, Shim,
         MAX_GIT_USER_NAME_CHARS,
     };
     use std::sync::Mutex;
 
     /// Env-var-touching tests must run serially — env vars are process-global.
     static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+    #[test]
+    fn shim_installs_canonical_and_legacy_cli_launchers() {
+        let _guard = ENV_LOCK.lock().unwrap_or_else(|poison| poison.into_inner());
+        std::env::remove_var("NOSTR_PRIVATE_KEY");
+        let shim = Shim::install().expect("install shim");
+        for launcher in ["zion", "buzz"] {
+            assert!(
+                shim._dir.path().join(launcher).exists(),
+                "{launcher} launcher must be installed"
+            );
+        }
+    }
 
     const PUBKEY_HEX: &str = "dcfd242e557282d7a1e2cf2e6877522682f1e5c6156dc92ca7d90eaedd3b0f95";
     const NPUB: &str = "npub1mn7jgtj4w2pd0g0zeuhxsa6jy6p0rewxz4kujt98my82ahfmp72sxjexk7";

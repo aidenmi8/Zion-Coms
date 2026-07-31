@@ -310,7 +310,7 @@ function CommunityApp({
   useNestNotifications();
 
   // Composite key: changes when community ID changes OR when
-  // the active community's config is updated (relayUrl/token).
+  // the active community's config is updated (relayUrl/reposDir).
   const communityKey = `${activeCommunity?.id ?? "none"}-${reinitKey}`;
 
   // Latch once the community key deviates from its cold-boot value: from then
@@ -373,7 +373,6 @@ function CommunityApp({
       id: crypto.randomUUID(),
       name: transaction.communityName,
       relayUrl: transaction.relayUrl,
-      token: transaction.token,
       reposDir: transaction.reposDir,
       pubkey: currentPubkey ?? undefined,
       addedAt: new Date().toISOString(),

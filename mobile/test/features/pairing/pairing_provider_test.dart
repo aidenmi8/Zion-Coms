@@ -100,6 +100,18 @@ void main() {
       expect(fakeAuth.lastCommunity, isNull);
     });
 
+    test('accepts zion scheme prefix', () async {
+      container = createContainer();
+
+      final code = 'zion://${_encodePairingCode()}';
+      await container.read(pairingProvider.notifier).pair(code);
+
+      final state = container.read(pairingProvider);
+      expect(state.status, PairingStatus.error);
+      expect(state.errorMessage, contains('missing nsec'));
+      expect(fakeAuth.lastCommunity, isNull);
+    });
+
     test('invalid base64 sets format error', () async {
       container = createContainer();
 

@@ -161,6 +161,8 @@ void main() {
       await _expandPairingCode(tester);
 
       expect(find.text('Hide pairing code'), findsOneWidget);
+      expect(find.textContaining('zion://'), findsOneWidget);
+      expect(find.textContaining('buzz://'), findsNothing);
       expect(find.text('Connect'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
     });

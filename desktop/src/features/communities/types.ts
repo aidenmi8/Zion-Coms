@@ -2,7 +2,6 @@ export type Community = {
   id: string;
   name: string;
   relayUrl: string;
-  token?: string;
   /**
    * The pubkey associated with the active identity at the time the community
    * was created. Display-only — auth always uses the persisted `identity.key`
@@ -24,4 +23,9 @@ export type Community = {
    * authoritative private key is the on-disk `identity.key` file.
    */
   nsec?: never;
+  /**
+   * @deprecated Never read. The relay now authenticates with Nostr keys, so
+   * new entries never set this field and storage loaders remove legacy values.
+   */
+  token?: never;
 };

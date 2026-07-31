@@ -38,7 +38,6 @@ export type CommunityOnboardingTransaction = {
   relayUrl: string;
   inviteCode?: string;
   communityName: string;
-  token?: string;
   reposDir?: string;
   /**
    * Join-policy acceptance receipt minted before the claim (bound to the
@@ -77,7 +76,6 @@ export type StartCommunityOnboardingInput = {
   relayUrl: string;
   inviteCode?: string;
   communityName?: string;
-  token?: string;
   reposDir?: string;
   policyReceipt?: string;
 };
@@ -123,7 +121,13 @@ export function loadCommunityOnboardingTransaction(
     const raw = storage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
-    return isTransaction(parsed) ? parsed : null;
+    if (!isTransaction(parsed)) return null;
+    if ("token" in parsed) {
+      const { token: _token, ...cleaned } = parsed;
+      saveCommunityOnboardingTransaction(cleaned, storage);
+      return cleaned;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -160,7 +164,6 @@ export function startCommunityOnboarding(
         input.firstCommunityPage ?? existing.firstCommunityPage,
       inviteCode: input.inviteCode?.trim() || existing.inviteCode,
       communityName: input.communityName?.trim() || existing.communityName,
-      token: input.token?.trim() || existing.token,
       reposDir: input.reposDir ?? existing.reposDir,
       policyReceipt: input.policyReceipt ?? existing.policyReceipt,
       updatedAt: now.toISOString(),
@@ -182,7 +185,6 @@ export function startCommunityOnboarding(
     relayUrl,
     inviteCode: input.inviteCode?.trim() || undefined,
     communityName: input.communityName?.trim() || deriveCommunityName(relayUrl),
-    token: input.token?.trim() || undefined,
     reposDir: input.reposDir,
     policyReceipt: input.policyReceipt,
     createdAt: timestamp,

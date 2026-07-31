@@ -291,10 +291,14 @@ fn parse_nostr_bind_deep_link(url: &Url) -> Result<NostrBindDeepLinkPayload, Str
     })
 }
 
-/// Handle an incoming `buzz://` deep link URL.
+fn is_supported_deep_link_scheme(scheme: &str) -> bool {
+    matches!(scheme, "zion" | "buzz")
+}
+
+/// Handle an incoming canonical Zion or legacy deep link URL.
 ///
 /// Currently supports:
-/// - `buzz://connect?relay=<ws(s)://...>` — emits `deep-link-connect` to the frontend
+/// - `zion://connect?relay=<ws(s)://...>` — emits `deep-link-connect` to the frontend
 pub(crate) fn handle_deep_link_url(app: &tauri::AppHandle, url_str: &str) {
     let url = match Url::parse(url_str) {
         Ok(u) => u,
@@ -304,7 +308,7 @@ pub(crate) fn handle_deep_link_url(app: &tauri::AppHandle, url_str: &str) {
         }
     };
 
-    if url.scheme() != "buzz" {
+    if !is_supported_deep_link_scheme(url.scheme()) {
         eprintln!("buzz-desktop: ignoring unsupported deep link scheme: {url_str}");
         return;
     }
@@ -320,7 +324,7 @@ pub(crate) fn handle_deep_link_url(app: &tauri::AppHandle, url_str: &str) {
             let _ = app.emit("deep-link-connect", relay_url);
         }
         Some("join") => {
-            // `buzz://join?relay=<ws(s)://...>&code=<invite code>` — fired by
+            // `zion://join?relay=<ws(s)://...>&code=<invite code>` — fired by
             // the relay's /invite/<code> landing page. The frontend claims the
             // invite against the relay's HTTP API, then adds the workspace.
             let Some(payload) = parse_join_deep_link(&url) else {
@@ -351,7 +355,7 @@ pub(crate) fn handle_deep_link_url(app: &tauri::AppHandle, url_str: &str) {
             let _ = app.emit("deep-link-add-community", payload);
         }
         Some("message") => {
-            // `buzz://message?channel=<uuid>&id=<eventId>[&thread=<rootId>]`
+            // `zion://message?channel=<uuid>&id=<eventId>[&thread=<rootId>]`
             //
             // Validation policy mirrors the `connect` arm: parse what we
             // need, refuse to emit anything if a required param is missing
@@ -389,9 +393,17 @@ mod tests {
     use url::Url;
 
     use super::{
-        parse_add_community_deep_link, parse_join_deep_link, parse_message_deep_link,
-        parse_nostr_bind_deep_link, PendingCommunityDeepLink, PendingCommunityDeepLinks,
+        is_supported_deep_link_scheme, parse_add_community_deep_link, parse_join_deep_link,
+        parse_message_deep_link, parse_nostr_bind_deep_link, PendingCommunityDeepLink,
+        PendingCommunityDeepLinks,
     };
+
+    #[test]
+    fn accepts_canonical_zion_and_legacy_buzz_schemes() {
+        assert!(is_supported_deep_link_scheme("zion"));
+        assert!(is_supported_deep_link_scheme("buzz"));
+        assert!(!is_supported_deep_link_scheme("https"));
+    }
 
     fn pending(id: &str, relay_url: &str, code: Option<&str>) -> PendingCommunityDeepLink {
         PendingCommunityDeepLink {

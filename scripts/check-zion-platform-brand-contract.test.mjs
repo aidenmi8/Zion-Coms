@@ -60,6 +60,59 @@ test("brand manifest publishes the canonical Zion compatibility facade", () => {
   });
 });
 
+test("desktop deep-link registration requires Zion before the legacy alias", () => {
+  const sources = loadPlatformBrandSources(repositoryRoot);
+  const tauriPath = "desktop/src-tauri/tauri.conf.json";
+  const tauri = JSON.parse(sources[tauriPath]);
+  tauri.plugins["deep-link"].desktop.schemes = ["buzz"];
+  sources[tauriPath] = JSON.stringify(tauri);
+
+  const failures = validatePlatformBrandSources(sources);
+  assert.ok(
+    failures.some(
+      (failure) =>
+        failure.includes(tauriPath) &&
+        failure.includes("Zion canonical and Buzz legacy deep-link schemes"),
+    ),
+  );
+});
+
+test("iOS deep-link registration requires Zion before the legacy alias", () => {
+  const sources = loadPlatformBrandSources(repositoryRoot);
+  const infoPath = "mobile/ios/Runner/Info.plist";
+  sources[infoPath] = sources[infoPath].replace(
+    "\t\t\t\t<string>zion</string>\n",
+    "",
+  );
+
+  const failures = validatePlatformBrandSources(sources);
+  assert.ok(
+    failures.some(
+      (failure) =>
+        failure.includes(infoPath) &&
+        failure.includes("Zion canonical and Buzz legacy deep-link schemes"),
+    ),
+  );
+});
+
+test("Android deep-link registration requires Zion and the legacy alias", () => {
+  const sources = loadPlatformBrandSources(repositoryRoot);
+  const manifestPath = "mobile/android/app/src/main/AndroidManifest.xml";
+  sources[manifestPath] = sources[manifestPath].replace(
+    '                <data android:scheme="zion"/>\n',
+    "",
+  );
+
+  const failures = validatePlatformBrandSources(sources);
+  assert.ok(
+    failures.some(
+      (failure) =>
+        failure.includes(manifestPath) &&
+        failure.includes("Zion canonical deep-link scheme"),
+    ),
+  );
+});
+
 test("restoring an Android Buzz label fails closed", () => {
   const sources = loadPlatformBrandSources(repositoryRoot);
   const gradlePath = "mobile/android/app/build.gradle.kts";

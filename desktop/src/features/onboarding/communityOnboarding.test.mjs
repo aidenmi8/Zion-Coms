@@ -139,6 +139,30 @@ test("malformed persisted state is ignored and can be cleared", () => {
   assert.equal(storage.length, 0);
 });
 
+test("loading persisted onboarding strips an obsolete token and rewrites storage", () => {
+  const storage = createMemoryStorage({
+    "buzz-community-onboarding-transaction.v1": JSON.stringify({
+      id: "legacy-transaction",
+      source: "add-community",
+      stage: "connecting",
+      relayUrl: "wss://relay.example.com",
+      communityName: "Existing relay",
+      token: "buzz_legacy-secret",
+      createdAt: "2026-07-16T00:00:00.000Z",
+      updatedAt: "2026-07-16T00:00:00.000Z",
+    }),
+  });
+
+  const loaded = loadCommunityOnboardingTransaction(storage);
+
+  assert.equal("token" in loaded, false);
+  const persisted = JSON.parse(
+    storage.getItem("buzz-community-onboarding-transaction.v1"),
+  );
+  assert.equal("token" in persisted, false);
+  assert.equal(persisted.relayUrl, "wss://relay.example.com");
+});
+
 test("completion is scoped by relay and pubkey and preserves legacy gate", () => {
   const storage = createMemoryStorage();
   markCommunityOnboardingComplete("pubkey", "wss://relay.example", storage);

@@ -167,7 +167,7 @@ test("automatically shows community join requirements near the community URL", a
     .toContain('"relayUrl":"wss://policy.example.com"');
 });
 
-test("supports API tokens without cluttering the default join form", async ({
+test("community dialogs never expose obsolete API token controls", async ({
   page,
 }) => {
   await installMockBridge(page, { applyCommunityDelayMs: 1_000 });
@@ -182,29 +182,18 @@ test("supports API tokens without cluttering the default join form", async ({
   await page
     .getByLabel("Community URL or invite link")
     .fill("token.example.com");
-  await page.getByTestId("community-api-token-reveal").click();
-  await page.getByLabel("API token").fill("buzz_secret");
-  await page.getByTestId("invite-redeem-submit").click();
+  await expect(page.getByLabel("API token")).toHaveCount(0);
+  await expect(page.getByTestId("community-api-token-reveal")).toHaveCount(0);
 
-  await expect
-    .poll(() =>
-      page.evaluate((key) => {
-        const raw = window.localStorage.getItem(key);
-        if (!raw) return null;
-        const transaction = JSON.parse(raw) as {
-          relayUrl?: string;
-          token?: string;
-        };
-        return {
-          relayUrl: transaction.relayUrl,
-          token: transaction.token,
-        };
-      }, COMMUNITY_ONBOARDING_STORAGE_KEY),
-    )
-    .toEqual({
-      relayUrl: "wss://token.example.com",
-      token: "buzz_secret",
-    });
+  await page.getByTestId("add-community-back").click();
+  await page.getByRole("button", { name: "Close" }).click();
+  await page.getByTestId("sidebar-profile-avatar-button").click();
+  await page.getByTestId("community-switcher").click();
+  await page.getByRole("menuitem", { name: "Community settings" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Edit Community" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("API Token")).toHaveCount(0);
 });
 
 test("hides Invites settings on open relays", async ({ page }) => {

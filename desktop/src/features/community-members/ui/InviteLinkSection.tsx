@@ -19,6 +19,8 @@ import { Separator } from "@/shared/ui/separator";
 import { Spinner } from "@/shared/ui/spinner";
 import { Switch } from "@/shared/ui/switch";
 
+import { canonicalizeInviteOutputUrl } from "./inviteOutput";
+
 const TTL_OPTIONS: { label: string; value: number }[] = [
   { label: "1 day", value: 24 * 60 * 60 },
   { label: "3 days", value: 3 * 24 * 60 * 60 },
@@ -76,7 +78,7 @@ export function InviteLinkSection({
         ttlSecs,
         maxUses: maxUsesEnabled ? parsedMaxUses : null,
       });
-      await writeTextToClipboard(invite.url);
+      await writeTextToClipboard(canonicalizeInviteOutputUrl(invite.url));
       setCopyStatus("copied");
       toast.success("Invite link copied");
     } catch {

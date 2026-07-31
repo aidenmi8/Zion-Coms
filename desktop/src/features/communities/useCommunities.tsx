@@ -41,7 +41,7 @@ export function resolveCommunityUpdateResult(
   activeId: string | null,
   id: string,
   updates: Partial<
-    Pick<Community, "name" | "relayUrl" | "token" | "pubkey" | "reposDir">
+    Pick<Community, "name" | "relayUrl" | "pubkey" | "reposDir">
   >,
 ): UpdateCommunityResult {
   const current = communities.find((w) => w.id === id);
@@ -58,7 +58,6 @@ export function resolveCommunityUpdateResult(
   const hasChange =
     (updates.name !== undefined && updates.name !== current.name) ||
     (updates.relayUrl !== undefined && updates.relayUrl !== current.relayUrl) ||
-    (updates.token !== undefined && updates.token !== current.token) ||
     (updates.pubkey !== undefined && updates.pubkey !== current.pubkey) ||
     (updates.reposDir !== undefined && updates.reposDir !== current.reposDir);
 
@@ -69,7 +68,6 @@ export function resolveCommunityUpdateResult(
     isActive &&
     ((updates.relayUrl !== undefined &&
       updates.relayUrl !== current.relayUrl) ||
-      (updates.token !== undefined && updates.token !== current.token) ||
       (updates.reposDir !== undefined &&
         updates.reposDir !== current.reposDir));
 
@@ -115,7 +113,7 @@ export function applyCommunitiesOrder(
 export type UseCommunitiesReturn = {
   communities: Community[];
   activeCommunity: Community | null;
-  /** Counter bumped when the active community's config changes (relayUrl/token). */
+  /** Counter bumped when the active community's config changes (relayUrl/reposDir). */
   reinitKey: number;
   /** Add a community, deduplicating by relayUrl. Returns the final ID in the list. */
   addCommunity: (community: Community) => string;
@@ -127,7 +125,7 @@ export type UseCommunitiesReturn = {
   updateCommunity: (
     id: string,
     updates: Partial<
-      Pick<Community, "name" | "relayUrl" | "token" | "pubkey" | "reposDir">
+      Pick<Community, "name" | "relayUrl" | "pubkey" | "reposDir">
     >,
   ) => UpdateCommunityResult;
   /** Persist a new display order for the rail. IDs not in orderedIds keep their relative position at the end. */
@@ -182,7 +180,6 @@ function useCommunitiesInternal(): UseCommunitiesReturn {
             ? {
                 ...w,
                 name: community.name || w.name,
-                token: community.token ?? w.token,
                 pubkey: community.pubkey ?? w.pubkey,
               }
             : w,
@@ -257,7 +254,7 @@ function useCommunitiesInternal(): UseCommunitiesReturn {
     (
       id: string,
       updates: Partial<
-        Pick<Community, "name" | "relayUrl" | "token" | "pubkey" | "reposDir">
+        Pick<Community, "name" | "relayUrl" | "pubkey" | "reposDir">
       >,
     ): UpdateCommunityResult => {
       const result = resolveCommunityUpdateResult(

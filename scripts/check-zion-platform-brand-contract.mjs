@@ -179,8 +179,15 @@ export function validatePlatformBrandSources(sources) {
       if (tauri.identifier !== "xyz.block.buzz.app") {
         failures.push(`${tauriPath}: compatibility identifier changed`);
       }
-      if (tauri.plugins?.["deep-link"]?.desktop?.schemes?.[0] !== "buzz") {
-        failures.push(`${tauriPath}: buzz:// deep-link compatibility changed`);
+      const deepLinkSchemes =
+        tauri.plugins?.["deep-link"]?.desktop?.schemes;
+      if (
+        JSON.stringify(deepLinkSchemes) !==
+        JSON.stringify(["zion", "buzz"])
+      ) {
+        failures.push(
+          `${tauriPath}: Zion canonical and Buzz legacy deep-link schemes must remain registered in order`,
+        );
       }
       const expectedSidecars = [
         "binaries/zion-acp",
@@ -278,6 +285,16 @@ export function validatePlatformBrandSources(sources) {
     'android:label="@string/app_name"',
     "Android manifest must use the display-name indirection",
   );
+  mustContain(
+    "mobile/android/app/src/main/AndroidManifest.xml",
+    '<data android:scheme="zion"/>',
+    "Android Zion canonical deep-link scheme changed",
+  );
+  mustContain(
+    "mobile/android/app/src/main/AndroidManifest.xml",
+    '<data android:scheme="buzz"/>',
+    "Android Buzz legacy deep-link scheme changed",
+  );
   mustMatch(
     "mobile/pubspec.yaml",
     new RegExp(
@@ -336,8 +353,8 @@ export function validatePlatformBrandSources(sources) {
   );
   mustMatch(
     iosInfo,
-    /<key>CFBundleURLSchemes<\/key>\s*<array>\s*<string>buzz<\/string>/,
-    "iOS buzz:// deep-link scheme changed",
+    /<key>CFBundleURLSchemes<\/key>\s*<array>\s*<string>zion<\/string>\s*<string>buzz<\/string>\s*<\/array>/,
+    "iOS Zion canonical and Buzz legacy deep-link schemes must remain registered in order",
   );
   for (const privacyKey of [
     "NSCameraUsageDescription",

@@ -272,14 +272,8 @@ pub(crate) fn known_acp_runtime_exact(id: &str) -> Option<&'static KnownAcpRunti
     KNOWN_ACP_RUNTIMES.iter().find(|p| p.id == id)
 }
 
-/// The agent command a freshly-created agent defaults to when the create
-/// request supplies none. Resolves the bundled `buzz-agent` from the catalog so
-/// the default cannot drift from the provider definition. Falls back to the id
-/// if the catalog entry is missing.
-///
-/// The previous default was the bare global `goose`, which is not on PATH on a
-/// stock Windows install: every worker failed with `program not found`. The
-/// bundled `buzz-agent` ships with the app and resolves on every platform.
+/// Resolves the bundled Zion agent from the catalog, with its canonical
+/// launcher as the fallback when the catalog entry is unavailable.
 pub fn default_agent_command() -> String {
     known_acp_runtime_exact("buzz-agent")
         .and_then(|p| p.commands.first().copied())
@@ -297,16 +291,8 @@ fn canonical_bundled_command(command: &str) -> &str {
     }
 }
 
-/// Record-first harness resolution (unified agent model, Phase 1A).
-///
-/// Resolution order:
-///   1. explicit override (non-empty) — a deliberate per-instance pin;
-///   2. the record's own `runtime` id mapped to its primary command —
-///      records materialize their runtime at create/migration time;
-///      checks both static builtins AND the loaded preset/custom registry;
-///   3. legacy fallback: the linked persona's `runtime` (records created
-///      before the unified model carry `persona_id` but no `runtime`);
-///   4. `default_agent_command()`.
+/// Resolves a record's explicit pin, own runtime, legacy persona runtime, then
+/// the bundled default, in that order.
 pub fn record_agent_command(
     record: &crate::managed_agents::types::ManagedAgentRecord,
     personas: &[crate::managed_agents::types::AgentDefinition],

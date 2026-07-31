@@ -355,20 +355,10 @@ pub fn cli_link_names(is_dev: bool) -> [&'static str; 2] {
     }
 }
 
-/// Ensures `~/.local/bin/buzz` (prod) or `~/.local/bin/buzz-dev` (dev) is a
-/// symlink to the bundled CLI binary.
-///
-/// The link name is split by `is_dev` so that an installed DMG and a
-/// concurrently running dev build each maintain their own symlink and never
-/// overwrite each other's target — the same isolation that separates the
-/// `~/.buzz` and `~/.buzz-dev` nests (see [`NEST_DIR_DEV`]).
-///
-/// On every boot: replaces any existing symlink unconditionally (the `buzz` /
-/// `buzz-dev` name is our namespace), creates a new one if absent, and leaves
-/// regular files alone to avoid clobbering a user-compiled binary.
-///
-/// Non-fatal: callers should ignore errors — the symlink is a convenience
-/// for human Terminal use; agents find the CLI via PATH augmentation.
+/// Ensures canonical Zion and legacy compatibility links for the bundled CLI.
+/// Dev and production links remain isolated; existing symlinks are refreshed,
+/// while regular files are preserved. Callers treat failures as non-fatal.
+/// Agents still discover the bundled binary through PATH augmentation.
 #[cfg(unix)]
 pub fn ensure_cli_symlink(exe_parent: &Path, is_dev: bool) -> Result<(), String> {
     let local_bin = dirs::home_dir()

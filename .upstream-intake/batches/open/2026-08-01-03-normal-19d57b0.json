@@ -1,0 +1,768 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-01-03-normal-19d57b0",
+  "previous_reviewed_sha": "4632c55041c5d423d572a6f6411bb7b279c26f67",
+  "pinned_upstream_sha": "19d57b0d46baa55814ac737041a36d0b405c9f64",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-3924",
+      "title": "docs: add VISION_REMOTE_AGENTS.md",
+      "upstream_pr": 3924,
+      "entry_shas": [
+        "689617af7ad420c3266d5d2eb437757371327089"
+      ]
+    },
+    {
+      "topic_id": "pr-3910",
+      "title": "refactor(voice): extract reusable Pocket primitives + Pocket voice settings (relands #2467 + #3208)",
+      "upstream_pr": 3910,
+      "entry_shas": [
+        "61ba9dfaa00852925058d1a024322fa53663a5bc"
+      ]
+    },
+    {
+      "topic_id": "pr-3751",
+      "title": "fix(desktop): open profiles from avatars",
+      "upstream_pr": 3751,
+      "entry_shas": [
+        "39ce3dfc3cf2d12f0d6c64b4cd4293df86567663"
+      ]
+    },
+    {
+      "topic_id": "pr-3259",
+      "title": "feat(desktop): import local Pocket voices",
+      "upstream_pr": 3259,
+      "entry_shas": [
+        "c104eecfb38620de2c35c7e20a716f8658b5a6b1"
+      ]
+    },
+    {
+      "topic_id": "pr-3943",
+      "title": "fix(release): make immutable desktop release operable",
+      "upstream_pr": 3943,
+      "entry_shas": [
+        "052174a148f9f6bcbb2b5a1d20ce0317645e49f8"
+      ]
+    },
+    {
+      "topic_id": "commit-d12b3d6a79d5",
+      "title": "chore(release): release Buzz Desktop version 0.5.3",
+      "upstream_pr": null,
+      "entry_shas": [
+        "d12b3d6a79d56a95fc99ce4fadd2d2235d5a3131"
+      ]
+    },
+    {
+      "topic_id": "commit-6e02e0a9022a",
+      "title": "Merge pull request #3944 from block/version-bump/0.5.3",
+      "upstream_pr": null,
+      "entry_shas": [
+        "6e02e0a9022a1a098c44ee611b4d9784addb10c7"
+      ]
+    },
+    {
+      "topic_id": "pr-2864",
+      "title": "docs(nips): add single-coordinate manual-unread override layer and verification model to NIP-RS",
+      "upstream_pr": 2864,
+      "entry_shas": [
+        "209536ade6c5ebf7fa82671d7ca0b74f599a40cc"
+      ]
+    },
+    {
+      "topic_id": "pr-3960",
+      "title": "Revert \"chore(release): release Buzz Desktop version 0.5.3\"",
+      "upstream_pr": 3960,
+      "entry_shas": [
+        "bb34bc4d98fe4dabe847046103ac5e2859917ac5"
+      ]
+    },
+    {
+      "topic_id": "pr-3965",
+      "title": "fix(release): make desktop tagging squash-safe",
+      "upstream_pr": 3965,
+      "entry_shas": [
+        "db7e84d4f815127236b9cb080c5d374f48eaac09"
+      ]
+    },
+    {
+      "topic_id": "pr-3973",
+      "title": "fix(release): require exact-head approval for desktop tags",
+      "upstream_pr": 3973,
+      "entry_shas": [
+        "54c8ef30a9bb9c59a4415a8a7ee84c7c5454b48a"
+      ]
+    },
+    {
+      "topic_id": "pr-3972",
+      "title": "chore(release): release Buzz Desktop version 0.5.3",
+      "upstream_pr": 3972,
+      "entry_shas": [
+        "3a96acea09b4a9e3f02c3a26cfb0607d2ccacf42"
+      ]
+    },
+    {
+      "topic_id": "pr-3979",
+      "title": "fix(release): preserve main in desktop PR body",
+      "upstream_pr": 3979,
+      "entry_shas": [
+        "e5e5bac2a932b2b2e4eb6b559d5545a992c21b96"
+      ]
+    },
+    {
+      "topic_id": "pr-3171",
+      "title": "feat(relay): accept kind:30621 multi-repo projects at ingest",
+      "upstream_pr": 3171,
+      "entry_shas": [
+        "cb9701cd30fb344bf134585634a09007f3155bfb"
+      ]
+    },
+    {
+      "topic_id": "pr-3999",
+      "title": "fix(buzz-acp): thread cache-read tokens into NIP-AM kind:44200 events",
+      "upstream_pr": 3999,
+      "entry_shas": [
+        "b1b283cd4c7f926e12eeee8ae1f38c7471922b16"
+      ]
+    },
+    {
+      "topic_id": "pr-3278",
+      "title": "feat(desktop): Agent Trading Cards — mintable agent-snapshot card PNGs with optional NIP-44 lock",
+      "upstream_pr": 3278,
+      "entry_shas": [
+        "eb049ddf815d48195e1713afe039d28c950d7933"
+      ]
+    },
+    {
+      "topic_id": "pr-3962",
+      "title": "fix(desktop): preserve first huddle speech",
+      "upstream_pr": 3962,
+      "entry_shas": [
+        "45314fc504113aec7c54ae6520cfe5e1562aae40"
+      ]
+    },
+    {
+      "topic_id": "pr-3909",
+      "title": "fix(mesh): stop restarting a busy or loading shared-compute node",
+      "upstream_pr": 3909,
+      "entry_shas": [
+        "fa1a5b1a797870724f5c7e7e26931861a60f22cb"
+      ]
+    },
+    {
+      "topic_id": "pr-3516",
+      "title": "fix(desktop): point Oh My Pi preset at omp.sh",
+      "upstream_pr": 3516,
+      "entry_shas": [
+        "3ade48d5030a8f7dbb9d3693f171e5544dcd8df1"
+      ]
+    },
+    {
+      "topic_id": "pr-2733",
+      "title": "docs: add one-click Railway deploy for a hosted relay",
+      "upstream_pr": 2733,
+      "entry_shas": [
+        "19d57b0d46baa55814ac737041a36d0b405c9f64"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "689617af7ad420c3266d5d2eb437757371327089",
+      "topic_id": "pr-3924",
+      "title": "docs: add VISION_REMOTE_AGENTS.md",
+      "areas": [
+        "docs",
+        "agents"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Documentation-only remote-agent vision material is not required for the current source intake and would expand scope without a product change.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3924",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "61ba9dfaa00852925058d1a024322fa53663a5bc",
+      "topic_id": "pr-3910",
+      "title": "refactor(voice): extract reusable Pocket primitives + Pocket voice settings (relands #2467 + #3208)",
+      "areas": [
+        "desktop",
+        "voice",
+        "dependencies"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The native Pocket voice refactor conflicts with the fork and requires an independent voice/runtime dependency review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3910",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated Pocket voice runtime adaptation and packaging review",
+        "owner": "Zion macOS maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "39ce3dfc3cf2d12f0d6c64b4cd4293df86567663",
+      "topic_id": "pr-3751",
+      "title": "fix(desktop): open profiles from avatars",
+      "areas": [
+        "desktop",
+        "profiles"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The profile/avatar UI patch conflicts with current Zion profile surfaces and needs a focused desktop adaptation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3751",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "focused profile-avatar navigation adaptation with UI tests",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "c104eecfb38620de2c35c7e20a716f8658b5a6b1",
+      "topic_id": "pr-3259",
+      "title": "feat(desktop): import local Pocket voices",
+      "areas": [
+        "desktop",
+        "voice",
+        "privacy"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Local voice import is broad native/runtime work and requires a separate dependency, privacy, and packaging review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3259",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated local voice import review with packaging and privacy checks",
+        "owner": "Zion macOS maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "052174a148f9f6bcbb2b5a1d20ce0317645e49f8",
+      "topic_id": "pr-3943",
+      "title": "fix(release): make immutable desktop release operable",
+      "areas": [
+        "release",
+        "desktop"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Release workflow changes are outside the authorized source-only intake; no release or deployment work is authorized.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3943",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "d12b3d6a79d56a95fc99ce4fadd2d2235d5a3131",
+      "topic_id": "commit-d12b3d6a79d5",
+      "title": "chore(release): release Buzz Desktop version 0.5.3",
+      "areas": [
+        "release"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This is a concrete product release commit and is explicitly out of scope for upstream intake.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "6e02e0a9022a1a098c44ee611b4d9784addb10c7",
+      "topic_id": "commit-6e02e0a9022a",
+      "title": "Merge pull request #3944 from block/version-bump/0.5.3",
+      "areas": [
+        "release"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Release merge provenance is not a source fix and must not be imported into the Zion fork.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": null,
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "209536ade6c5ebf7fa82671d7ca0b74f599a40cc",
+      "topic_id": "pr-2864",
+      "title": "docs(nips): add single-coordinate manual-unread override layer and verification model to NIP-RS",
+      "areas": [
+        "docs",
+        "protocol"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Documentation-only protocol material is not needed for the current product scope.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/2864",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "bb34bc4d98fe4dabe847046103ac5e2859917ac5",
+      "topic_id": "pr-3960",
+      "title": "Revert \"chore(release): release Buzz Desktop version 0.5.3\"",
+      "areas": [
+        "release"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This is release-history churn and must not be imported into the Zion fork.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3960",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "db7e84d4f815127236b9cb080c5d374f48eaac09",
+      "topic_id": "pr-3965",
+      "title": "fix(release): make desktop tagging squash-safe",
+      "areas": [
+        "release",
+        "automation"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Release automation is outside the authorized source-only intake.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3965",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "54c8ef30a9bb9c59a4415a8a7ee84c7c5454b48a",
+      "topic_id": "pr-3973",
+      "title": "fix(release): require exact-head approval for desktop tags",
+      "areas": [
+        "release",
+        "automation"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Release approval automation is outside this intake and cannot be coupled to a rebrand-safe source batch.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3973",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "3a96acea09b4a9e3f02c3a26cfb0607d2ccacf42",
+      "topic_id": "pr-3972",
+      "title": "chore(release): release Buzz Desktop version 0.5.3",
+      "areas": [
+        "release"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This concrete release commit is outside the authorized source-only intake.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3972",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "e5e5bac2a932b2b2e4eb6b559d5545a992c21b96",
+      "topic_id": "pr-3979",
+      "title": "fix(release): preserve main in desktop PR body",
+      "areas": [
+        "release",
+        "automation"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Release PR body automation is outside the authorized source-only intake.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3979",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "cb9701cd30fb344bf134585634a09007f3155bfb",
+      "topic_id": "pr-3171",
+      "title": "feat(relay): accept kind:30621 multi-repo projects at ingest",
+      "areas": [
+        "relay",
+        "protocol",
+        "authorization"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Protocol and relay-ingest expansion requires a dedicated security/compatibility review with complete kind and authorization tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3171",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated relay protocol batch for multi-repo project ingest",
+        "owner": "Zion relay security maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "b1b283cd4c7f926e12eeee8ae1f38c7471922b16",
+      "topic_id": "pr-3999",
+      "title": "fix(buzz-acp): thread cache-read tokens into NIP-AM kind:44200 events",
+      "areas": [
+        "acp",
+        "agents",
+        "protocol"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Agent protocol token propagation changes the signed event context and requires a dedicated ACP/egress review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3999",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated ACP token-context adaptation with signed-event tests",
+        "owner": "Zion agent maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "eb049ddf815d48195e1713afe039d28c950d7933",
+      "topic_id": "pr-3278",
+      "title": "feat(desktop): Agent Trading Cards — mintable agent-snapshot card PNGs with optional NIP-44 lock",
+      "areas": [
+        "desktop",
+        "agents",
+        "cryptography"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This is a new agent-card feature with cryptographic export behavior and requires an independent product/security review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3278",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated agent trading-card security and product review",
+        "owner": "Zion security maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "45314fc504113aec7c54ae6520cfe5e1562aae40",
+      "topic_id": "pr-3962",
+      "title": "fix(desktop): preserve first huddle speech",
+      "areas": [
+        "desktop",
+        "huddle"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The huddle audio patch conflicts with the current native pipeline and needs focused device/runtime verification.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3962",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "focused huddle speech adaptation with device verification",
+        "owner": "Zion macOS maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "fa1a5b1a797870724f5c7e7e26931861a60f22cb",
+      "topic_id": "pr-3909",
+      "title": "fix(mesh): stop restarting a busy or loading shared-compute node",
+      "areas": [
+        "mesh",
+        "agents"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Mesh runtime behavior is outside this narrow intake and requires an independent dependency/runtime test.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3909",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated mesh runtime stability adaptation",
+        "owner": "Zion runtime maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "3ade48d5030a8f7dbb9d3693f171e5544dcd8df1",
+      "topic_id": "pr-3516",
+      "title": "fix(desktop): point Oh My Pi preset at omp.sh",
+      "areas": [
+        "desktop",
+        "agents",
+        "providers"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Adding or changing a provider preset is product-surface work outside this controlled Zion intake.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3516",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "19d57b0d46baa55814ac737041a36d0b405c9f64",
+      "topic_id": "pr-2733",
+      "title": "docs: add one-click Railway deploy for a hosted relay",
+      "areas": [
+        "docs",
+        "deployment",
+        "hosted-relay"
+      ],
+      "risk": "high",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Hosted deployment instructions are explicitly outside this source-only intake and the Zion hosted-community page is disabled.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/2733",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

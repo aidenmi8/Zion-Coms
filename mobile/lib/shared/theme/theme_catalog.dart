@@ -38,9 +38,8 @@ class ThemeColors {
         return name
             .split('-')
             .map(
-              (w) => w.isNotEmpty
-                  ? '${w[0].toUpperCase()}${w.substring(1)}'
-                  : w,
+              (w) =>
+                  w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w,
             )
             .join(' ');
     }

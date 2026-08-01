@@ -683,7 +683,6 @@ export function ChannelScreen({
     threadReplyTargetId,
     threadReplyTargetMessage,
   });
-
   const hasAuxiliaryPanel = Boolean(
     effectiveOpenThreadHeadId ||
       openAgentSessionPubkey ||
@@ -691,7 +690,6 @@ export function ChannelScreen({
       channelManagementOpen,
   );
   const displayedThreadHeadMessage = threadPanelData.threadHead;
-  const displayedThreadAllMessages = threadPanelData.messages;
   const displayedThreadMessages = threadPanelData.visibleReplies;
   const displayedThreadReplyTargetMessage = threadPanelData.replyTargetMessage;
   const displayedThreadFirstUnreadReplyId = displayedThreadHeadMessage
@@ -945,7 +943,7 @@ export function ChannelScreen({
                   firstUnreadMessageId={firstUnreadMessageId}
                   unreadCount={unreadCount}
                   targetMessageId={mainTimelineTargetMessageId}
-                  threadAllMessages={displayedThreadAllMessages}
+                  threadAllMessages={threadPanelData.messages}
                   threadHeadMessage={displayedThreadHeadMessage}
                   threadMessages={displayedThreadMessages}
                   threadMessagesPending={threadRepliesQuery.isPending}

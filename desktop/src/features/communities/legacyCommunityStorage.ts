@@ -21,6 +21,7 @@ type LegacyCommunityStorageSnapshot = {
 
 type StoredCommunity = {
   relayUrl?: unknown;
+  token?: unknown;
 };
 
 function parseCommunityList(raw: string | null): StoredCommunity[] | null {
@@ -38,6 +39,21 @@ function parseCommunityList(raw: string | null): StoredCommunity[] | null {
 
 function normalizeRelayUrl(relayUrl: string) {
   return relayUrl.trim().replace(/\/$/, "");
+}
+
+function scrubLegacyCommunityTokens(raw: string): string {
+  const communities = parseCommunityList(raw);
+  if (!communities) {
+    return raw;
+  }
+  const cleaned = communities.map((community) => {
+    if (community && typeof community === "object" && "token" in community) {
+      const { token: _token, ...rest } = community;
+      return rest;
+    }
+    return community;
+  });
+  return JSON.stringify(cleaned);
 }
 
 function hasOnlyLocalDevCommunity(raw: string | null): boolean {
@@ -84,7 +100,10 @@ export function applyLegacyCommunityStorage(
   });
 
   if (shouldWriteCommunities && legacyStorage.workspaces) {
-    storage.setItem(BUZZ_COMMUNITIES_KEY, legacyStorage.workspaces);
+    storage.setItem(
+      BUZZ_COMMUNITIES_KEY,
+      scrubLegacyCommunityTokens(legacyStorage.workspaces),
+    );
   }
 
   const currentActiveCommunityId = storage.getItem(BUZZ_ACTIVE_COMMUNITY_KEY);

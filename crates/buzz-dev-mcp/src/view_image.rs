@@ -261,7 +261,7 @@ fn sign_media_get_auth(keys: &nostr::Keys, authority: &str) -> Result<String, St
         .map_err(|e| e.to_string())?,
         Tag::parse(["server", authority]).map_err(|e| e.to_string())?,
     ];
-    let event = EventBuilder::new(Kind::from(24242), "Get buzz-media")
+    let event = EventBuilder::new(Kind::from(24242), "Get Zion media")
         .tags(tags)
         .sign_with_keys(keys)
         .map_err(|e| e.to_string())?;
@@ -284,23 +284,23 @@ fn server_authority(url: &reqwest::Url) -> Option<String> {
 }
 
 /// Mint a `t=get` Authorization header for `url` when it is relay-hosted
-/// media and `BUZZ_PRIVATE_KEY` is available; `None` otherwise.
+/// media and `ZION_PRIVATE_KEY` (or its legacy alias) is available; `None` otherwise.
 ///
 /// Fail-open by design: while the relay's media-read-auth flag is off, an
 /// unauthenticated request still succeeds, so a missing/invalid key degrades
 /// to an unsigned fetch instead of an error. Once the flag is on, the fetch
 /// 403s and the error path below names the missing key.
 fn relay_media_get_auth(url: &reqwest::Url) -> Option<String> {
-    let relay = std::env::var("BUZZ_RELAY_URL").ok()?;
+    let relay = buzz_core::branding::env_alias("ZION_RELAY_URL", "BUZZ_RELAY_URL")?;
     let relay = reqwest::Url::parse(&relay).ok()?;
     if !is_relay_media_url(url, &relay) {
         return None;
     }
-    let key = std::env::var("BUZZ_PRIVATE_KEY").ok()?;
+    let key = buzz_core::branding::env_alias("ZION_PRIVATE_KEY", "BUZZ_PRIVATE_KEY")?;
     let keys = match nostr::Keys::parse(&key) {
         Ok(k) => k,
         Err(e) => {
-            tracing::warn!("BUZZ_PRIVATE_KEY invalid; fetching relay media unauthenticated: {e}");
+            tracing::warn!("ZION_PRIVATE_KEY invalid; fetching relay media unauthenticated: {e}");
             return None;
         }
     };
@@ -317,7 +317,7 @@ fn relay_media_get_auth(url: &reqwest::Url) -> Option<String> {
 /// Fetch an http(s) URL with a streaming read and a hard byte cap.
 /// Refuses up-front if `Content-Length` advertises more than the cap.
 /// Relay-hosted `/media/` URLs get a signed Blossom `t=get` header when
-/// `BUZZ_RELAY_URL` + `BUZZ_PRIVATE_KEY` are configured.
+/// `ZION_RELAY_URL` + `ZION_PRIVATE_KEY` (or legacy aliases) are configured.
 async fn fetch_url(url: &str) -> Result<Vec<u8>, ErrorData> {
     let parsed = reqwest::Url::parse(url)
         .map_err(|e| invalid_params(format!("invalid URL: {url} ({e})")))?;
@@ -338,7 +338,7 @@ async fn fetch_url(url: &str) -> Result<Vec<u8>, ErrorData> {
     let authed = auth.is_some();
     if let Some(header) = auth {
         req = req.header("Authorization", header);
-        if let Ok(auth_tag) = std::env::var("BUZZ_AUTH_TAG") {
+        if let Some(auth_tag) = buzz_core::branding::env_alias("ZION_AUTH_TAG", "BUZZ_AUTH_TAG") {
             if !auth_tag.trim().is_empty() {
                 req = req.header("x-auth-tag", auth_tag);
             }
@@ -353,7 +353,7 @@ async fn fetch_url(url: &str) -> Result<Vec<u8>, ErrorData> {
         if matches!(status.as_u16(), 401 | 403) && !authed {
             return Err(invalid_params(format!(
                 "fetch {url} returned HTTP {status} — this relay requires authenticated media \
-                 reads; set BUZZ_PRIVATE_KEY (and BUZZ_RELAY_URL) to a member identity"
+                 reads; set ZION_PRIVATE_KEY (and ZION_RELAY_URL) to a member identity"
             )));
         }
         return Err(invalid_params(format!(
@@ -1117,6 +1117,8 @@ mod tests {
         let event = nostr::Event::from_json(std::str::from_utf8(&json).unwrap()).unwrap();
 
         assert_eq!(event.kind, nostr::Kind::from(24242));
+        assert_eq!(event.content, "Get Zion media");
+        assert!(!event.content.to_ascii_lowercase().contains("buzz"));
         event.verify().expect("valid signature");
 
         let tag = |name: &str| -> Option<String> {

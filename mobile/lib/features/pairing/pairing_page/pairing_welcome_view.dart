@@ -150,7 +150,7 @@ class _PairingWelcomeView extends StatelessWidget {
                                             .colors
                                             .surfaceContainerHighest,
                                         hintText:
-                                            'nostrpair://... or buzz://...',
+                                            'nostrpair://... or zion://...',
                                         hintStyle: context.textTheme.bodyMedium
                                             ?.copyWith(
                                               color: context

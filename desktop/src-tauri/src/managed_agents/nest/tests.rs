@@ -118,6 +118,12 @@ fn ensure_nest_creates_skill_file() {
     assert!(skill.exists(), "SKILL.md should exist at .agents path");
     let content = fs::read_to_string(&skill).unwrap();
     assert_eq!(content, BUZZ_CLI_SKILL_MD);
+    assert!(content.contains("Zion CLI"));
+    assert!(content.contains("zion --format compact"));
+    assert!(
+        !content.contains("buzz "),
+        "new skill prose must use canonical Zion launchers"
+    );
 
     // On unix, harness-specific symlinks should resolve to the canonical dir.
     #[cfg(unix)]
@@ -134,6 +140,12 @@ fn ensure_nest_creates_skill_file() {
             );
         }
     }
+}
+
+#[test]
+fn cli_link_names_keep_legacy_alias_after_canonical_zion() {
+    assert_eq!(cli_link_names(false), ["zion", "buzz"]);
+    assert_eq!(cli_link_names(true), ["zion-dev", "buzz-dev"]);
 }
 
 #[test]

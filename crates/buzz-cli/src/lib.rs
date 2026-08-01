@@ -37,7 +37,7 @@ where
     // double-install returns Err and is harmless.
     let _ = rustls::crypto::ring::default_provider().install_default();
 
-    let cli = match Cli::try_parse_from(args) {
+    let cli = match Cli::try_parse_from(args_with_environment_aliases(args)) {
         Ok(cli) => cli,
         Err(e) => {
             if e.use_stderr() {
@@ -59,17 +59,58 @@ where
     }
 }
 
+fn args_with_environment_aliases<I, S>(args: I) -> Vec<std::ffi::OsString>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<std::ffi::OsString> + Clone,
+{
+    args_with_environment_aliases_from(args, buzz_core::branding::env_alias)
+}
+
+fn args_with_environment_aliases_from<I, S, F>(args: I, mut env_alias: F) -> Vec<std::ffi::OsString>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<std::ffi::OsString> + Clone,
+    F: FnMut(&str, &str) -> Option<String>,
+{
+    let mut args = args.into_iter().map(Into::into).collect::<Vec<_>>();
+    if let Some(argv0) = args.first_mut() {
+        *argv0 = "zion".into();
+    }
+    let mut environment_args = Vec::new();
+    for (flag, canonical, legacy) in [
+        ("--relay", "ZION_RELAY_URL", "BUZZ_RELAY_URL"),
+        ("--private-key", "ZION_PRIVATE_KEY", "BUZZ_PRIVATE_KEY"),
+        ("--auth-tag", "ZION_AUTH_TAG", "BUZZ_AUTH_TAG"),
+    ] {
+        let explicit = args.iter().any(|arg| {
+            arg == flag
+                || arg
+                    .to_str()
+                    .is_some_and(|arg| arg.starts_with(&format!("{flag}=")))
+        });
+        if !explicit {
+            if let Some(value) = env_alias(canonical, legacy) {
+                environment_args.push(flag.into());
+                environment_args.push(value.into());
+            }
+        }
+    }
+    args.splice(1..1, environment_args);
+    args
+}
+
 #[derive(Parser)]
 #[command(
-    name = "buzz",
-    about = "Buzz CLI — interact with a Buzz relay",
+    name = "zion",
+    about = "Zion CLI — interact with a Zion relay",
     long_about = "\
-Buzz CLI — interact with a Buzz relay
+Zion CLI — interact with a Zion relay
 
 Configuration (flags override env vars):
-  BUZZ_RELAY_URL     Relay base URL        [default: http://localhost:3000]
-  BUZZ_PRIVATE_KEY   Nostr private key (hex or nsec)  [required]
-  BUZZ_AUTH_TAG      NIP-OA auth tag JSON  [optional]
+  ZION_RELAY_URL     Relay base URL        [default: http://localhost:3000]
+  ZION_PRIVATE_KEY   Nostr private key (hex or nsec)  [required]
+  ZION_AUTH_TAG      NIP-OA auth tag JSON  [optional]
 
 The 'pack' subcommand runs locally and does not require a relay connection.
 
@@ -77,16 +118,16 @@ Exit codes: 0=ok  1=bad input  2=relay/network error  3=auth error  4=other  5=w
 Errors are JSON on stderr: {\"error\": \"<category>\", \"message\": \"<detail>\"}"
 )]
 struct Cli {
-    /// Relay URL (http:// or https://). Overrides BUZZ_RELAY_URL env var.
-    #[arg(long, env = "BUZZ_RELAY_URL", default_value = "http://localhost:3000")]
+    /// Relay URL (http:// or https://). Overrides ZION_RELAY_URL.
+    #[arg(long, default_value = "http://localhost:3000")]
     relay: String,
 
     /// Nostr private key (hex or nsec). This is the CLI's identity.
-    #[arg(long, env = "BUZZ_PRIVATE_KEY", hide_env_values = true)]
+    #[arg(long, hide_env_values = true)]
     private_key: Option<String>,
 
     /// NIP-OA auth tag JSON (owner attestation). Injected into every signed event.
-    #[arg(long, env = "BUZZ_AUTH_TAG", hide_env_values = true)]
+    #[arg(long, hide_env_values = true)]
     auth_tag: Option<String>,
 
     /// Output format: 'json' (default, full fields) or 'compact' (reduced fields).
@@ -258,7 +299,7 @@ impl RespondToArg {
 
 #[derive(Subcommand)]
 pub enum AgentsCmd {
-    /// Open a prefilled create-agent form in the owner's Buzz Desktop
+    /// Open a prefilled create-agent form in the owner's Zion Desktop
     DraftCreate {
         /// Current channel UUID; the new agent is added here after save
         #[arg(long)]
@@ -270,7 +311,7 @@ pub enum AgentsCmd {
         #[arg(long)]
         system_prompt: String,
     },
-    /// Open a prefilled edit-agent form in the owner's Buzz Desktop
+    /// Open a prefilled edit-agent form in the owner's Zion Desktop
     DraftUpdate {
         /// Current channel UUID
         #[arg(long)]
@@ -299,12 +340,12 @@ submitted request; this command does not retry with a different shape.\n\n\
 Suggested --reason codes (unknown values are allowed): rotated, retired, \
 bot-rebuilt, left-organization, spam\n\n\
 Archiving a third-party identity is a human owner/admin action: an agent \
-running under BUZZ_AUTH_TAG signs as itself, so it can only ever satisfy \
+running under ZION_AUTH_TAG signs as itself, so it can only ever satisfy \
 the self path (target == signer) — not the owner-of-agent path for another \
 identity.\n\n\
 Examples:\n  \
-buzz agents archive <PUBKEY> --reason retired\n  \
-buzz agents archive <PUBKEY> --reason bot-rebuilt --replaced-by <NEW_PUBKEY>"
+zion agents archive <PUBKEY> --reason retired\n  \
+zion agents archive <PUBKEY> --reason bot-rebuilt --replaced-by <NEW_PUBKEY>"
     )]
     Archive {
         /// Target identity pubkey (hex)
@@ -321,7 +362,7 @@ buzz agents archive <PUBKEY> --reason bot-rebuilt --replaced-by <NEW_PUBKEY>"
     },
     /// Submit a NIP-IA unarchive request for an identity (kind 9036)
     #[command(after_help = "Examples:\n  \
-buzz agents unarchive <PUBKEY> --reason returned")]
+zion agents unarchive <PUBKEY> --reason returned")]
     Unarchive {
         /// Target identity pubkey (hex)
         target_pubkey: String,
@@ -339,7 +380,7 @@ and NIP-70 `-` protection tag before trusting it. Any trust failure is a \
 nonzero-exit error, never a false-empty success — this command's whole \
 purpose is verification.\n\n\
 Examples:\n  \
-buzz agents archived"
+zion agents archived"
     )]
     Archived,
 }
@@ -348,10 +389,10 @@ buzz agents archived"
 pub enum MessagesCmd {
     /// Send a message to a channel
     #[command(
-        after_help = "Examples:\n  buzz messages send --channel <UUID> --content \"hello\"\n  buzz messages send --channel <UUID> --content \"@alice check this\"\n  echo \"hello from stdin\" | buzz messages send --channel <UUID> --content -"
+        after_help = "Examples:\n  zion messages send --channel <UUID> --content \"hello\"\n  zion messages send --channel <UUID> --content \"@alice check this\"\n  echo \"hello from stdin\" | zion messages send --channel <UUID> --content -"
     )]
     Send {
-        /// Channel UUID (from 'buzz channels list')
+        /// Channel UUID (from 'zion channels list')
         #[arg(long)]
         channel: String,
         /// Message text — supports @mentions and markdown. Use '-' to read from stdin.
@@ -435,7 +476,7 @@ pub enum MessagesCmd {
     },
     /// Retrieve messages from a channel
     #[command(
-        after_help = "Examples:\n  buzz messages get --channel <UUID>\n  buzz messages get --channel <UUID> --limit 50 --kinds 1,1984"
+        after_help = "Examples:\n  zion messages get --channel <UUID>\n  zion messages get --channel <UUID> --limit 50 --kinds 1,1984"
     )]
     Get {
         /// Channel UUID
@@ -471,7 +512,7 @@ pub enum MessagesCmd {
     },
     /// Full-text search across messages
     #[command(
-        after_help = "Examples:\n  buzz messages search --query checkout\n  buzz messages search --author npub1... --since 1783497600\n  buzz messages search --author Aaron --query checkout --limit 20"
+        after_help = "Examples:\n  zion messages search --query checkout\n  zion messages search --author npub1... --since 1783497600\n  zion messages search --author Aaron --query checkout --limit 20"
     )]
     Search {
         /// Search query string (optional when --author is given)
@@ -502,7 +543,7 @@ pub enum MessagesCmd {
 pub enum ChannelsCmd {
     /// List channels visible to the current identity
     #[command(
-        after_help = "Examples:\n  buzz channels list\n  buzz channels list --visibility open"
+        after_help = "Examples:\n  zion channels list\n  zion channels list --visibility open"
     )]
     List {
         /// Filter by visibility
@@ -523,7 +564,7 @@ pub enum ChannelsCmd {
     },
     /// Search channels by human-readable name
     #[command(
-        after_help = "Examples:\n  buzz channels search --query composer\n  buzz channels search --query buzz-chat-composer --exact\n  buzz channels search --query design --include-archived"
+        after_help = "Examples:\n  zion channels search --query composer\n  zion channels search --query zion-chat-composer --exact\n  zion channels search --query design --include-archived"
     )]
     Search {
         /// Search query (case-insensitive substring of channel name)
@@ -541,7 +582,7 @@ pub enum ChannelsCmd {
     },
     /// Create a new channel
     #[command(
-        after_help = "Examples:\n  buzz channels create --name general --type stream --visibility open\n  buzz channels create --name design --type forum --visibility open --description \"Design discussions\"\n  buzz channels create --name standup --type stream --visibility open --ttl 3600  # ephemeral, archived after 1h idle\n  buzz channels create --name project-x --template \"Buzz Team\"  # type/visibility/canvas/roster from the template; explicit flags override"
+        after_help = "Examples:\n  zion channels create --name general --type stream --visibility open\n  zion channels create --name design --type forum --visibility open --description \"Design discussions\"\n  zion channels create --name standup --type stream --visibility open --ttl 3600  # ephemeral, archived after 1h idle\n  zion channels create --name project-x --template \"Zion Team\"  # type/visibility/canvas/roster from the template; explicit flags override"
     )]
     Create {
         /// Channel name
@@ -808,6 +849,9 @@ pub enum UsersCmd {
         /// Search by display name (case-insensitive substring match)
         #[arg(long = "name")]
         name: Option<String>,
+        /// Scope an exact-name agent lookup to its owner (`me`, hex, or npub)
+        #[arg(long = "owner", requires = "name")]
+        owner: Option<String>,
     },
     /// Update the current identity's profile
     #[command(name = "set-profile")]
@@ -896,7 +940,7 @@ pub enum WorkflowsCmd {
     },
     /// Trigger a workflow run
     #[command(
-        after_help = "Examples:\n  buzz workflows trigger --workflow <UUID>\n  buzz workflows trigger --workflow <UUID> --inputs '{\"key\":\"value\"}'"
+        after_help = "Examples:\n  zion workflows trigger --workflow <UUID>\n  zion workflows trigger --workflow <UUID> --inputs '{\"key\":\"value\"}'"
     )]
     Trigger {
         /// Workflow UUID
@@ -917,7 +961,7 @@ pub enum WorkflowsCmd {
     },
     /// Approve or deny a workflow step
     #[command(
-        after_help = "Examples:\n  buzz workflows approve --token <UUID>\n  buzz workflows approve --token <UUID> --approved false --note \"needs revision\""
+        after_help = "Examples:\n  zion workflows approve --token <UUID>\n  zion workflows approve --token <UUID> --approved false --note \"needs revision\""
     )]
     Approve {
         /// The approval token UUID (from the approval request)
@@ -1034,7 +1078,7 @@ pub enum NotesCmd {
     /// title is carried forward when `--title` is omitted, and `--title ""`
     /// explicitly clears it.
     #[command(
-        after_help = "Examples:\n  echo '# Hello' | buzz notes set --name hello --title 'Hello' --content -\n  buzz notes set --name hello --tag onboarding --content - < draft.md"
+        after_help = "Examples:\n  echo '# Hello' | zion notes set --name hello --title 'Hello' --content -\n  zion notes set --name hello --tag onboarding --content - < draft.md"
     )]
     Set {
         /// Slug — becomes the `d` tag. `[a-z0-9._-]{1,80}`.
@@ -1126,6 +1170,11 @@ pub enum ReposCmd {
         /// Preferred Nostr relay(s) for repo discovery — can be specified multiple times
         #[arg(long = "nostr-relay")]
         relays: Vec<String>,
+        /// Channel UUID to bind the repo to. The channel binding tag is the
+        /// git ACL: without it the relay 404s every clone/fetch/push until
+        /// the author runs the `repos bind` command (issue #3527).
+        #[arg(long)]
+        channel: Option<String>,
     },
     /// Get a repository announcement
     Get {
@@ -1144,6 +1193,20 @@ pub enum ReposCmd {
         /// Maximum number of results
         #[arg(long)]
         limit: Option<u32>,
+    },
+    /// Bind (or rebind) one of your repositories to a channel.
+    ///
+    /// The channel binding tag on the announcement is the git ACL: the relay
+    /// authorizes clone/fetch/push by membership in the bound channel. A
+    /// repo announced without it (e.g. by a vanilla NIP-34 client) returns
+    /// 404 for everyone until its author binds it here.
+    Bind {
+        /// Repository identifier (d-tag).
+        #[arg(long)]
+        id: String,
+        /// Channel UUID to bind. Replaces any existing binding.
+        #[arg(long)]
+        channel: String,
     },
     /// Manage branch and tag protection rules on one of your repositories.
     #[command(subcommand)]
@@ -1206,7 +1269,7 @@ pub enum RepoPushRole {
 pub enum PatchesCmd {
     /// Send a git patch (NIP-34 kind:1617)
     #[command(
-        after_help = "Examples:\n  git format-patch -1 HEAD --stdout | buzz patches send --repo-owner <hex> --repo-id myrepo --patch-file - --root\n  buzz patches send --repo-owner <hex> --repo-id myrepo --patch-file 0001-fix.patch --reply-to <prev-patch-id>"
+        after_help = "Examples:\n  git format-patch -1 HEAD --stdout | zion patches send --repo-owner <hex> --repo-id myrepo --patch-file - --root\n  zion patches send --repo-owner <hex> --repo-id myrepo --patch-file 0001-fix.patch --reply-to <prev-patch-id>"
     )]
     Send {
         /// Repo owner pubkey (64-char hex)
@@ -1312,7 +1375,7 @@ pub enum PatchesCmd {
 pub enum PrCmd {
     /// Open a git pull request (NIP-34 kind:1618)
     #[command(
-        after_help = "Examples:\n  buzz pr open --repo-owner <hex> --repo-id myrepo --subject 'Fix bug' --body-file - --commit $(git rev-parse HEAD) --clone https://relay/git/owner/myrepo --branch-name fix-bug\n  buzz pr update --repo-owner <hex> --repo-id myrepo --pr <event> --pr-author <hex> --commit $(git rev-parse HEAD) --clone https://relay/git/owner/myrepo"
+        after_help = "Examples:\n  zion pr open --repo-owner <hex> --repo-id myrepo --subject 'Fix bug' --body-file - --commit $(git rev-parse HEAD) --clone https://relay/git/owner/myrepo --branch-name fix-bug\n  zion pr update --repo-owner <hex> --repo-id myrepo --pr <event> --pr-author <hex> --commit $(git rev-parse HEAD) --clone https://relay/git/owner/myrepo"
     )]
     Open {
         /// Repo owner pubkey (64-char hex)
@@ -1554,7 +1617,7 @@ pub enum MediaCmd {
 pub enum MemCmd {
     /// List non-tombstoned memory entries
     Ls {
-        /// Owner pubkey (hex). Overrides BUZZ_AUTH_TAG.
+        /// Owner pubkey (hex). Overrides ZION_AUTH_TAG.
         #[arg(long)]
         owner: Option<String>,
         /// Agent pubkey (hex) to read as this key's owner.
@@ -1605,8 +1668,8 @@ pub enum MemCmd {
         #[arg(long)]
         patch_file: Option<String>,
         /// sha256 hex digest (lowercase) of the value the patch was generated
-        /// against. Hashes the exact UTF-8 bytes returned by `buzz mem get`,
-        /// not normalized lines. Run `buzz mem hash <slug>` to capture this
+        /// against. Hashes the exact UTF-8 bytes returned by `zion mem get`,
+        /// not normalized lines. Run `zion mem hash <slug>` to capture this
         /// before editing.
         #[arg(long)]
         base_hash: Option<String>,
@@ -1657,7 +1720,7 @@ pub enum PackCmd {
 pub enum ModerationCmd {
     /// List reports in the moderation queue (newest first)
     #[command(
-        after_help = "Examples:\n  buzz moderation reports\n  buzz moderation reports --status open --limit 20"
+        after_help = "Examples:\n  zion moderation reports\n  zion moderation reports --status open --limit 20"
     )]
     Reports {
         /// Filter by status: open | resolved | dismissed | escalated (default: all)
@@ -1669,7 +1732,7 @@ pub enum ModerationCmd {
     },
     /// Resolve or dismiss a report (kind 9044)
     #[command(
-        after_help = "Examples:\n  buzz moderation resolve --report <REPORT_EVENT_ID> --status dismissed --action dismiss\n  buzz moderation resolve --report <REPORT_EVENT_ID> --status resolved --action ban --reason \"rule 3\""
+        after_help = "Examples:\n  zion moderation resolve --report <REPORT_EVENT_ID> --status dismissed --action dismiss\n  zion moderation resolve --report <REPORT_EVENT_ID> --status resolved --action ban --reason \"rule 3\""
     )]
     Resolve {
         /// Hex event id of the kind:1984 report being resolved
@@ -1687,7 +1750,7 @@ pub enum ModerationCmd {
     },
     /// Ban a member from the community (kind 9040)
     #[command(
-        after_help = "Examples:\n  buzz moderation ban --pubkey <HEX>\n  buzz moderation ban --pubkey <HEX> --expires-in 604800 --reason \"repeated spam\""
+        after_help = "Examples:\n  zion moderation ban --pubkey <HEX>\n  zion moderation ban --pubkey <HEX> --expires-in 604800 --reason \"repeated spam\""
     )]
     Ban {
         /// Target member pubkey (hex)
@@ -1711,7 +1774,7 @@ pub enum ModerationCmd {
     },
     /// Time out a member — a write-block, not a disconnect (kind 9042)
     #[command(
-        after_help = "Examples:\n  buzz moderation timeout --pubkey <HEX> --expires-in 3600\n  buzz moderation timeout --pubkey <HEX> --expires-at 1783500000 --reason \"cool off\""
+        after_help = "Examples:\n  zion moderation timeout --pubkey <HEX> --expires-in 3600\n  zion moderation timeout --pubkey <HEX> --expires-at 1783500000 --reason \"cool off\""
     )]
     Timeout {
         /// Target member pubkey (hex)
@@ -1757,19 +1820,19 @@ async fn run(cli: Cli) -> Result<(), CliError> {
     // Auth: private key is required for all relay operations.
     // The keypair IS the identity — no tokens, no other auth.
     let private_key_str = cli.private_key.ok_or_else(|| {
-        CliError::Auth("BUZZ_PRIVATE_KEY is required (use --private-key or set env var)".into())
+        CliError::Auth("ZION_PRIVATE_KEY is required (use --private-key or set env var)".into())
     })?;
     let keys = Keys::parse(&private_key_str)
-        .map_err(|e| CliError::Key(format!("invalid BUZZ_PRIVATE_KEY: {e}")))?;
+        .map_err(|e| CliError::Key(format!("invalid ZION_PRIVATE_KEY: {e}")))?;
 
     // NIP-OA: parse and verify the auth tag if provided.
     let (auth_tag, auth_tag_json) = match cli.auth_tag {
         Some(ref json) if !json.is_empty() => {
             let tag = buzz_sdk::nip_oa::parse_auth_tag(json)
-                .map_err(|e| CliError::Auth(format!("BUZZ_AUTH_TAG is malformed: {e}")))?;
+                .map_err(|e| CliError::Auth(format!("ZION_AUTH_TAG is malformed: {e}")))?;
             buzz_sdk::nip_oa::verify_auth_tag(json, &keys.public_key()).map_err(|e| {
                 CliError::Auth(format!(
-                    "BUZZ_AUTH_TAG verification failed for pubkey {}: {e}",
+                    "ZION_AUTH_TAG verification failed for pubkey {}: {e}",
                     keys.public_key().to_hex()
                 ))
             })?;
@@ -1810,10 +1873,87 @@ mod tests {
     use super::*;
     use clap::CommandFactory;
 
+    fn parse_channels_list_with_env(values: &[(&str, &str)]) -> Result<Cli, clap::error::Error> {
+        let args = args_with_environment_aliases_from(
+            ["zion", "channels", "list"],
+            |canonical, legacy| {
+                values
+                    .iter()
+                    .find_map(|(key, value)| (*key == canonical).then(|| (*value).to_owned()))
+                    .or_else(|| {
+                        values
+                            .iter()
+                            .find_map(|(key, value)| (*key == legacy).then(|| (*value).to_owned()))
+                    })
+            },
+        );
+        Cli::try_parse_from(args)
+    }
+
+    #[test]
+    fn zion_environment_aliases_precede_legacy_values_on_a_real_subcommand_parse() {
+        let cli = parse_channels_list_with_env(&[
+            ("ZION_RELAY_URL", "http://zion.example"),
+            ("BUZZ_RELAY_URL", "http://legacy.example"),
+            ("ZION_PRIVATE_KEY", "zion-private-key"),
+            ("BUZZ_PRIVATE_KEY", "legacy-private-key"),
+            ("ZION_AUTH_TAG", "zion-auth-tag"),
+            ("BUZZ_AUTH_TAG", "legacy-auth-tag"),
+        ])
+        .expect("Zion aliases must parse as parent options before the subcommand");
+
+        assert_eq!(cli.relay, "http://zion.example");
+        assert_eq!(cli.private_key.as_deref(), Some("zion-private-key"));
+        assert_eq!(cli.auth_tag.as_deref(), Some("zion-auth-tag"));
+    }
+
+    #[test]
+    fn legacy_environment_aliases_fall_back_on_a_real_subcommand_parse() {
+        let cli = parse_channels_list_with_env(&[
+            ("BUZZ_RELAY_URL", "http://legacy.example"),
+            ("BUZZ_PRIVATE_KEY", "legacy-private-key"),
+            ("BUZZ_AUTH_TAG", "legacy-auth-tag"),
+        ])
+        .expect("legacy aliases must parse as parent options before the subcommand");
+
+        assert_eq!(cli.relay, "http://legacy.example");
+        assert_eq!(cli.private_key.as_deref(), Some("legacy-private-key"));
+        assert_eq!(cli.auth_tag.as_deref(), Some("legacy-auth-tag"));
+    }
+
     /// Smoke test: CLI definition is valid and parseable.
     #[test]
     fn cli_definition_is_valid() {
         Cli::command().debug_assert();
+    }
+
+    #[test]
+    fn all_public_help_paths_emit_zion_only_copy_for_canonical_and_legacy_launchers() {
+        fn assert_help_tree(command: &clap::Command, path: &str) {
+            let mut rendered = command.clone();
+            let help = rendered.render_long_help().to_string();
+            assert!(
+                !help.to_ascii_lowercase().contains("buzz"),
+                "legacy product copy in help path {path}:\n{help}"
+            );
+            for child in command
+                .get_subcommands()
+                .filter(|child| child.get_name() != "help")
+            {
+                assert_help_tree(child, &format!("{path} {}", child.get_name()));
+            }
+        }
+
+        assert_help_tree(&Cli::command(), "zion");
+        let normalized =
+            args_with_environment_aliases_from(["buzz", "messages", "send", "--help"], |_, _| None);
+        let error = match Cli::try_parse_from(normalized) {
+            Ok(_) => panic!("help must exit through clap"),
+            Err(error) => error,
+        };
+        let help = error.to_string();
+        assert!(!help.to_ascii_lowercase().contains("buzz"), "{help}");
+        assert!(help.contains("zion messages send"), "{help}");
     }
 
     #[test]
@@ -1988,7 +2128,7 @@ mod tests {
         );
         assert_eq!(
             names(&cmd, "repos"),
-            vec!["create", "get", "list", "protect"]
+            vec!["bind", "create", "get", "list", "protect"]
         );
         let repos = cmd
             .get_subcommands()
@@ -2051,7 +2191,7 @@ mod tests {
             ("patches", 4),
             ("pr", 5),
             ("reactions", 3),
-            ("repos", 4),
+            ("repos", 5),
             ("social", 7),
             ("upload", 1),
             ("users", 5),

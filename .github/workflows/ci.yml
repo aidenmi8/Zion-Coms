@@ -934,14 +934,16 @@ jobs:
           key: windows-msvc
           save-if: ${{ github.event_name != 'pull_request' }}
       # Tauri validates externalBin at compile time, so the Tauri-crate steps
-      # below fail without these stubs. Mirrors scripts/bundle-sidecars.sh's
-      # Windows naming (binaries/<bin>-<triple>.exe); empty files suffice for a
-      # type-check since nothing executes them.
+      # below fail without these stubs. Keep canonical Zion launchers and
+      # legacy Buzz aliases aligned with tauri.conf.json. Mirrors
+      # scripts/bundle-sidecars.sh's Windows naming
+      # (binaries/<bin>-<triple>.exe); empty files suffice for a type-check
+      # since nothing executes them.
       - name: Create sidecar placeholders
         shell: bash
         run: |
           mkdir -p desktop/src-tauri/binaries
-          for bin in buzz-acp buzz-agent buzz-dev-mcp git-credential-nostr buzz; do
+          for bin in zion-acp zion-agent zion-dev-mcp zion git-credential-nostr buzz-acp buzz-agent buzz-dev-mcp buzz; do
             touch "desktop/src-tauri/binaries/${bin}-${TARGET}.exe"
           done
       - name: Clippy (workspace)
@@ -1013,11 +1015,9 @@ jobs:
         run: |
           TARGET=$(rustc -vV | sed -n 's|host: ||p')
           mkdir -p desktop/src-tauri/binaries
-          touch "desktop/src-tauri/binaries/buzz-acp-$TARGET"
-          touch "desktop/src-tauri/binaries/buzz-agent-$TARGET"
-          touch "desktop/src-tauri/binaries/buzz-dev-mcp-$TARGET"
-          touch "desktop/src-tauri/binaries/git-credential-nostr-$TARGET"
-          touch "desktop/src-tauri/binaries/buzz-$TARGET"
+          for bin in zion-acp zion-agent zion-dev-mcp zion git-credential-nostr buzz-acp buzz-agent buzz-dev-mcp buzz; do
+            touch "desktop/src-tauri/binaries/$bin-$TARGET"
+          done
       # Mesh rev is derived from Cargo.lock so a dependency bump needs no
       # lockstep edit here; the cache key tracks it automatically.
       - name: Resolve mesh-llm rev

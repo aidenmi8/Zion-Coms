@@ -186,7 +186,7 @@ async fn handshake(h: &mut Harness) -> String {
         .await;
     let init = h.recv_for_id(init_id).await;
     assert_eq!(init["result"]["protocolVersion"], 2);
-    assert_eq!(init["result"]["agentInfo"]["name"], "buzz-agent");
+    assert_eq!(init["result"]["agentInfo"]["name"], "zion-agent");
     assert_eq!(
         init["result"]["agentCapabilities"]["promptCapabilities"]["image"],
         false

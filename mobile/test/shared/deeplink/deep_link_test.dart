@@ -6,6 +6,16 @@ void main() {
   _buildMessageLinkTests();
 
   group('parseMessageDeepLink', () {
+    test('parses canonical zion message links', () {
+      final link = parseMessageDeepLink(
+        Uri.parse('zion://message?channel=d14cd131&id=abc123'),
+      );
+      expect(
+        link,
+        const MessageDeepLink(channelId: 'd14cd131', messageId: 'abc123'),
+      );
+    });
+
     test('parses channel and id', () {
       final link = parseMessageDeepLink(
         Uri.parse('buzz://message?channel=d14cd131&id=abc123'),
@@ -94,6 +104,21 @@ void _inviteTests() {
       final link = parseInviteDeepLink(
         Uri.parse(
           'buzz://join?relay=wss%3A%2F%2Frelay.example.com&code=abc123',
+        ),
+      );
+      expect(
+        link,
+        const InviteDeepLink(
+          relayUrl: 'wss://relay.example.com',
+          code: 'abc123',
+        ),
+      );
+    });
+
+    test('parses canonical zion join handoff link', () {
+      final link = parseInviteDeepLink(
+        Uri.parse(
+          'zion://join?relay=wss%3A%2F%2Frelay.example.com&code=abc123',
         ),
       );
       expect(
@@ -238,7 +263,7 @@ void _buildMessageLinkTests() {
     test('builds channel + id link', () {
       expect(
         buildMessageLink(channelId: 'd14cd131', messageId: 'abc123'),
-        'buzz://message?channel=d14cd131&id=abc123',
+        'zion://message?channel=d14cd131&id=abc123',
       );
     });
 
@@ -249,7 +274,7 @@ void _buildMessageLinkTests() {
           messageId: 'abc123',
           threadRootId: 'root99',
         ),
-        'buzz://message?channel=d14cd131&id=abc123&thread=root99',
+        'zion://message?channel=d14cd131&id=abc123&thread=root99',
       );
     });
 
@@ -260,7 +285,7 @@ void _buildMessageLinkTests() {
           messageId: 'abc123',
           threadRootId: '',
         ),
-        'buzz://message?channel=d14cd131&id=abc123',
+        'zion://message?channel=d14cd131&id=abc123',
       );
     });
 

@@ -72,6 +72,29 @@ pub fn validate_content_size(content: &str) -> Result<(), CliError> {
     Ok(())
 }
 
+/// Reject legacy product branding in text emitted by a managed agent.
+///
+/// The managed-agent marker is injected by the desktop runtime. User-authored
+/// CLI invocations do not carry it and therefore remain unchanged. The check
+/// happens before event construction/signing so rejected text is never logged,
+/// signed, or submitted by the CLI.
+pub fn validate_managed_agent_output(content: &str) -> Result<(), CliError> {
+    let managed = std::env::var_os("ZION_MANAGED_AGENT")
+        .or_else(|| std::env::var_os("BUZZ_MANAGED_AGENT"))
+        .is_some_and(|value| !value.is_empty());
+    validate_managed_agent_content(content, managed)
+}
+
+fn validate_managed_agent_content(content: &str, managed: bool) -> Result<(), CliError> {
+    if managed && content.to_lowercase().contains("buzz") {
+        return Err(CliError::Usage(
+            "Zion-managed output rejected by branding policy; retry without legacy product branding."
+                .into(),
+        ));
+    }
+    Ok(())
+}
+
 /// Percent-encode for URL path segments and query parameter values.
 /// Encodes all bytes except RFC 3986 unreserved: A-Z a-z 0-9 - _ . ~
 #[cfg(test)]
@@ -274,6 +297,24 @@ mod tests {
     #[test]
     fn validate_content_size_empty() {
         assert!(validate_content_size("").is_ok());
+    }
+
+    // --- validate_managed_agent_content ---
+
+    #[test]
+    fn managed_agent_branding_guard_rejects_case_insensitive_legacy_name() {
+        let err = validate_managed_agent_content("Healthy BUZZ relay", true).unwrap_err();
+        assert!(matches!(err, CliError::Usage(message) if message.contains("Zion-managed")));
+    }
+
+    #[test]
+    fn managed_agent_branding_guard_allows_clean_output() {
+        assert!(validate_managed_agent_content("Healthy Zion relay", true).is_ok());
+    }
+
+    #[test]
+    fn user_output_bypasses_managed_agent_branding_guard() {
+        assert!(validate_managed_agent_content("User mentions Buzz", false).is_ok());
     }
 
     // --- percent_encode ---

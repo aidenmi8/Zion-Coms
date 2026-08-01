@@ -553,17 +553,17 @@ function renderMarkdown(content) {
   );
 }
 
-test("messageLinkUrlTransform: preserves buzz://message href", () => {
+test("messageLinkUrlTransform: preserves zion://message href", () => {
   const html = renderMarkdown(
-    "Click [here](buzz://message?channel=abc&id=xyz)",
+    "Click [here](zion://message?channel=abc&id=xyz)",
   );
   // HTML-encoded `&` in attributes is fine — the browser decodes back to `&`.
-  assert.match(html, /href="buzz:\/\/message\?channel=abc&(?:amp;)?id=xyz"/);
+  assert.match(html, /href="zion:\/\/message\?channel=abc&(?:amp;)?id=xyz"/);
 });
 
-test("messageLinkUrlTransform: preserves buzz://message autolink href", () => {
-  const html = renderMarkdown("<buzz://message?channel=abc&id=xyz>");
-  assert.match(html, /href="buzz:\/\/message\?channel=abc&(?:amp;)?id=xyz"/);
+test("messageLinkUrlTransform: preserves zion://message autolink href", () => {
+  const html = renderMarkdown("<zion://message?channel=abc&id=xyz>");
+  assert.match(html, /href="zion:\/\/message\?channel=abc&(?:amp;)?id=xyz"/);
 });
 
 test("messageLinkUrlTransform: preserves buzz://message href with thread", () => {
@@ -644,12 +644,12 @@ function text(value) {
   return { type: "text", value };
 }
 
-test("remarkMessageLinks: bare buzz://message URL is replaced", () => {
-  const tree = runPlugin(paragraph(text("buzz://message?channel=c&id=m")));
+test("remarkMessageLinks: bare zion://message URL is replaced", () => {
+  const tree = runPlugin(paragraph(text("zion://message?channel=c&id=m")));
   const para = tree.children[0];
   assert.equal(para.children.length, 1);
   assert.equal(para.children[0].type, "message-link");
-  assert.equal(para.children[0].value, "buzz://message?channel=c&id=m");
+  assert.equal(para.children[0].value, "zion://message?channel=c&id=m");
   assert.equal(para.children[0].data.hName, "message-link");
 });
 

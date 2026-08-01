@@ -1,0 +1,891 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-01-01-normal-f44b5a2",
+  "previous_reviewed_sha": "f95fdc1a102e17c6718a44323d9a2feaed702db7",
+  "pinned_upstream_sha": "f44b5a2477f3979ae66e49153b11be36538cf859",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-1975",
+      "title": "feat: add first-class OpenRouter provider support",
+      "upstream_pr": 1975,
+      "entry_shas": [
+        "ab55fee81896d2b03edf5d2ca5012b715be2b93d"
+      ]
+    },
+    {
+      "topic_id": "pr-3400",
+      "title": "feat: configure S3 URL addressing style",
+      "upstream_pr": 3400,
+      "entry_shas": [
+        "7012d86d52fd188b27c7beedeaa132d9c1f61fa8"
+      ]
+    },
+    {
+      "topic_id": "pr-3626",
+      "title": "fix(git): channel binding tooling + author remediation for unbound repos",
+      "upstream_pr": 3626,
+      "entry_shas": [
+        "788b3c002bd2509455444f57f8a03a054b4b496a"
+      ]
+    },
+    {
+      "topic_id": "pr-3268",
+      "title": "feat(replica): portable heartbeat-token fence with snapshot-local reader routing",
+      "upstream_pr": 3268,
+      "entry_shas": [
+        "63496cc1d4c6f1b7c613801bdcc694169dcf391a"
+      ]
+    },
+    {
+      "topic_id": "pr-3416",
+      "title": "fix(desktop): remove Projects overview card fills",
+      "upstream_pr": 3416,
+      "entry_shas": [
+        "3b8567a05d4c40e667d061666feb7aa7bc38212d"
+      ]
+    },
+    {
+      "topic_id": "pr-3178",
+      "title": "fix(cli): resolve agents from owner records",
+      "upstream_pr": 3178,
+      "entry_shas": [
+        "262f2392e3b7e09c78d582fb384672034d8551d5"
+      ]
+    },
+    {
+      "topic_id": "pr-2561",
+      "title": "fix(desktop): explain open agent access",
+      "upstream_pr": 2561,
+      "entry_shas": [
+        "7fb008f9347b933b9a1da20a7afb070912b430e8"
+      ]
+    },
+    {
+      "topic_id": "pr-3634",
+      "title": "desktop: restore direct community member adds",
+      "upstream_pr": 3634,
+      "entry_shas": [
+        "310df2ec33fbb075edf226ba18bf9a96d90ba81b"
+      ]
+    },
+    {
+      "topic_id": "pr-3485",
+      "title": "feat(mobile): desktop-parity emoji and thread experience",
+      "upstream_pr": 3485,
+      "entry_shas": [
+        "85edc0572a8540dedfa6562d40f0f875af0b5f61"
+      ]
+    },
+    {
+      "topic_id": "pr-3742",
+      "title": "fix(desktop): remove remaining Projects panel fills",
+      "upstream_pr": 3742,
+      "entry_shas": [
+        "c55e421a0629c74b9ffd96ee3ccde36f006196ed"
+      ]
+    },
+    {
+      "topic_id": "pr-3543",
+      "title": "Fix pending message feedback",
+      "upstream_pr": 3543,
+      "entry_shas": [
+        "4672ee55c4e4a7916c31bfeae5df2fb4384bed10"
+      ]
+    },
+    {
+      "topic_id": "pr-3565",
+      "title": "Add macOS agent menu-bar menu",
+      "upstream_pr": 3565,
+      "entry_shas": [
+        "d0a24bcb5210326da4c0b1e749ee3935621b329c"
+      ]
+    },
+    {
+      "topic_id": "pr-3688",
+      "title": "fix: align responsive agent views",
+      "upstream_pr": 3688,
+      "entry_shas": [
+        "73589408db6fd96b87ac570935d414ecc4120f53"
+      ]
+    },
+    {
+      "topic_id": "pr-3607",
+      "title": "desktop: enable getUserMedia in the Linux WebKitGTK webview",
+      "upstream_pr": 3607,
+      "entry_shas": [
+        "c9aa55505c544c608ff71648bbfd21b235637f19"
+      ]
+    },
+    {
+      "topic_id": "pr-3699",
+      "title": "Refine agent sharing dialog",
+      "upstream_pr": 3699,
+      "entry_shas": [
+        "9a386a0defbf2b355ee17646c7c11817a535b85f"
+      ]
+    },
+    {
+      "topic_id": "pr-3163",
+      "title": "docs(nips): specify kind:30621 multi-repo projects (NIP-MP)",
+      "upstream_pr": 3163,
+      "entry_shas": [
+        "33bf7caa6ea474ccde2932c1ed05a90d7345c6e0"
+      ]
+    },
+    {
+      "topic_id": "pr-3741",
+      "title": "feat(mesh): upgrade embedded mesh to v0.74 and harden shared compute (split 1/2 of #3467)",
+      "upstream_pr": 3741,
+      "entry_shas": [
+        "4933672eb4589e7208b312829ebddcd10dfa9dd3"
+      ]
+    },
+    {
+      "topic_id": "pr-3640",
+      "title": "feat(catalog): resolve publisher display name in catalog detail pane",
+      "upstream_pr": 3640,
+      "entry_shas": [
+        "02be413b823c356587e6e9f4d07f6cb06bb41c3c"
+      ]
+    },
+    {
+      "topic_id": "pr-3340",
+      "title": "fix(acp): preserve truncated thread context",
+      "upstream_pr": 3340,
+      "entry_shas": [
+        "53771c8f5439f9c5c26876f0229bfcfe5da9b170"
+      ]
+    },
+    {
+      "topic_id": "pr-3758",
+      "title": "fix(catalog): update Amp description",
+      "upstream_pr": 3758,
+      "entry_shas": [
+        "61b96c9828d1dd54106b570d87a54edbc92bb9c4"
+      ]
+    },
+    {
+      "topic_id": "pr-3702",
+      "title": "Render mobile agent mention chips",
+      "upstream_pr": 3702,
+      "entry_shas": [
+        "06582ee6f09e5f7454e4d8895d80a45c3cdb5e8a"
+      ]
+    },
+    {
+      "topic_id": "pr-2155",
+      "title": "fix(desktop): reuse profiles when joining communities",
+      "upstream_pr": 2155,
+      "entry_shas": [
+        "f44b5a2477f3979ae66e49153b11be36538cf859"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "ab55fee81896d2b03edf5d2ca5012b715be2b93d",
+      "topic_id": "pr-1975",
+      "title": "feat: add first-class OpenRouter provider support",
+      "areas": [
+        "agents",
+        "desktop"
+      ],
+      "risk": "high",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "OpenRouter provider support would widen the managed-agent/provider surface and conflicts with the fork-owned Zion agent facade; it is outside this controlled rebrand-preserving intake batch.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/1975",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "7012d86d52fd188b27c7beedeaa132d9c1f61fa8",
+      "topic_id": "pr-3400",
+      "title": "feat: configure S3 URL addressing style",
+      "areas": [
+        "relay",
+        "media",
+        "deployment"
+      ],
+      "risk": "high",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Deployment, MinIO, and Helm configuration changes are operational infrastructure work and are outside this source-only intake scope.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3400",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "788b3c002bd2509455444f57f8a03a054b4b496a",
+      "topic_id": "pr-3626",
+      "title": "fix(git): channel binding tooling + author remediation for unbound repos",
+      "areas": [
+        "relay",
+        "git",
+        "cli",
+        "desktop"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "included",
+      "rationale": "Git channel binding behavior is useful and was adapted so all newly emitted remediation copy remains Zion-visible-brand clean while legacy protocol tags remain unchanged.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3626",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+          "f9991399cebcbf08ce5ecb7f140cee5b96716933"
+        ]
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "cargo test -p buzz-core --lib — PASS, 237 passed",
+        "cargo test -p buzz-cli --lib — PASS, 270 passed",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "63496cc1d4c6f1b7c613801bdcc694169dcf391a",
+      "topic_id": "pr-3268",
+      "title": "feat(replica): portable heartbeat-token fence with snapshot-local reader routing",
+      "areas": [
+        "relay",
+        "database",
+        "migrations"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The schema and relay reader-routing changes conflict with the fork and require a dedicated migration/replica verification batch.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3268",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated relay/DB migration batch with Postgres replica-fence verification",
+        "owner": "Zion relay maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "3b8567a05d4c40e667d061666feb7aa7bc38212d",
+      "topic_id": "pr-3416",
+      "title": "fix(desktop): remove Projects overview card fills",
+      "areas": [
+        "desktop",
+        "projects"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "The focused desktop styling and regression test apply cleanly and preserve Zion presentation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3416",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+          "b9de577806d41477ec5b11007b50c638a959b8f8"
+        ]
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "262f2392e3b7e09c78d582fb384672034d8551d5",
+      "topic_id": "pr-3178",
+      "title": "fix(cli): resolve agents from owner records",
+      "areas": [
+        "cli",
+        "agents"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "included",
+      "rationale": "Owner-scoped managed-agent lookup improves correctness without changing relay or storage contracts; help copy remains Zion-only.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3178",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+          "a8df0ef75b8119f8b0a0dc967ec84982e06538fa"
+        ]
+      },
+      "verification": [
+        "cargo test -p buzz-cli --lib — PASS, 270 passed",
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "7fb008f9347b933b9a1da20a7afb070912b430e8",
+      "topic_id": "pr-2561",
+      "title": "fix(desktop): explain open agent access",
+      "areas": [
+        "desktop",
+        "agents"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The agent-access UX conflicts with the fork-owned agent surfaces and needs a dedicated desktop adaptation with visible-copy review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/2561",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated desktop agent-access adaptation with visible-copy snapshots",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "310df2ec33fbb075edf226ba18bf9a96d90ba81b",
+      "topic_id": "pr-3634",
+      "title": "desktop: restore direct community member adds",
+      "areas": [
+        "desktop",
+        "invites"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Invite/member UI overlaps the fork's Zion invite and deep-link changes; defer to a focused invite/member adaptation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3634",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated invite/member adaptation after Zion deep-link review",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "85edc0572a8540dedfa6562d40f0f875af0b5f61",
+      "topic_id": "pr-3485",
+      "title": "feat(mobile): desktop-parity emoji and thread experience",
+      "areas": [
+        "mobile",
+        "ios"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The 45-file mobile parity change is too broad for this controlled batch and needs a dedicated mobile review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3485",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated mobile parity batch with widget tests",
+        "owner": "Zion mobile maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "c55e421a0629c74b9ffd96ee3ccde36f006196ed",
+      "topic_id": "pr-3742",
+      "title": "fix(desktop): remove remaining Projects panel fills",
+      "areas": [
+        "desktop",
+        "projects"
+      ],
+      "risk": "low",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The panel styling patch has a conflicting regression-test hunk; defer until the test is manually adapted and scoped.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3742",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "manual adaptation of the Projects panel regression test",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "4672ee55c4e4a7916c31bfeae5df2fb4384bed10",
+      "topic_id": "pr-3543",
+      "title": "Fix pending message feedback",
+      "areas": [
+        "desktop",
+        "feedback"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Feedback timeline and E2E bridge changes need a separate focused UI/runtime review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3543",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "focused feedback runtime/E2E bridge review",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "d0a24bcb5210326da4c0b1e749ee3935621b329c",
+      "topic_id": "pr-3565",
+      "title": "Add macOS agent menu-bar menu",
+      "areas": [
+        "desktop",
+        "macos"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Native tray behavior changes require a dedicated macOS shell review and packaging-aware verification.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3565",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated macOS tray review before packaging",
+        "owner": "Zion macOS maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "73589408db6fd96b87ac570935d414ecc4120f53",
+      "topic_id": "pr-3688",
+      "title": "fix: align responsive agent views",
+      "areas": [
+        "desktop",
+        "agents"
+      ],
+      "risk": "low",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The responsive agent views conflict with current Zion agent UI composition and need a focused desktop adaptation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3688",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "focused responsive agent UI adaptation",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "c9aa55505c544c608ff71648bbfd21b235637f19",
+      "topic_id": "pr-3607",
+      "title": "desktop: enable getUserMedia in the Linux WebKitGTK webview",
+      "areas": [
+        "desktop",
+        "linux"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Linux-only media support is outside the authorized Apple desktop/mobile delivery profile for this intake.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3607",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "9a386a0defbf2b355ee17646c7c11817a535b85f",
+      "topic_id": "pr-3699",
+      "title": "Refine agent sharing dialog",
+      "areas": [
+        "desktop",
+        "agents"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The sharing dialog conflicts with the current Zion agent UI and requires a separate visible-copy and authorization review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3699",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "focused agent sharing and authorization review",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "33bf7caa6ea474ccde2932c1ed05a90d7345c6e0",
+      "topic_id": "pr-3163",
+      "title": "docs(nips): specify kind:30621 multi-repo projects (NIP-MP)",
+      "areas": [
+        "docs",
+        "protocol"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This docs-only protocol proposal is not required for the current source delivery and would expand the reviewed surface without a product need.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3163",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "4933672eb4589e7208b312829ebddcd10dfa9dd3",
+      "topic_id": "pr-3741",
+      "title": "feat(mesh): upgrade embedded mesh to v0.74 and harden shared compute (split 1/2 of #3467)",
+      "areas": [
+        "mesh",
+        "agents",
+        "desktop"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The mesh dependency/runtime upgrade is high-risk and requires an independent dependency and integration batch.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3741",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "independent mesh dependency upgrade and runtime verification batch",
+        "owner": "Zion runtime maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "02be413b823c356587e6e9f4d07f6cb06bb41c3c",
+      "topic_id": "pr-3640",
+      "title": "feat(catalog): resolve publisher display name in catalog detail pane",
+      "areas": [
+        "desktop",
+        "catalog"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Catalog identity UI overlaps existing Zion catalog copy and needs a focused adaptation with scanner coverage.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3640",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "catalog identity adaptation with visible-brand scanner coverage",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "53771c8f5439f9c5c26876f0229bfcfe5da9b170",
+      "topic_id": "pr-3340",
+      "title": "fix(acp): preserve truncated thread context",
+      "areas": [
+        "acp",
+        "agents"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "The ACP context-preservation fix applies cleanly and keeps the existing Zion prompt/runtime contract.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3340",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+          "b88aaf6d8abdfd674727fde32272059aeaddfe96"
+        ]
+      },
+      "verification": [
+        "cargo test -p buzz-acp --lib — PASS, 632 passed",
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "61b96c9828d1dd54106b570d87a54edbc92bb9c4",
+      "topic_id": "pr-3758",
+      "title": "fix(catalog): update Amp description",
+      "areas": [
+        "desktop",
+        "catalog"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "included",
+      "rationale": "The catalog description is a safe one-line copy correction adapted to preserve Zion identity.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3758",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+          "1940b4e490b1046d0a360ca079652760d33e821f"
+        ]
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "06582ee6f09e5f7454e4d8895d80a45c3cdb5e8a",
+      "topic_id": "pr-3702",
+      "title": "Render mobile agent mention chips",
+      "areas": [
+        "mobile",
+        "agents"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Mobile mention rendering needs a dedicated mobile UI adaptation and branding sweep.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3702",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated mobile mention-chip adaptation and widget tests",
+        "owner": "Zion mobile maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "f44b5a2477f3979ae66e49153b11be36538cf859",
+      "topic_id": "pr-2155",
+      "title": "fix(desktop): reuse profiles when joining communities",
+      "areas": [
+        "desktop",
+        "onboarding"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Onboarding/profile reuse conflicts with current Zion community-link handling and requires a dedicated onboarding review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/2155",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated onboarding/profile-link adaptation",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    }
+  ],
+  "reclassifications": []
+}

@@ -393,9 +393,9 @@ fn fizz_builtin_has_no_pinned_runtime() {
 }
 
 #[test]
-fn fizz_builtin_resolves_to_buzz_agent() {
+fn fizz_builtin_resolves_to_zion_agent() {
     // With no runtime pin, effective_agent_command must fall through to
-    // default_agent_command(), which resolves the bundled buzz-agent.
+    // default_agent_command(), which resolves the bundled Zion Agent.
     let records = built_in_persona_records("2026-01-01T00:00:00Z");
     assert_eq!(
         effective_agent_command(Some("builtin:fizz"), &records, None),
@@ -404,7 +404,7 @@ fn fizz_builtin_resolves_to_buzz_agent() {
     );
     assert_eq!(
         effective_agent_command(Some("builtin:fizz"), &records, None),
-        "buzz-agent",
-        "Fizz must resolve to buzz-agent specifically"
+        "zion-agent",
+        "Fizz must resolve to Zion Agent specifically"
     );
 }

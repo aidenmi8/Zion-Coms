@@ -625,8 +625,11 @@ class PairingNotifier extends Notifier<PairingState> {
   Community _parseLegacyInput(String raw) {
     var payload = raw.trim();
 
-    if (payload.startsWith('buzz://')) {
-      payload = payload.substring('buzz://'.length);
+    for (final prefix in const ['zion://', 'buzz://']) {
+      if (payload.startsWith(prefix)) {
+        payload = payload.substring(prefix.length);
+        break;
+      }
     }
 
     final normalized = base64Url.normalize(payload);

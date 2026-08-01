@@ -219,7 +219,8 @@ _parsePromptText(String text) {
 
   PromptSection? eventSection;
   for (final section in sections) {
-    if (section.title.toLowerCase().startsWith('buzz event')) {
+    final title = section.title.toLowerCase();
+    if (title.startsWith('zion event') || title.startsWith('buzz event')) {
       eventSection = section;
       break;
     }

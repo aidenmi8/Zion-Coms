@@ -150,7 +150,7 @@ pub fn anthropic_thinking_config(
                 max_output_tokens,
                 level_budget,
                 headroom,
-                "BUZZ_AGENT_THINKING_EFFORT: max_output_tokens too small to fit thinking budget + answer headroom; omitting thinking fields"
+                "ZION_AGENT_THINKING_EFFORT: max_output_tokens too small to fit thinking budget + answer headroom; omitting thinking fields"
             );
             return (None, None);
         }
@@ -220,7 +220,7 @@ pub fn clamp_adaptive_effort(model: &str, effort: ThinkingEffort) -> ThinkingEff
             model,
             requested = effort.openai_effort_str(),
             clamped = clamped.openai_effort_str(),
-            "BUZZ_AGENT_THINKING_EFFORT is not available for this model; clamping to highest supported level"
+            "ZION_AGENT_THINKING_EFFORT is not available for this model; clamping to highest supported level"
         );
     }
     clamped
@@ -513,7 +513,7 @@ fn resolve_openai_effort(
         %model,
         requested = requested.openai_effort_str(),
         resolved = resolved.openai_effort_str(),
-        "BUZZ_AGENT_THINKING_EFFORT={} is not supported by this OpenAI model; using nearest supported level",
+        "ZION_AGENT_THINKING_EFFORT={} is not supported by this OpenAI model; using nearest supported level",
         requested.openai_effort_str(),
     );
     resolved
@@ -542,7 +542,7 @@ pub fn normalize_effort_for_openai_route(effort: ThinkingEffort, model: &str) ->
             tracing::warn!(
                 requested = "max",
                 resolved = "xhigh",
-                "BUZZ_AGENT_THINKING_EFFORT=max not confirmed for unknown OpenAI model; clamping to xhigh"
+                "ZION_AGENT_THINKING_EFFORT=max not confirmed for unknown OpenAI model; clamping to xhigh"
             );
             ThinkingEffort::XHigh
         }
@@ -565,7 +565,7 @@ pub fn normalize_effort_for_anthropic_route(effort: ThinkingEffort) -> Option<Th
         ThinkingEffort::None | ThinkingEffort::Minimal => {
             tracing::warn!(
                 requested = effort.openai_effort_str(),
-                "BUZZ_AGENT_THINKING_EFFORT={} is not expressible as an Anthropic thinking level; \
+                "ZION_AGENT_THINKING_EFFORT={} is not expressible as an Anthropic thinking level; \
                  omitting thinking fields (provider default; default-on/always-on adaptive models may still think)",
                 effort.openai_effort_str()
             );
@@ -630,7 +630,7 @@ pub fn parse_thinking_effort(raw: Option<&str>) -> Result<Option<ThinkingEffort>
         Some("xhigh") => Ok(Some(ThinkingEffort::XHigh)),
         Some("max") => Ok(Some(ThinkingEffort::Max)),
         Some(other) => Err(format!(
-            "config: BUZZ_AGENT_THINKING_EFFORT={other} not supported (use none|minimal|low|medium|high|xhigh|max)"
+            "config: ZION_AGENT_THINKING_EFFORT={other} not supported (use none|minimal|low|medium|high|xhigh|max)"
         )),
     }
 }
@@ -656,7 +656,7 @@ pub const HANDOFF_ORIGINAL_TASK_MAX_BYTES: usize = 16 * 1024;
 pub const HANDOFF_MAX_TOOL_NAMES: usize = 20;
 
 const DEFAULT_SYSTEM_PROMPT: &str =
-    "You are buzz-agent. Use the provided tools to act. Tool calls are your only output.";
+    "You are Zion agent. Use the provided tools to act. Tool calls are your only output.";
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Provider {
@@ -743,7 +743,7 @@ impl Config {
         let databricks_host = env("DATABRICKS_HOST");
         let databricks_model = env("DATABRICKS_MODEL");
         let provider = resolve_provider(
-            env("BUZZ_AGENT_PROVIDER").as_deref(),
+            buzz_core::branding::env_alias("ZION_AGENT_PROVIDER", "BUZZ_AGENT_PROVIDER").as_deref(),
             env("ANTHROPIC_API_KEY").as_deref(),
             env("OPENAI_COMPAT_API_KEY").as_deref(),
         )?;
@@ -752,7 +752,7 @@ impl Config {
         // env vars (ANTHROPIC_MODEL, OPENAI_COMPAT_MODEL, DATABRICKS_MODEL) when
         // present. Set by the desktop from the persona/record to express explicit
         // user intent; provider-specific vars serve as defaults for CLI/standalone use.
-        let buzz_agent_model = env("BUZZ_AGENT_MODEL");
+        let agent_model = buzz_core::branding::env_alias("ZION_AGENT_MODEL", "BUZZ_AGENT_MODEL");
 
         // OPENAI_COMPAT_API is only read when provider=openai, so a stray
         // bad value can't break an Anthropic-only deployment.
@@ -763,18 +763,15 @@ impl Config {
         let (api_key, model, base_url, openai_api) = match provider {
             Provider::Anthropic => (
                 req("ANTHROPIC_API_KEY")?,
-                resolve_model(
-                    buzz_agent_model.as_deref(),
-                    env("ANTHROPIC_MODEL").as_deref(),
-                )
-                .ok_or_else(|| "config: ANTHROPIC_MODEL required".to_string())?,
+                resolve_model(agent_model.as_deref(), env("ANTHROPIC_MODEL").as_deref())
+                    .ok_or_else(|| "config: ANTHROPIC_MODEL required".to_string())?,
                 env_or("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
                 OpenAiApi::Auto, // unused for Anthropic
             ),
             Provider::OpenAi => (
                 req("OPENAI_COMPAT_API_KEY")?,
                 resolve_model(
-                    buzz_agent_model.as_deref(),
+                    agent_model.as_deref(),
                     env("OPENAI_COMPAT_MODEL").as_deref(),
                 )
                 .ok_or_else(|| "config: OPENAI_COMPAT_MODEL required".to_string())?,
@@ -783,17 +780,23 @@ impl Config {
             ),
             Provider::Databricks | Provider::DatabricksV2 => (
                 env("DATABRICKS_TOKEN").unwrap_or_default(),
-                resolve_model(buzz_agent_model.as_deref(), databricks_model.as_deref())
+                resolve_model(agent_model.as_deref(), databricks_model.as_deref())
                     .ok_or_else(|| "config: DATABRICKS_MODEL required".to_string())?,
                 databricks_host.ok_or_else(|| "config: DATABRICKS_HOST required".to_string())?,
                 OpenAiApi::Chat, // only read by OpenAI/legacy Databricks dispatch
             ),
         };
-        let system_prompt = match (env("BUZZ_AGENT_SYSTEM_PROMPT"), env("BUZZ_AGENT_SYSTEM_PROMPT_FILE")) {
-            (Some(_), Some(_)) => return Err(
-                "config: BUZZ_AGENT_SYSTEM_PROMPT and BUZZ_AGENT_SYSTEM_PROMPT_FILE are mutually exclusive".into()),
+        let (system_prompt_value, system_prompt_file) = select_system_prompt_sources(
+            env("ZION_AGENT_SYSTEM_PROMPT"),
+            env("BUZZ_AGENT_SYSTEM_PROMPT"),
+            env("ZION_AGENT_SYSTEM_PROMPT_FILE"),
+            env("BUZZ_AGENT_SYSTEM_PROMPT_FILE"),
+        )?;
+        let system_prompt = match (system_prompt_value, system_prompt_file) {
             (Some(s), _) => s,
-            (_, Some(p)) => std::fs::read_to_string(&p).map_err(|e| format!("config: read {p}: {e}"))?,
+            (_, Some(p)) => {
+                std::fs::read_to_string(&p).map_err(|e| format!("config: read {p}: {e}"))?
+            }
             _ => DEFAULT_SYSTEM_PROMPT.to_owned(),
         };
         let cfg = Config {
@@ -804,33 +807,101 @@ impl Config {
             base_url,
             anthropic_api_version: env_or("ANTHROPIC_API_VERSION", "2023-06-01"),
             openai_api,
-            prefer_mesh_for_auto: parse_env("BUZZ_AGENT_PREFER_MESH_FOR_AUTO", 0u8)? != 0,
-            max_rounds: parse_env("BUZZ_AGENT_MAX_ROUNDS", 0)?,
-            max_output_tokens: parse_env("BUZZ_AGENT_MAX_OUTPUT_TOKENS", 32_768)?,
-            llm_timeout: Duration::from_secs(parse_env("BUZZ_AGENT_LLM_TIMEOUT_SECS", 240)?),
-            tool_timeout: Duration::from_secs(parse_env("BUZZ_AGENT_TOOL_TIMEOUT_SECS", 660)?),
-            mcp_init_timeout: Duration::from_secs(parse_env(
+            prefer_mesh_for_auto: parse_env_alias(
+                "ZION_AGENT_PREFER_MESH_FOR_AUTO",
+                "BUZZ_AGENT_PREFER_MESH_FOR_AUTO",
+                0u8,
+            )? != 0,
+            max_rounds: parse_env_alias("ZION_AGENT_MAX_ROUNDS", "BUZZ_AGENT_MAX_ROUNDS", 0)?,
+            max_output_tokens: parse_env_alias(
+                "ZION_AGENT_MAX_OUTPUT_TOKENS",
+                "BUZZ_AGENT_MAX_OUTPUT_TOKENS",
+                32_768,
+            )?,
+            llm_timeout: Duration::from_secs(parse_env_alias(
+                "ZION_AGENT_LLM_TIMEOUT_SECS",
+                "BUZZ_AGENT_LLM_TIMEOUT_SECS",
+                240,
+            )?),
+            tool_timeout: Duration::from_secs(parse_env_alias(
+                "ZION_AGENT_TOOL_TIMEOUT_SECS",
+                "BUZZ_AGENT_TOOL_TIMEOUT_SECS",
+                660,
+            )?),
+            mcp_init_timeout: Duration::from_secs(parse_env_alias(
+                "ZION_AGENT_MCP_INIT_TIMEOUT_SECS",
                 "BUZZ_AGENT_MCP_INIT_TIMEOUT_SECS",
                 30,
             )?),
-            mcp_max_restart_attempts: parse_env("BUZZ_AGENT_MCP_RESTART_MAX_ATTEMPTS", 3u32)?,
-            mcp_restart_base_ms: parse_env("BUZZ_AGENT_MCP_RESTART_BASE_MS", 500u64)?,
-            mcp_restart_max_ms: parse_env("BUZZ_AGENT_MCP_RESTART_MAX_MS", 30_000u64)?,
-            max_sessions: parse_env("BUZZ_AGENT_MAX_SESSIONS", usize::MAX)?,
-            max_line_bytes: parse_env("BUZZ_AGENT_MAX_LINE_BYTES", 4 * 1024 * 1024)?,
-            max_history_bytes: parse_env("BUZZ_AGENT_MAX_HISTORY_BYTES", 16 * 1024 * 1024)?,
-            max_tool_result_text_bytes: parse_env(
+            mcp_max_restart_attempts: parse_env_alias(
+                "ZION_AGENT_MCP_RESTART_MAX_ATTEMPTS",
+                "BUZZ_AGENT_MCP_RESTART_MAX_ATTEMPTS",
+                3u32,
+            )?,
+            mcp_restart_base_ms: parse_env_alias(
+                "ZION_AGENT_MCP_RESTART_BASE_MS",
+                "BUZZ_AGENT_MCP_RESTART_BASE_MS",
+                500u64,
+            )?,
+            mcp_restart_max_ms: parse_env_alias(
+                "ZION_AGENT_MCP_RESTART_MAX_MS",
+                "BUZZ_AGENT_MCP_RESTART_MAX_MS",
+                30_000u64,
+            )?,
+            max_sessions: parse_env_alias(
+                "ZION_AGENT_MAX_SESSIONS",
+                "BUZZ_AGENT_MAX_SESSIONS",
+                usize::MAX,
+            )?,
+            max_line_bytes: parse_env_alias(
+                "ZION_AGENT_MAX_LINE_BYTES",
+                "BUZZ_AGENT_MAX_LINE_BYTES",
+                4 * 1024 * 1024,
+            )?,
+            max_history_bytes: parse_env_alias(
+                "ZION_AGENT_MAX_HISTORY_BYTES",
+                "BUZZ_AGENT_MAX_HISTORY_BYTES",
+                16 * 1024 * 1024,
+            )?,
+            max_tool_result_text_bytes: parse_env_alias(
+                "ZION_AGENT_MAX_TOOL_RESULT_TEXT_BYTES",
                 "BUZZ_AGENT_MAX_TOOL_RESULT_TEXT_BYTES",
                 DEFAULT_TOOL_RESULT_TEXT_BYTES,
             )?,
-            max_context_tokens: parse_env("BUZZ_AGENT_MAX_CONTEXT_TOKENS", 200_000u64)?,
-            max_handoffs: parse_env("BUZZ_AGENT_MAX_HANDOFFS", 10)?,
-            max_parallel_tools: parse_env("BUZZ_AGENT_MAX_PARALLEL_TOOLS", 8usize)?,
-            hook_timeout: Duration::from_millis(parse_env("BUZZ_AGENT_HOOK_TIMEOUT_MS", 2500u64)?),
-            stop_max_rejections: parse_env("BUZZ_AGENT_STOP_MAX_REJECTIONS", 3u32)?,
+            max_context_tokens: parse_env_alias(
+                "ZION_AGENT_MAX_CONTEXT_TOKENS",
+                "BUZZ_AGENT_MAX_CONTEXT_TOKENS",
+                200_000u64,
+            )?,
+            max_handoffs: parse_env_alias(
+                "ZION_AGENT_MAX_HANDOFFS",
+                "BUZZ_AGENT_MAX_HANDOFFS",
+                10,
+            )?,
+            max_parallel_tools: parse_env_alias(
+                "ZION_AGENT_MAX_PARALLEL_TOOLS",
+                "BUZZ_AGENT_MAX_PARALLEL_TOOLS",
+                8usize,
+            )?,
+            hook_timeout: Duration::from_millis(parse_env_alias(
+                "ZION_AGENT_HOOK_TIMEOUT_MS",
+                "BUZZ_AGENT_HOOK_TIMEOUT_MS",
+                2500u64,
+            )?),
+            stop_max_rejections: parse_env_alias(
+                "ZION_AGENT_STOP_MAX_REJECTIONS",
+                "BUZZ_AGENT_STOP_MAX_REJECTIONS",
+                3u32,
+            )?,
             hook_servers: parse_hook_servers_env("MCP_HOOK_SERVERS"),
-            hints_enabled: parse_env("BUZZ_AGENT_NO_HINTS", 0u8)? == 0,
-            thinking_effort: parse_thinking_effort(env("BUZZ_AGENT_THINKING_EFFORT").as_deref())?,
+            hints_enabled: parse_env_alias("ZION_AGENT_NO_HINTS", "BUZZ_AGENT_NO_HINTS", 0u8)? == 0,
+            thinking_effort: parse_thinking_effort(
+                buzz_core::branding::env_alias(
+                    "ZION_AGENT_THINKING_EFFORT",
+                    "BUZZ_AGENT_THINKING_EFFORT",
+                )
+                .as_deref(),
+            )?,
         };
         cfg.validate()?;
         Ok(cfg)
@@ -882,58 +953,58 @@ impl Config {
         const MIN_TIMEOUT: Duration = Duration::from_secs(1);
 
         if self.max_output_tokens < 1 {
-            return Err("config: BUZZ_AGENT_MAX_OUTPUT_TOKENS must be >= 1".into());
+            return Err("config: ZION_AGENT_MAX_OUTPUT_TOKENS must be >= 1".into());
         }
         if self.max_context_tokens <= u64::from(self.max_output_tokens) {
             return Err(format!(
-                "config: BUZZ_AGENT_MAX_CONTEXT_TOKENS ({}) must be > BUZZ_AGENT_MAX_OUTPUT_TOKENS ({}) — the context window must leave room for the response",
+                "config: ZION_AGENT_MAX_CONTEXT_TOKENS ({}) must be > ZION_AGENT_MAX_OUTPUT_TOKENS ({}) — the context window must leave room for the response",
                 self.max_context_tokens, self.max_output_tokens
             ));
         }
         if self.max_history_bytes < MIN_HISTORY_BYTES {
             return Err(format!(
-                "config: BUZZ_AGENT_MAX_HISTORY_BYTES must be >= {MIN_HISTORY_BYTES}"
+                "config: ZION_AGENT_MAX_HISTORY_BYTES must be >= {MIN_HISTORY_BYTES}"
             ));
         }
         if self.max_history_bytes < MAX_PROMPT_BYTES {
             return Err(format!(
-                "config: BUZZ_AGENT_MAX_HISTORY_BYTES ({}) must be >= MAX_PROMPT_BYTES ({MAX_PROMPT_BYTES})",
+                "config: ZION_AGENT_MAX_HISTORY_BYTES ({}) must be >= MAX_PROMPT_BYTES ({MAX_PROMPT_BYTES})",
                 self.max_history_bytes
             ));
         }
         if self.max_line_bytes < MIN_LINE_BYTES {
             return Err(format!(
-                "config: BUZZ_AGENT_MAX_LINE_BYTES must be >= {MIN_LINE_BYTES}"
+                "config: ZION_AGENT_MAX_LINE_BYTES must be >= {MIN_LINE_BYTES}"
             ));
         }
         if self.max_tool_result_text_bytes < MIN_TOOL_RESULT_TEXT_BYTES
             || self.max_tool_result_text_bytes > MAX_TOOL_RESULT_BYTES
         {
             return Err(format!(
-                "config: BUZZ_AGENT_MAX_TOOL_RESULT_TEXT_BYTES must be in {MIN_TOOL_RESULT_TEXT_BYTES}..={MAX_TOOL_RESULT_BYTES}"
+                "config: ZION_AGENT_MAX_TOOL_RESULT_TEXT_BYTES must be in {MIN_TOOL_RESULT_TEXT_BYTES}..={MAX_TOOL_RESULT_BYTES}"
             ));
         }
         if self.llm_timeout < MIN_TIMEOUT {
-            return Err("config: BUZZ_AGENT_LLM_TIMEOUT_SECS must be >= 1".into());
+            return Err("config: ZION_AGENT_LLM_TIMEOUT_SECS must be >= 1".into());
         }
         if self.tool_timeout < MIN_TIMEOUT {
-            return Err("config: BUZZ_AGENT_TOOL_TIMEOUT_SECS must be >= 1".into());
+            return Err("config: ZION_AGENT_TOOL_TIMEOUT_SECS must be >= 1".into());
         }
         if self.mcp_init_timeout < MIN_TIMEOUT {
-            return Err("config: BUZZ_AGENT_MCP_INIT_TIMEOUT_SECS must be >= 1".into());
+            return Err("config: ZION_AGENT_MCP_INIT_TIMEOUT_SECS must be >= 1".into());
         }
         if self.max_parallel_tools < 1 {
-            return Err("config: BUZZ_AGENT_MAX_PARALLEL_TOOLS must be >= 1".into());
+            return Err("config: ZION_AGENT_MAX_PARALLEL_TOOLS must be >= 1".into());
         }
         if self.mcp_max_restart_attempts < 1 {
-            return Err("config: BUZZ_AGENT_MCP_RESTART_MAX_ATTEMPTS must be >= 1".into());
+            return Err("config: ZION_AGENT_MCP_RESTART_MAX_ATTEMPTS must be >= 1".into());
         }
         if self.mcp_restart_base_ms < 1 {
-            return Err("config: BUZZ_AGENT_MCP_RESTART_BASE_MS must be >= 1".into());
+            return Err("config: ZION_AGENT_MCP_RESTART_BASE_MS must be >= 1".into());
         }
         if self.mcp_restart_max_ms < self.mcp_restart_base_ms {
             return Err(
-                "config: BUZZ_AGENT_MCP_RESTART_MAX_MS must be >= BUZZ_AGENT_MCP_RESTART_BASE_MS"
+                "config: ZION_AGENT_MCP_RESTART_MAX_MS must be >= ZION_AGENT_MCP_RESTART_BASE_MS"
                     .into(),
             );
         }
@@ -949,7 +1020,7 @@ impl Config {
             if is_pure_anthropic && matches!(effort, ThinkingEffort::None | ThinkingEffort::Minimal)
             {
                 return Err(format!(
-                    "config: BUZZ_AGENT_THINKING_EFFORT={} is not valid for Anthropic providers \
+                    "config: ZION_AGENT_THINKING_EFFORT={} is not valid for Anthropic providers \
                      (allowed: low|medium|high|xhigh|max)",
                     effort.openai_effort_str()
                 ));
@@ -969,6 +1040,27 @@ fn env_or(k: &str, d: &str) -> String {
 
 fn req(k: &str) -> Result<String, String> {
     env(k).ok_or_else(|| format!("config: {k} required"))
+}
+
+fn select_system_prompt_sources(
+    canonical_prompt: Option<String>,
+    legacy_prompt: Option<String>,
+    canonical_file: Option<String>,
+    legacy_file: Option<String>,
+) -> Result<(Option<String>, Option<String>), String> {
+    let canonical_present = canonical_prompt.is_some() || canonical_file.is_some();
+    let (prompt, file) = if canonical_present {
+        (canonical_prompt, canonical_file)
+    } else {
+        (legacy_prompt, legacy_file)
+    };
+    if prompt.is_some() && file.is_some() {
+        return Err(
+            "config: ZION_AGENT_SYSTEM_PROMPT and ZION_AGENT_SYSTEM_PROMPT_FILE are mutually exclusive"
+                .into(),
+        );
+    }
+    Ok((prompt, file))
 }
 
 /// Returns the first present value. `explicit_override` (BUZZ_AGENT_MODEL,
@@ -1007,12 +1099,12 @@ fn resolve_provider(
                 "databricks" => Ok(Provider::Databricks),
                 "databricks_v2" | "databricks-v2" => Ok(Provider::DatabricksV2),
                 _ => Err(format!(
-                    "config: BUZZ_AGENT_PROVIDER={raw} not supported"
+                    "config: ZION_AGENT_PROVIDER={raw} not supported"
                 )),
             }
         }
         None => Err(
-            "config: BUZZ_AGENT_PROVIDER is required — set it to your provider (e.g. anthropic, openai, databricks)".into(),
+            "config: ZION_AGENT_PROVIDER is required — set it to your provider (e.g. anthropic, openai, databricks)".into(),
         ),
     }
 }
@@ -1046,12 +1138,20 @@ pub fn is_openai_host(base_url: &str) -> bool {
     host == "api.openai.com" || host.ends_with(".openai.com")
 }
 
-fn parse_env<T: std::str::FromStr>(key: &str, default: T) -> Result<T, String>
+fn parse_env_alias<T: std::str::FromStr>(
+    canonical: &str,
+    legacy: &str,
+    default: T,
+) -> Result<T, String>
 where
     T::Err: std::fmt::Display,
 {
-    env(key)
-        .map(|v| v.parse().map_err(|e| format!("config: {key}: {e}")))
+    buzz_core::branding::env_alias(canonical, legacy)
+        .map(|value| {
+            value
+                .parse()
+                .map_err(|error| format!("config: {canonical}: {error}"))
+        })
         .unwrap_or(Ok(default))
 }
 
@@ -1114,6 +1214,54 @@ fn parse_hook_servers(raw: Option<&str>) -> HookServers {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn product_authored_config_diagnostics_use_zion_identifiers() {
+        for error in [
+            parse_thinking_effort(Some("extreme")).expect_err("invalid effort"),
+            resolve_provider(None, None, None).expect_err("missing provider"),
+            resolve_provider(Some("OpenAIish"), None, None).expect_err("invalid provider"),
+        ] {
+            assert!(error.contains("ZION_AGENT_"), "{error}");
+            assert!(!error.to_ascii_lowercase().contains("buzz"), "{error}");
+        }
+        assert!(DEFAULT_SYSTEM_PROMPT.contains("Zion agent"));
+        assert!(!DEFAULT_SYSTEM_PROMPT.to_ascii_lowercase().contains("buzz"));
+    }
+
+    #[test]
+    fn system_prompt_sources_prefer_zion_and_accept_legacy_fallbacks_silently() {
+        assert_eq!(
+            select_system_prompt_sources(
+                Some("zion prompt".into()),
+                Some("legacy prompt".into()),
+                None,
+                Some("legacy.txt".into()),
+            )
+            .expect("canonical prompt"),
+            (Some("zion prompt".into()), None)
+        );
+        assert_eq!(
+            select_system_prompt_sources(
+                None,
+                Some("legacy prompt".into()),
+                Some("zion.txt".into()),
+                Some("legacy.txt".into()),
+            )
+            .expect("canonical file"),
+            (None, Some("zion.txt".into()))
+        );
+        assert_eq!(
+            select_system_prompt_sources(
+                None,
+                Some("legacy prompt".into()),
+                None,
+                Some("legacy.txt".into()),
+            )
+            .expect_err("legacy aliases still conflict"),
+            "config: ZION_AGENT_SYSTEM_PROMPT and ZION_AGENT_SYSTEM_PROMPT_FILE are mutually exclusive"
+        );
+    }
 
     #[test]
     fn hook_servers_unset_is_none() {
@@ -1244,15 +1392,15 @@ mod tests {
 
     #[test]
     fn resolve_provider_errors_when_provider_env_absent() {
-        // No implicit inference — absent BUZZ_AGENT_PROVIDER is an error.
+        // No implicit inference — absent provider configuration is an error.
         let err = resolve_provider(None, None, None).unwrap_err();
-        assert!(err.contains("BUZZ_AGENT_PROVIDER is required"), "{err}");
+        assert!(err.contains("ZION_AGENT_PROVIDER is required"), "{err}");
     }
 
     #[test]
     fn resolve_provider_requires_databricks_host_and_model_for_fallback() {
         // Renamed: verify the explicit databricks provider path works correctly.
-        // When BUZZ_AGENT_PROVIDER=databricks, resolve_provider succeeds regardless
+        // When the provider is databricks, resolve_provider succeeds regardless
         // of DATABRICKS_HOST/MODEL (those are validated later in from_env()).
         assert_eq!(
             resolve_provider(Some("databricks"), None, None).unwrap(),
@@ -1262,13 +1410,13 @@ mod tests {
         let err = resolve_provider(Some("openai"), None, None).unwrap_err();
         assert!(err.contains("OPENAI_COMPAT_API_KEY required"), "{err}");
         let err = resolve_provider(None, None, None).unwrap_err();
-        assert!(err.contains("BUZZ_AGENT_PROVIDER is required"), "{err}");
+        assert!(err.contains("ZION_AGENT_PROVIDER is required"), "{err}");
     }
 
     #[test]
     fn resolve_provider_unsupported_error_preserves_user_casing() {
         let err = resolve_provider(Some("OpenAIish"), None, None).unwrap_err();
-        assert!(err.contains("BUZZ_AGENT_PROVIDER=OpenAIish"));
+        assert!(err.contains("ZION_AGENT_PROVIDER=OpenAIish"));
     }
 
     #[test]
@@ -1348,7 +1496,7 @@ mod tests {
     #[test]
     fn parse_thinking_effort_rejects_unknown_value() {
         let err = parse_thinking_effort(Some("extreme")).unwrap_err();
-        assert!(err.contains("BUZZ_AGENT_THINKING_EFFORT=extreme"), "{err}");
+        assert!(err.contains("ZION_AGENT_THINKING_EFFORT=extreme"), "{err}");
         assert!(
             err.contains("none|minimal|low|medium|high|xhigh|max"),
             "{err}"
@@ -1868,7 +2016,7 @@ mod tests {
         let cfg = make_config_for_validation(Provider::Anthropic, Some(ThinkingEffort::None));
         let err = cfg.validate().unwrap_err();
         assert!(
-            err.contains("BUZZ_AGENT_THINKING_EFFORT=none"),
+            err.contains("ZION_AGENT_THINKING_EFFORT=none"),
             "error must name the value: {err}"
         );
         assert!(
@@ -1885,7 +2033,7 @@ mod tests {
     fn validate_rejects_minimal_effort_for_anthropic() {
         let cfg = make_config_for_validation(Provider::Anthropic, Some(ThinkingEffort::Minimal));
         let err = cfg.validate().unwrap_err();
-        assert!(err.contains("BUZZ_AGENT_THINKING_EFFORT=minimal"), "{err}");
+        assert!(err.contains("ZION_AGENT_THINKING_EFFORT=minimal"), "{err}");
         assert!(err.contains("not valid for Anthropic"), "{err}");
     }
 

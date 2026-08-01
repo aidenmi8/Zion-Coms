@@ -53,7 +53,9 @@ export function InvitePage({ code }: { code: string }) {
   const [browserJoinError, setBrowserJoinError] = React.useState<string | null>(
     null,
   );
-  const [downloadUrl, setDownloadUrl] = React.useState(BUZZ_RELEASES_URL);
+  const [downloadUrl, setDownloadUrl] = React.useState<string>();
+  const [downloadLookupComplete, setDownloadLookupComplete] =
+    React.useState(false);
   const [needsMacChoice, setNeedsMacChoice] = React.useState(false);
   const [showMacChoice, setShowMacChoice] = React.useState(false);
   const [choosingMacDownload, setChoosingMacDownload] = React.useState(false);
@@ -68,11 +70,27 @@ export function InvitePage({ code }: { code: string }) {
         platform.operatingSystem === "macos" &&
         platform.architecture === "unknown"
       ) {
-        setNeedsMacChoice(true);
+        const [arm64Url, x64Url] = await Promise.all([
+          resolveBuzzDownloadUrlForPlatform({
+            operatingSystem: "macos",
+            architecture: "arm64",
+          }),
+          resolveBuzzDownloadUrlForPlatform({
+            operatingSystem: "macos",
+            architecture: "x64",
+          }),
+        ]);
+        if (!active) return;
+        setNeedsMacChoice(Boolean(arm64Url || x64Url));
+        setDownloadUrl(arm64Url ?? x64Url);
+        setDownloadLookupComplete(true);
         return;
       }
       const url = await resolveBuzzDownloadUrlForPlatform(platform);
-      if (active) setDownloadUrl(url);
+      if (active) {
+        setDownloadUrl(url);
+        setDownloadLookupComplete(true);
+      }
     });
     return () => {
       active = false;
@@ -110,7 +128,7 @@ export function InvitePage({ code }: { code: string }) {
       const receipt = await acceptPolicy();
       const query = new URLSearchParams({ relay, code });
       if (receipt) query.set("policy_receipt", receipt);
-      window.location.href = `buzz://join?${query.toString()}`;
+      window.location.href = `zion://join?${query.toString()}`;
     } finally {
       setOpening(false);
     }
@@ -168,7 +186,7 @@ export function InvitePage({ code }: { code: string }) {
     setShowMacChoice(false);
     try {
       const url = await resolveBuzzDownloadUrlForPlatform(platform);
-      downloadWindow?.location.replace(url);
+      downloadWindow?.location.replace(url ?? BUZZ_RELEASES_URL);
     } finally {
       choosingMacDownloadRef.current = false;
       setChoosingMacDownload(false);
@@ -245,7 +263,7 @@ export function InvitePage({ code }: { code: string }) {
                 }`}
               >
                 <a
-                  href={`buzz://join?relay=${encodeURIComponent(relay)}&code=${encodeURIComponent(code)}`}
+                  href={`zion://join?relay=${encodeURIComponent(relay)}&code=${encodeURIComponent(code)}`}
                 >
                   Accept invite in Zion
                 </a>
@@ -271,23 +289,41 @@ export function InvitePage({ code }: { code: string }) {
           </div>
         </div>
         <p className="flex h-[3.125rem] items-center justify-center rounded-2xl border border-[#332842] bg-[#151020] text-sm text-[#b9aecf]">
-          Don&apos;t have the app?{" "}
-          <a
-            aria-expanded={needsMacChoice ? showMacChoice : undefined}
-            aria-haspopup={needsMacChoice ? "dialog" : undefined}
-            className="ml-1 font-medium text-[#f3efff] underline-offset-4 hover:text-[#b99aff] hover:underline focus-visible:underline"
-            href={downloadUrl}
-            ref={downloadTriggerRef}
-            rel="noreferrer"
-            target="_blank"
-            onClick={(event) => {
-              if (!needsMacChoice) return;
-              event.preventDefault();
-              setShowMacChoice(true);
-            }}
-          >
-            Download it now
-          </a>
+          {downloadUrl ? (
+            <>
+              Don&apos;t have the app?{" "}
+              <a
+                aria-expanded={needsMacChoice ? showMacChoice : undefined}
+                aria-haspopup={needsMacChoice ? "dialog" : undefined}
+                className="ml-1 font-medium text-[#f3efff] underline-offset-4 hover:text-[#b99aff] hover:underline focus-visible:underline"
+                href={downloadUrl}
+                ref={downloadTriggerRef}
+                rel="noreferrer"
+                target="_blank"
+                onClick={(event) => {
+                  if (!needsMacChoice) return;
+                  event.preventDefault();
+                  setShowMacChoice(true);
+                }}
+              >
+                Download it now
+              </a>
+            </>
+          ) : downloadLookupComplete ? (
+            <>
+              No Zion installer is available yet.{" "}
+              <a
+                className="ml-1 font-medium text-[#f3efff] underline-offset-4 hover:text-[#b99aff] hover:underline focus-visible:underline"
+                href={BUZZ_RELEASES_URL}
+                rel="noreferrer"
+                target="_blank"
+              >
+                View Zion-Coms Releases
+              </a>
+            </>
+          ) : (
+            "Checking for a Zion installer…"
+          )}
         </p>
       </div>
 

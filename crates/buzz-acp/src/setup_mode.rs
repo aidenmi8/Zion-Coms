@@ -237,7 +237,7 @@ impl SetupPayload {
     ///
     /// The body contains two parts separated by a blank line:
     /// 1. Human-readable markdown (unchanged; used by CLI and non-card clients).
-    /// 2. A fenced `buzz:config-nudge` sentinel block containing the structured
+    /// 2. A fenced `zion:config-nudge` sentinel block containing the structured
     ///    payload as JSON. The desktop client parses this block to render a
     ///    `ConfigNudgeCard`; clients that don't understand it see a code block.
     fn nudge_body(&self) -> String {
@@ -273,11 +273,11 @@ impl SetupPayload {
                 // help. Don't send the user there.
                 "Fix the config file(s) and restart the agent.".to_string()
             } else if any_external {
-                // Mixed: some Buzz-managed fields, some external config.
-                "Open Edit Agent in the Buzz app for the Buzz-managed fields; fix the external CLI config files manually and restart the agent.".to_string()
+                // Mixed: some Zion-managed fields, some external config.
+                "Open Edit Agent in the Zion app for the Zion-managed fields; fix the external CLI config files manually and restart the agent.".to_string()
             } else {
-                // All Buzz-managed — original footer unchanged.
-                "Open Edit Agent in the Buzz app to set these.".to_string()
+                // All Zion-managed.
+                "Open Edit Agent in the Zion app to set these.".to_string()
             };
 
             format!(
@@ -293,7 +293,7 @@ impl SetupPayload {
         let sentinel_json =
             serde_json::to_string(self).expect("SetupPayload must be serializable to JSON");
 
-        format!("{}\n\n```buzz:config-nudge\n{}\n```", prose, sentinel_json)
+        format!("{}\n\n```zion:config-nudge\n{}\n```", prose, sentinel_json)
     }
 }
 
@@ -310,16 +310,16 @@ pub(crate) async fn run_setup_listener(config: Config, payload: SetupPayload) ->
     tracing::info!(
         agent = %payload.agent_name,
         requirements = payload.requirements.len(),
-        "buzz-acp entering setup mode"
+        "zion-acp entering setup mode"
     );
 
     let pubkey_hex = config.keys.public_key().to_hex();
 
-    // Parse BUZZ_AUTH_TAG for relay membership / NIP-OA.
-    let relay_auth_tag: Option<nostr::Tag> = std::env::var("BUZZ_AUTH_TAG")
-        .ok()
-        .filter(|s| !s.is_empty())
-        .and_then(|s| buzz_sdk::nip_oa::parse_auth_tag(&s).ok());
+    // Parse ZION_AUTH_TAG (or legacy alias) for relay membership / NIP-OA.
+    let relay_auth_tag: Option<nostr::Tag> =
+        buzz_core::branding::env_alias("ZION_AUTH_TAG", "BUZZ_AUTH_TAG")
+            .filter(|s| !s.is_empty())
+            .and_then(|s| buzz_sdk::nip_oa::parse_auth_tag(&s).ok());
 
     let startup_watermark: u64 = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -873,8 +873,7 @@ mod tests {
     }
 
     #[test]
-    fn nudge_body_all_buzz_managed_retains_original_footer() {
-        // Pure Buzz-managed requirements → original "Open Edit Agent" footer unchanged.
+    fn nudge_body_all_managed_uses_zion_footer() {
         let payload = SetupPayload {
             agent_name: "Fizz".to_string(),
             agent_pubkey: "test".to_string(),
@@ -884,16 +883,17 @@ mod tests {
         };
         let body = payload.nudge_body();
         assert!(
-            body.contains("Open Edit Agent in the Buzz app to set these."),
-            "all-managed nudge must use the original Edit Agent footer; got: {body:?}"
+            body.contains("Open Edit Agent in the Zion app to set these."),
+            "all-managed nudge must use the Zion Edit Agent footer; got: {body:?}"
         );
+        assert!(!body.to_ascii_lowercase().contains("buzz"), "{body}");
     }
 
     // ── sentinel block tests ───────────────────────────────────────────────────
 
     #[test]
     fn nudge_body_contains_sentinel_block() {
-        // The body must end with a ```buzz:config-nudge fence so the desktop
+        // The body must end with a canonical Zion fence so the desktop
         // can detect and strip it before rendering the ConfigNudgeCard.
         let payload = SetupPayload {
             agent_name: "Fizz".to_string(),
@@ -904,7 +904,7 @@ mod tests {
         };
         let body = payload.nudge_body();
         assert!(
-            body.contains("```buzz:config-nudge\n"),
+            body.contains("```zion:config-nudge\n"),
             "body must open the sentinel fence; got: {body:?}"
         );
         assert!(
@@ -937,7 +937,7 @@ mod tests {
         let body = payload.nudge_body();
 
         // Extract the JSON between the fence markers.
-        let fence_open = "```buzz:config-nudge\n";
+        let fence_open = "```zion:config-nudge\n";
         let fence_close = "\n```";
         let start = body
             .rfind(fence_open)
@@ -981,7 +981,7 @@ mod tests {
         assert!(body.contains("Fizz"), "prose must name the agent");
         // Sentinel is also present.
         assert!(
-            body.contains("```buzz:config-nudge"),
+            body.contains("```zion:config-nudge"),
             "sentinel must follow"
         );
     }
@@ -1056,7 +1056,7 @@ mod tests {
     // deserialization and the desktop card never rendered.
 
     fn extract_sentinel_json(body: &str) -> String {
-        let fence_open = "```buzz:config-nudge\n";
+        let fence_open = "```zion:config-nudge\n";
         let fence_close = "\n```";
         let start = body
             .rfind(fence_open)

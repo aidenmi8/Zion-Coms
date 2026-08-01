@@ -1,10 +1,11 @@
 /**
- * `buzz://message` link encoding for "Copy link" / deep-link-to-message.
+ * `zion://message` link encoding for "Copy link" / deep-link-to-message.
  *
- * Format: `buzz://message?channel=<uuid>&id=<eventId>[&thread=<rootId>]`
+ * Format: `zion://message?channel=<uuid>&id=<eventId>[&thread=<rootId>]`
  */
 
-const MESSAGE_LINK_SCHEME = "buzz:";
+const CANONICAL_MESSAGE_LINK_SCHEME = "zion:";
+const LEGACY_MESSAGE_LINK_SCHEME = "buzz:";
 const MESSAGE_LINK_HOST = "message";
 
 export type MessageLinkInput = {
@@ -33,7 +34,7 @@ export type MessageLinkParseResult =
   | { ok: false; reason: string };
 
 /**
- * Build a `buzz://message` URL for a given channel + message.
+ * Build a `zion://message` URL for a given channel + message.
  *
  * Empty `threadRootId` is treated as "no thread" so callers can pass through
  * the result of `getThreadReference(tags).rootId` without extra null checks.
@@ -52,12 +53,12 @@ export function buildMessageLink(input: MessageLinkInput): string {
   if (input.threadRootId) {
     params.set("thread", input.threadRootId);
   }
-  return `${MESSAGE_LINK_SCHEME}//${MESSAGE_LINK_HOST}?${params.toString()}`;
+  return `${CANONICAL_MESSAGE_LINK_SCHEME}//${MESSAGE_LINK_HOST}?${params.toString()}`;
 }
 
 /**
- * Parse a `buzz://message?…` URL. Returns a discriminated result so callers can
- * render a fallback (e.g. a plain link) without throwing.
+ * Parse a canonical Zion or legacy message URL. Returns a discriminated result
+ * so callers can render a fallback (e.g. a plain link) without throwing.
  */
 export function parseMessageLink(url: string): MessageLinkParseResult {
   let parsed: URL;
@@ -67,10 +68,13 @@ export function parseMessageLink(url: string): MessageLinkParseResult {
     return { ok: false, reason: "invalid-url" };
   }
 
-  if (parsed.protocol !== MESSAGE_LINK_SCHEME) {
+  if (
+    parsed.protocol !== CANONICAL_MESSAGE_LINK_SCHEME &&
+    parsed.protocol !== LEGACY_MESSAGE_LINK_SCHEME
+  ) {
     return { ok: false, reason: "wrong-scheme" };
   }
-  // `new URL("buzz://message?…")` puts "message" in `hostname`.
+  // A custom-scheme URL puts "message" in `hostname`.
   if (parsed.hostname !== MESSAGE_LINK_HOST) {
     return { ok: false, reason: "wrong-host" };
   }
@@ -100,7 +104,12 @@ export function parseMessageLink(url: string): MessageLinkParseResult {
  */
 export function isMessageLink(href: string | undefined | null): boolean {
   if (!href) return false;
-  return href.startsWith("buzz://message?") || href === "buzz://message";
+  return (
+    href.startsWith("zion://message?") ||
+    href === "zion://message" ||
+    href.startsWith("buzz://message?") ||
+    href === "buzz://message"
+  );
 }
 
 type MessageLinkRenderInput = {
@@ -115,7 +124,7 @@ export type MessageLinkRenderTarget =
 
 /**
  * Centralizes how markdown-rendered anchors map to message-link UI. Both
- * CommonMark autolinks (`<buzz://message?...>`) and explicitly labeled links
+ * CommonMark autolinks (`<zion://message?...>`) and explicitly labeled links
  * arrive as anchors; autolinks have label === href and should render as pills,
  * while intentionally labeled links keep their label.
  */

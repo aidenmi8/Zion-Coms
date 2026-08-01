@@ -90,6 +90,16 @@ test("parseInviteInput_buzz_join_with_encoded_relay_param", () => {
   });
 });
 
+test("parseInviteInput accepts canonical zion join links", () => {
+  const result = parseInviteInput(
+    "zion://join?relay=wss%3A%2F%2Frelay.example.com&code=abc123",
+  );
+  assert.deepEqual(result, {
+    relayWsUrl: "wss://relay.example.com",
+    code: "abc123",
+  });
+});
+
 test("parseInviteInput_buzz_join_rejects_non_ws_relay", () => {
   const result = parseInviteInput(
     "buzz://join?relay=https://relay.example.com&code=abc123",

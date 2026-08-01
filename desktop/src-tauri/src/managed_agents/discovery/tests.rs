@@ -12,6 +12,8 @@ use super::{
 };
 use crate::managed_agents::AcpAvailabilityStatus;
 
+mod zion_compatibility;
+
 #[test]
 fn resolves_known_avatar_for_bare_command() {
     let avatar_url = managed_agent_avatar_url("goose").expect("goose avatar should resolve");
@@ -42,18 +44,6 @@ fn resolves_known_avatar_for_command_paths_and_aliases() {
 #[test]
 fn returns_none_for_unknown_commands() {
     assert!(managed_agent_avatar_url("custom-agent").is_none());
-}
-
-#[test]
-fn default_agent_command_resolves_bundled_buzz_agent() {
-    // The create-path default must be the bundled buzz-agent, never the
-    // bare `goose` that isn't on PATH on a stock Windows install.
-    assert_eq!(default_agent_command(), "buzz-agent");
-    // And buzz-agent takes no `acp` arg — confirm no arg leakage from the default.
-    assert_eq!(
-        normalize_agent_args(&default_agent_command(), vec!["acp".into()]),
-        Vec::<String>::new()
-    );
 }
 
 #[test]

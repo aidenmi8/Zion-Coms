@@ -151,3 +151,28 @@ test("applyLegacyCommunityStorage migrates onboarding completion keys", () => {
 
   assert.equal(storage.getItem("buzz-onboarding-complete.v1:abc123"), "true");
 });
+
+test("applyLegacyCommunityStorage strips obsolete tokens from imported communities", () => {
+  const storage = createMemoryStorage();
+
+  applyLegacyCommunityStorage(
+    {
+      workspaces: JSON.stringify([
+        {
+          id: "legacy-community",
+          name: "Existing relay",
+          relayUrl: "wss://relay.example.com",
+          token: "buzz_legacy-secret",
+          addedAt: "2026-06-12T00:00:00.000Z",
+        },
+      ]),
+      activeWorkspaceId: "legacy-community",
+      onboardingCompletions: [],
+    },
+    storage,
+  );
+
+  const persisted = JSON.parse(storage.getItem("buzz-communities"));
+  assert.equal("token" in persisted[0], false);
+  assert.equal(persisted[0].relayUrl, "wss://relay.example.com");
+});

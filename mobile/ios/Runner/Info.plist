@@ -31,6 +31,7 @@
 			<string>com.buzz.deeplink</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>zion</string>
 				<string>buzz</string>
 			</array>
 		</dict>

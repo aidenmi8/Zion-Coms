@@ -18,7 +18,7 @@ test("invite renders the Zion motion contract and preserves its deep link", asyn
   await expect(motion.locator("img")).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Accept invite in Zion" }),
-  ).toHaveAttribute("href", /^buzz:\/\/join\?/);
+  ).toHaveAttribute("href", /^zion:\/\/join\?/);
 });
 
 test("invite motion is static under reduced motion", async ({ page }) => {

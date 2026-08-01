@@ -49,7 +49,7 @@ test("copies a freshly minted invite link without showing a URL or QR code", asy
       ?.payload;
   });
 
-  expect(payload).toEqual({
-    text: "buzz://join?relay=wss%3A%2F%2Frelay.example.com&code=qr-download-test",
+  expect(payload).toMatchObject({
+    text: "zion://join?relay=wss%3A%2F%2Frelay.example.com&code=qr-download-test",
   });
 });

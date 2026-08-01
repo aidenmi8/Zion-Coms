@@ -79,10 +79,12 @@ const settingsNavGroups: Array<{
 
 function SettingsSectionButton({
   active,
+  disabled = false,
   onSelect,
   section,
 }: {
   active: boolean;
+  disabled?: boolean;
   onSelect: (section: SettingsSection) => void;
   section: (typeof settingsSections)[number];
 }) {
@@ -93,9 +95,12 @@ function SettingsSectionButton({
       <SidebarMenuButton
         aria-pressed={active}
         data-testid={`settings-nav-${section.value}`}
+        disabled={disabled}
         isActive={active}
         onClick={() => onSelect(section.value)}
-        tooltip={section.label}
+        tooltip={
+          disabled ? `${section.label} is temporarily disabled` : section.label
+        }
         type="button"
       >
         <Icon
@@ -286,6 +291,7 @@ export function SettingsView({
                   {group.sections.map((entry) => (
                     <SettingsSectionButton
                       active={entry.value === section}
+                      disabled={entry.value === "hosted-communities"}
                       key={entry.value}
                       onSelect={onSectionChange}
                       section={entry}

@@ -16,7 +16,7 @@ const THREAD =
 
 test("buildMessageLink → parseMessageLink round-trips without thread", () => {
   const url = buildMessageLink({ channelId: CHANNEL, messageId: MESSAGE });
-  assert.equal(url, `buzz://message?channel=${CHANNEL}&id=${MESSAGE}`);
+  assert.equal(url, `zion://message?channel=${CHANNEL}&id=${MESSAGE}`);
 
   const parsed = parseMessageLink(url);
   assert.equal(parsed.ok, true);
@@ -53,8 +53,8 @@ test("buildMessageLink treats null/empty thread as absent", () => {
     messageId: MESSAGE,
     threadRootId: "",
   });
-  assert.equal(a, `buzz://message?channel=${CHANNEL}&id=${MESSAGE}`);
-  assert.equal(b, `buzz://message?channel=${CHANNEL}&id=${MESSAGE}`);
+  assert.equal(a, `zion://message?channel=${CHANNEL}&id=${MESSAGE}`);
+  assert.equal(b, `zion://message?channel=${CHANNEL}&id=${MESSAGE}`);
 });
 
 test("buildMessageLink rejects missing required params", () => {
@@ -104,16 +104,26 @@ test("parseMessageLink accepts legacy buzz://message links", () => {
   });
 });
 
-test("isMessageLink matches buzz://message and legacy buzz://message", () => {
+test("parseMessageLink accepts canonical zion://message links", () => {
+  const r = parseMessageLink(`zion://message?channel=${CHANNEL}&id=${MESSAGE}`);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.ok && r.value, {
+    channelId: CHANNEL,
+    messageId: MESSAGE,
+    threadRootId: null,
+  });
+});
+
+test("isMessageLink matches canonical Zion and legacy Buzz message links", () => {
   assert.equal(
-    isMessageLink(`buzz://message?channel=${CHANNEL}&id=${MESSAGE}`),
+    isMessageLink(`zion://message?channel=${CHANNEL}&id=${MESSAGE}`),
     true,
   );
   assert.equal(
     isMessageLink(`buzz://message?channel=${CHANNEL}&id=${MESSAGE}`),
     true,
   );
-  assert.equal(isMessageLink("buzz://connect?relay=wss://x"), false);
+  assert.equal(isMessageLink("zion://connect?relay=wss://x"), false);
   assert.equal(isMessageLink("buzz://connect?relay=wss://x"), false);
   assert.equal(isMessageLink("https://example.com"), false);
   assert.equal(isMessageLink(undefined), false);

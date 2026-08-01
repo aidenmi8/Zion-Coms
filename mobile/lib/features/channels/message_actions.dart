@@ -383,7 +383,7 @@ Future<void> _shareImage(
   }
 }
 
-/// Canonical `buzz://message` link for a timeline message, including thread
+/// Canonical `zion://message` link for a timeline message, including thread
 /// context when the message is a reply.
 String messageLinkFor({
   required TimelineMessage message,

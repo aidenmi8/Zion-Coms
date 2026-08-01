@@ -1,7 +1,8 @@
-export const BUZZ_RELEASES_URL = "https://github.com/block/buzz/releases";
+export const BUZZ_RELEASES_URL =
+  "https://github.com/aidenmi8/Zion-Coms/releases";
 const BUZZ_RELEASES_API_URL =
-  "https://api.github.com/repos/block/buzz/releases?per_page=10";
-const CACHE_KEY = "buzz.latestDownload.v1";
+  "https://api.github.com/repos/aidenmi8/Zion-Coms/releases?per_page=10";
+const CACHE_KEY = "zion.latestDownload.v1";
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
 export type BuzzDownloadPlatform = {
@@ -110,17 +111,38 @@ export async function detectBuzzDownloadPlatform(
 function assetPattern(platform: BuzzDownloadPlatform): RegExp | undefined {
   switch (platform.operatingSystem) {
     case "macos":
-      if (platform.architecture === "arm64") return /_aarch64\.dmg$/i;
-      if (platform.architecture === "x64") return /_x64\.dmg$/i;
+      if (platform.architecture === "arm64")
+        return /^Zion(?:[-_].*)?_aarch64\.dmg$/i;
+      if (platform.architecture === "x64") return /^Zion(?:[-_].*)?_x64\.dmg$/i;
       return undefined;
     case "windows":
-      return /_x64-setup[^/]*\.exe$/i;
+      return /^Zion(?:[-_].*)?_x64-setup[^/]*\.exe$/i;
     case "linux":
       return platform.architecture === "arm64"
         ? undefined
-        : /_amd64\.AppImage$/i;
+        : /^Zion(?:[-_].*)?_amd64\.AppImage$/i;
     default:
       return undefined;
+  }
+}
+
+function isZionComsReleaseDownloadUrl(value: string, pattern: RegExp): boolean {
+  try {
+    const url = new URL(value);
+    const pathSegments = url.pathname.split("/");
+    const filename = decodeURIComponent(
+      pathSegments[pathSegments.length - 1] ?? "",
+    );
+    return (
+      url.protocol === "https:" &&
+      url.hostname === "github.com" &&
+      url.pathname
+        .toLowerCase()
+        .startsWith("/aidenmi8/zion-coms/releases/download/") &&
+      pattern.test(filename)
+    );
+  } catch {
+    return false;
   }
 }
 
@@ -133,7 +155,11 @@ export function selectBuzzDownloadUrl(
 
   for (const release of releases) {
     if (release.draft || release.prerelease) continue;
-    const asset = release.assets.find(({ name }) => pattern.test(name));
+    const asset = release.assets.find(
+      ({ name, browser_download_url }) =>
+        pattern.test(name) &&
+        isZionComsReleaseDownloadUrl(browser_download_url, pattern),
+    );
     if (asset) return asset.browser_download_url;
   }
   return undefined;
@@ -141,7 +167,8 @@ export function selectBuzzDownloadUrl(
 
 export async function resolveBuzzDownloadUrlForPlatform(
   platform: BuzzDownloadPlatform,
-): Promise<string> {
+): Promise<string | undefined> {
+  const pattern = assetPattern(platform);
   try {
     const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) ?? "null") as {
       expiresAt: number;
@@ -154,7 +181,10 @@ export async function resolveBuzzDownloadUrlForPlatform(
       cached.platform.operatingSystem === platform.operatingSystem &&
       cached.platform.architecture === platform.architecture
     ) {
-      return cached.url;
+      if (pattern && isZionComsReleaseDownloadUrl(cached.url, pattern)) {
+        return cached.url;
+      }
+      sessionStorage.removeItem(CACHE_KEY);
     }
   } catch {
     // Storage is only an optimization.
@@ -164,12 +194,12 @@ export async function resolveBuzzDownloadUrlForPlatform(
     const response = await fetch(BUZZ_RELEASES_API_URL, {
       headers: { Accept: "application/vnd.github+json" },
     });
-    if (!response.ok) return BUZZ_RELEASES_URL;
+    if (!response.ok) return undefined;
     const url = selectBuzzDownloadUrl(
       (await response.json()) as GitHubRelease[],
       platform,
     );
-    if (!url) return BUZZ_RELEASES_URL;
+    if (!url) return undefined;
     try {
       sessionStorage.setItem(
         CACHE_KEY,
@@ -184,11 +214,11 @@ export async function resolveBuzzDownloadUrlForPlatform(
     }
     return url;
   } catch {
-    return BUZZ_RELEASES_URL;
+    return undefined;
   }
 }
 
-export async function resolveBuzzDownloadUrl(): Promise<string> {
+export async function resolveBuzzDownloadUrl(): Promise<string | undefined> {
   return resolveBuzzDownloadUrlForPlatform(
     await detectBuzzDownloadPlatform(navigator),
   );

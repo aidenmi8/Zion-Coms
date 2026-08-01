@@ -57,16 +57,17 @@ export function loadCommunities(): Community[] {
     if (!Array.isArray(parsed)) {
       return [];
     }
-    // Migration: older builds stored the user's `nsec` in localStorage and
-    // re-applied it to the backend on every reload, which silently overwrote
-    // any `import_identity` result with the original generated key. The
-    // on-disk `identity.key` file is the only source of truth now. Strip
-    // any lingering `nsec` from existing entries on read and persist the
-    // cleaned list back so it cannot leak into future sessions.
+    // Migration: strip secret-shaped fields older builds persisted but no
+    // longer consume. `nsec` was superseded by the on-disk identity.key, while
+    // `token` became dead when relay auth moved to Nostr keys.
     let didStrip = false;
     const cleaned = (parsed as Array<Record<string, unknown>>).map((entry) => {
-      if (entry && typeof entry === "object" && "nsec" in entry) {
-        const { nsec: _nsec, ...rest } = entry;
+      if (
+        entry &&
+        typeof entry === "object" &&
+        ("nsec" in entry || "token" in entry)
+      ) {
+        const { nsec: _nsec, token: _token, ...rest } = entry;
         didStrip = true;
         return rest;
       }
@@ -82,9 +83,17 @@ export function loadCommunities(): Community[] {
 }
 
 export function saveCommunities(communities: Community[]): boolean {
+  const cleaned = communities.map((community) => {
+    const {
+      nsec: _nsec,
+      token: _token,
+      ...rest
+    } = community as unknown as Record<string, unknown>;
+    return rest;
+  });
   return setLocalStorageItemWithRecovery(
     COMMUNITIES_KEY,
-    JSON.stringify(communities),
+    JSON.stringify(cleaned),
   );
 }
 

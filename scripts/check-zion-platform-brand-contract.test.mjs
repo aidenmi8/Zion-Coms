@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -18,6 +19,98 @@ test("current platform files satisfy the Zion brand contract", () => {
     loadPlatformBrandSources(repositoryRoot),
   );
   assert.deepEqual(failures, []);
+});
+
+test("brand manifest publishes the canonical Zion compatibility facade", () => {
+  const manifest = JSON.parse(
+    fs.readFileSync(
+      path.join(repositoryRoot, "branding/zion-brand-manifest.json"),
+      "utf8",
+    ),
+  );
+
+  assert.deepEqual(manifest.publicContract, {
+    productName: "Zion",
+    relayName: "Zion Relay",
+    canonicalUrlScheme: "zion",
+    legacyUrlScheme: "buzz",
+    releaseRepositoryUrl: "https://github.com/aidenmi8/Zion-Coms",
+    canonicalLaunchers: ["zion", "zion-acp", "zion-agent", "zion-dev-mcp"],
+    legacyLaunchers: ["buzz", "buzz-acp", "buzz-agent", "buzz-dev-mcp"],
+    environmentAliases: [
+      { canonical: "ZION_RELAY_URL", legacy: "BUZZ_RELAY_URL" },
+      { canonical: "ZION_PRIVATE_KEY", legacy: "BUZZ_PRIVATE_KEY" },
+      { canonical: "ZION_AUTH_TAG", legacy: "BUZZ_AUTH_TAG" },
+      { canonical: "ZION_SHELL", legacy: "BUZZ_SHELL" },
+      { canonical: "ZION_AGENT_PROVIDER", legacy: "BUZZ_AGENT_PROVIDER" },
+      { canonical: "ZION_AGENT_MODEL", legacy: "BUZZ_AGENT_MODEL" },
+      {
+        canonical: "ZION_AGENT_THINKING_EFFORT",
+        legacy: "BUZZ_AGENT_THINKING_EFFORT",
+      },
+      {
+        canonical: "ZION_AGENT_MAX_OUTPUT_TOKENS",
+        legacy: "BUZZ_AGENT_MAX_OUTPUT_TOKENS",
+      },
+      {
+        canonical: "ZION_AGENT_MAX_CONTEXT_TOKENS",
+        legacy: "BUZZ_AGENT_MAX_CONTEXT_TOKENS",
+      },
+    ],
+  });
+});
+
+test("desktop deep-link registration requires Zion before the legacy alias", () => {
+  const sources = loadPlatformBrandSources(repositoryRoot);
+  const tauriPath = "desktop/src-tauri/tauri.conf.json";
+  const tauri = JSON.parse(sources[tauriPath]);
+  tauri.plugins["deep-link"].desktop.schemes = ["buzz"];
+  sources[tauriPath] = JSON.stringify(tauri);
+
+  const failures = validatePlatformBrandSources(sources);
+  assert.ok(
+    failures.some(
+      (failure) =>
+        failure.includes(tauriPath) &&
+        failure.includes("Zion canonical and Buzz legacy deep-link schemes"),
+    ),
+  );
+});
+
+test("iOS deep-link registration requires Zion before the legacy alias", () => {
+  const sources = loadPlatformBrandSources(repositoryRoot);
+  const infoPath = "mobile/ios/Runner/Info.plist";
+  sources[infoPath] = sources[infoPath].replace(
+    "\t\t\t\t<string>zion</string>\n",
+    "",
+  );
+
+  const failures = validatePlatformBrandSources(sources);
+  assert.ok(
+    failures.some(
+      (failure) =>
+        failure.includes(infoPath) &&
+        failure.includes("Zion canonical and Buzz legacy deep-link schemes"),
+    ),
+  );
+});
+
+test("Android deep-link registration requires Zion and the legacy alias", () => {
+  const sources = loadPlatformBrandSources(repositoryRoot);
+  const manifestPath = "mobile/android/app/src/main/AndroidManifest.xml";
+  sources[manifestPath] = sources[manifestPath].replace(
+    '                <data android:scheme="zion"/>\n',
+    "",
+  );
+
+  const failures = validatePlatformBrandSources(sources);
+  assert.ok(
+    failures.some(
+      (failure) =>
+        failure.includes(manifestPath) &&
+        failure.includes("Zion canonical deep-link scheme"),
+    ),
+  );
 });
 
 test("restoring an Android Buzz label fails closed", () => {

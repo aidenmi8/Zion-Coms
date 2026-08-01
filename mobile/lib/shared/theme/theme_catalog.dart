@@ -25,10 +25,25 @@ class ThemeColors {
   bool get isDark => bg.computeLuminance() < 0.5;
 
   /// Human-readable display name: 'catppuccin-mocha' → 'Catppuccin Mocha'.
-  String get displayName => name
-      .split('-')
-      .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w)
-      .join(' ');
+  ///
+  /// The first-party theme IDs remain legacy-compatible storage keys, while
+  /// their newly rendered labels use the canonical Zion product name.
+  String get displayName {
+    switch (name) {
+      case 'buzz':
+        return 'Zion';
+      case 'buzz-dark':
+        return 'Zion Dark';
+      default:
+        return name
+            .split('-')
+            .map(
+              (w) =>
+                  w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w,
+            )
+            .join(' ');
+    }
+  }
 }
 
 /// Known light theme names — used to show sun/moon icons before loading.

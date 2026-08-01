@@ -42,24 +42,24 @@ test("invite requires age and legal consent before opening Zion", async ({
           prerelease: false,
           assets: [
             {
-              name: "Buzz_0.4.9_aarch64.dmg",
+              name: "Zion_0.4.9_aarch64.dmg",
               browser_download_url:
-                "https://github.com/block/buzz/releases/download/v0.4.9/Buzz_0.4.9_aarch64.dmg",
+                "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_aarch64.dmg",
             },
             {
-              name: "Buzz_0.4.9_x64.dmg",
+              name: "Zion_0.4.9_x64.dmg",
               browser_download_url:
-                "https://github.com/block/buzz/releases/download/v0.4.9/Buzz_0.4.9_x64.dmg",
+                "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_x64.dmg",
             },
             {
-              name: "Buzz_0.4.9_amd64.AppImage",
+              name: "Zion_0.4.9_amd64.AppImage",
               browser_download_url:
-                "https://github.com/block/buzz/releases/download/v0.4.9/Buzz_0.4.9_amd64.AppImage",
+                "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_amd64.AppImage",
             },
             {
-              name: "Buzz_0.4.9_x64-setup_alpha-unsigned.exe",
+              name: "Zion_0.4.9_x64-setup_alpha-unsigned.exe",
               browser_download_url:
-                "https://github.com/block/buzz/releases/download/v0.4.9/Buzz_0.4.9_x64-setup_alpha-unsigned.exe",
+                "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_x64-setup_alpha-unsigned.exe",
             },
           ],
         },
@@ -72,7 +72,7 @@ test("invite requires age and legal consent before opening Zion", async ({
     page.getByRole("link", { name: "Download it now" }),
   ).toHaveAttribute(
     "href",
-    "https://github.com/block/buzz/releases/download/v0.4.9/Buzz_0.4.9_x64-setup_alpha-unsigned.exe",
+    "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_x64-setup_alpha-unsigned.exe",
   );
 
   const ageConfirmation = page.getByLabel("I am 18 years of age or older.");
@@ -201,7 +201,7 @@ test("invite can enroll a NIP-07 identity for browser access", async ({
   expect(claimObserved).toBe(true);
 });
 
-test("invite asks Safari users to choose their Mac download", async ({
+test("invite hides direct downloads when Zion-Coms has no artifact", async ({
   browser,
 }) => {
   const context = await browser.newContext({
@@ -228,39 +228,19 @@ test("invite asks Safari users to choose their Mac download", async ({
   });
 
   await page.goto("/invite/demo-code");
-  const download = page.getByRole("link", { name: "Download it now" });
-  await expect(download).toHaveAttribute("aria-haspopup", "dialog");
-  await download.click();
-
-  const chooser = page.getByRole("dialog", {
-    name: "Which Mac do you have?",
-  });
-  await expect(chooser).toBeVisible();
-  await expect(chooser.getByRole("link", { name: /Newer Mac/ })).toContainText(
-    "2021 or later, or a late-2020 Mac with an Apple M1 chip",
+  await expect(page.getByRole("link", { name: "Download it now" })).toHaveCount(
+    0,
   );
-  await expect(chooser.getByRole("link", { name: /Older Mac/ })).toContainText(
-    "2019 or earlier, or a 2020 Mac with an Intel processor",
-  );
-  await expect(chooser.getByText("About This Mac")).toBeVisible();
-
-  const openedPagePromise = context.waitForEvent("page");
-  await chooser.getByRole("link", { name: /Newer Mac/ }).click();
-  const openedPage = await openedPagePromise;
-  await expect(chooser).toBeHidden();
-  await expect(openedPage).toHaveURL("https://github.com/block/buzz/releases");
-  await expect(page).toHaveURL(/\/invite\/demo-code$/);
-  await openedPage.close();
-
-  await download.click();
-  await expect(chooser).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(chooser).toBeHidden();
-  await expect(download).toBeFocused();
+  await expect(
+    page.getByRole("link", { name: "View Zion-Coms Releases" }),
+  ).toHaveAttribute("href", "https://github.com/aidenmi8/Zion-Coms/releases");
+  await expect(
+    page.getByRole("link", { name: "Accept invite in Zion" }),
+  ).toHaveAttribute("href", /zion:\/\/join\?/);
   await context.close();
 });
 
-test("invite download falls back for mobile and non-desktop devices", async ({
+test("invite links unsupported devices only to Zion-Coms releases", async ({
   browser,
 }) => {
   const unsupportedDevices = [
@@ -324,14 +304,14 @@ test("invite download falls back for mobile and non-desktop devices", async ({
             prerelease: false,
             assets: [
               {
-                name: "Buzz_0.4.9_x64.dmg",
+                name: "Zion_0.4.9_x64.dmg",
                 browser_download_url:
-                  "https://github.com/block/buzz/releases/download/v0.4.9/Buzz_0.4.9_x64.dmg",
+                  "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_x64.dmg",
               },
               {
-                name: "Buzz_0.4.9_amd64.AppImage",
+                name: "Zion_0.4.9_amd64.AppImage",
                 browser_download_url:
-                  "https://github.com/block/buzz/releases/download/v0.4.9/Buzz_0.4.9_amd64.AppImage",
+                  "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_amd64.AppImage",
               },
             ],
           },
@@ -341,9 +321,13 @@ test("invite download falls back for mobile and non-desktop devices", async ({
 
     await page.goto("/invite/demo-code");
     await expect(
+      page.getByRole("link", { name: "View Zion-Coms Releases" }),
+      device.name,
+    ).toHaveAttribute("href", "https://github.com/aidenmi8/Zion-Coms/releases");
+    await expect(
       page.getByRole("link", { name: "Download it now" }),
       device.name,
-    ).toHaveAttribute("href", "https://github.com/block/buzz/releases");
+    ).toHaveCount(0);
     await context.close();
   }
 });

@@ -1,3 +1,4 @@
+use buzz_core::branding;
 use nostr::ToBech32;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
@@ -32,6 +33,7 @@ impl Shim {
         for name in [
             "rg",
             "tree",
+            "zion",
             "buzz",
             "git-credential-nostr",
             "git-sign-nostr",
@@ -92,7 +94,7 @@ fn write_keyfile(shim_dir: &Path, raw: &str) -> Option<KeyInfo> {
         Ok(k) => k,
         Err(e) => {
             eprintln!(
-                "buzz-dev-mcp: warning: NOSTR_PRIVATE_KEY is set but invalid ({e}); \
+                "zion-dev-mcp: warning: NOSTR_PRIVATE_KEY is set but invalid ({e}); \
                  git auth/signing will be disabled"
             );
             return None;
@@ -107,7 +109,7 @@ fn write_keyfile(shim_dir: &Path, raw: &str) -> Option<KeyInfo> {
     let keyfile = shim_dir.join(".nostr-key");
     if write_keyfile_atomic(&keyfile, raw.as_bytes()).is_err() {
         eprintln!(
-            "buzz-dev-mcp: warning: failed to write nostr keyfile; git auth/signing disabled"
+            "zion-dev-mcp: warning: failed to write nostr keyfile; git auth/signing disabled"
         );
         return None;
     }
@@ -115,7 +117,7 @@ fn write_keyfile(shim_dir: &Path, raw: &str) -> Option<KeyInfo> {
         Some(s) => s.to_owned(),
         None => {
             eprintln!(
-                "buzz-dev-mcp: warning: tempdir path is not valid UTF-8; git auth/signing disabled"
+                "zion-dev-mcp: warning: tempdir path is not valid UTF-8; git auth/signing disabled"
             );
             return None;
         }
@@ -150,10 +152,9 @@ fn write_keyfile_atomic(path: &Path, data: &[u8]) -> std::io::Result<()> {
 
 /// Derive a NIP-05-style email from the pubkey and relay URL.
 /// Format: `<hex_pubkey>@<relay_host>` (e.g., `ab12...cd@relay.buzz.dev`).
-/// Falls back to `<hex_pubkey>@buzz` if no relay URL is configured.
+/// Falls back to `<hex_pubkey>@zion` if no relay URL is configured.
 fn derive_git_email(pubkey_hex: &str) -> String {
-    let host = std::env::var("BUZZ_RELAY_URL")
-        .ok()
+    let host = branding::env_alias("ZION_RELAY_URL", "BUZZ_RELAY_URL")
         .and_then(|url| {
             // Strip scheme, port, and trailing paths
             let stripped = url
@@ -167,7 +168,7 @@ fn derive_git_email(pubkey_hex: &str) -> String {
             Some(host_port.split(':').next().unwrap_or(host_port).to_owned())
         })
         .filter(|h| !h.is_empty() && !h.starts_with("localhost") && !h.starts_with("127."))
-        .unwrap_or_else(|| "buzz".to_owned());
+        .unwrap_or_else(|| "zion".to_owned());
     format!("{pubkey_hex}@{host}")
 }
 
@@ -180,7 +181,8 @@ fn derive_git_email(pubkey_hex: &str) -> String {
 ///
 /// Nothing writes this yet — when unset, [`build_git_env`] falls back to the
 /// npub, which is byte-for-byte today's behavior.
-const DISPLAY_NAME_ENV_VAR: &str = "BUZZ_ACP_DISPLAY_NAME";
+const DISPLAY_NAME_ENV_VAR: &str = "ZION_ACP_DISPLAY_NAME";
+const LEGACY_DISPLAY_NAME_ENV_VAR: &str = "BUZZ_ACP_DISPLAY_NAME";
 
 /// Max characters in a git author name. Nostr display names are unbounded.
 const MAX_GIT_USER_NAME_CHARS: usize = 80;
@@ -283,8 +285,7 @@ fn build_git_env(info: &KeyInfo) -> Vec<(String, String)> {
     let email = derive_git_email(&info.pubkey_hex);
     // Display name for humans reading `git log`; the pubkey stays in the email,
     // which is what NIP-98 auth, NIP-GS signing, and contributor matching key on.
-    let user_name = std::env::var(DISPLAY_NAME_ENV_VAR)
-        .ok()
+    let user_name = branding::env_alias(DISPLAY_NAME_ENV_VAR, LEGACY_DISPLAY_NAME_ENV_VAR)
         .as_deref()
         .and_then(sanitize_git_user_name)
         .unwrap_or_else(|| info.npub.clone());
@@ -361,13 +362,31 @@ pub fn artifact_dir(session_root: &Path) -> PathBuf {
 #[cfg(test)]
 mod git_user_name_tests {
     use super::{
-        build_git_env, is_git_crud, is_unicode_format, sanitize_git_user_name, KeyInfo,
+        build_git_env, is_git_crud, is_unicode_format, sanitize_git_user_name, KeyInfo, Shim,
         MAX_GIT_USER_NAME_CHARS,
     };
     use std::sync::Mutex;
 
     /// Env-var-touching tests must run serially — env vars are process-global.
     static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+    #[test]
+    fn shim_installs_canonical_and_legacy_cli_launchers() {
+        let _guard = ENV_LOCK.lock().unwrap_or_else(|poison| poison.into_inner());
+        std::env::remove_var("NOSTR_PRIVATE_KEY");
+        let shim = Shim::install().expect("install shim");
+        for launcher in ["zion", "buzz"] {
+            let launcher_path = if cfg!(windows) {
+                shim._dir.path().join(format!("{launcher}.exe"))
+            } else {
+                shim._dir.path().join(launcher)
+            };
+            assert!(
+                launcher_path.exists(),
+                "{launcher} launcher must be installed"
+            );
+        }
+    }
 
     const PUBKEY_HEX: &str = "dcfd242e557282d7a1e2cf2e6877522682f1e5c6156dc92ca7d90eaedd3b0f95";
     const NPUB: &str = "npub1mn7jgtj4w2pd0g0zeuhxsa6jy6p0rewxz4kujt98my82ahfmp72sxjexk7";
@@ -637,7 +656,7 @@ mod git_user_name_tests {
         // matching key on — must stay in the email untouched.
         assert_eq!(
             git_config(&env, "user.email").as_deref(),
-            Some(format!("{PUBKEY_HEX}@buzz").as_str())
+            Some(format!("{PUBKEY_HEX}@zion").as_str())
         );
         assert_eq!(
             git_config(&env, "user.signingkey").as_deref(),
@@ -658,7 +677,7 @@ mod git_user_name_tests {
         assert_eq!(git_config(&env, "user.name").as_deref(), Some(NPUB));
         assert_eq!(
             git_config(&env, "user.email").as_deref(),
-            Some(format!("{PUBKEY_HEX}@buzz").as_str())
+            Some(format!("{PUBKEY_HEX}@zion").as_str())
         );
     }
 

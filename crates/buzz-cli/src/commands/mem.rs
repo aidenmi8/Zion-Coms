@@ -37,7 +37,7 @@ fn resolve_owner(client: &BuzzClient, owner_flag: Option<&str>) -> Result<Public
     }
     let tag = client.auth_tag_owner_hex().ok_or_else(|| {
         CliError::Usage(
-            "owner pubkey required (set BUZZ_AUTH_TAG with a NIP-OA attestation or pass --owner)"
+            "owner pubkey required (set ZION_AUTH_TAG with a NIP-OA attestation or pass --owner)"
                 .into(),
         )
     })?;
@@ -339,7 +339,7 @@ pub async fn cmd_set(
         if buf.is_empty() && !allow_empty {
             return Err(CliError::Usage(
                 "refusing to write empty value from stdin (an upstream pipeline step likely \
-                 failed). Pass --allow-empty to confirm, or use `buzz mem rm <slug>` to \
+                 failed). Pass --allow-empty to confirm, or use `zion mem rm <slug>` to \
                  tombstone."
                     .into(),
             ));
@@ -558,7 +558,7 @@ pub async fn cmd_patch(
         }
         (None, false) => {
             return Err(CliError::Usage(
-                "missing --base-hash <hex> (run `buzz mem hash <slug>` to get it). \
+                "missing --base-hash <hex> (run `zion mem hash <slug>` to get it). \
                  Pass --no-base-hash to skip this check at your own risk."
                     .into(),
             ));
@@ -659,7 +659,7 @@ pub async fn cmd_patch(
     if new_value.is_empty() && !allow_empty {
         return Err(CliError::Usage(
             "refusing to write empty value (patch result is empty). \
-             Pass --allow-empty to confirm, or use `buzz mem rm <slug>` to tombstone."
+             Pass --allow-empty to confirm, or use `zion mem rm <slug>` to tombstone."
                 .into(),
         ));
     }
@@ -712,7 +712,7 @@ pub async fn cmd_rm(
         normalize_slug(raw_slug).map_err(|e| CliError::Usage(format!("invalid slug: {e}")))?;
     if slug == engram::CORE_SLUG {
         return Err(CliError::Usage(
-            "core cannot be tombstoned; overwrite it with `buzz mem set core ''` instead".into(),
+            "core cannot be tombstoned; overwrite it with `zion mem set core ''` instead".into(),
         ));
     }
     let owner = resolve_owner(client, owner_flag)?;

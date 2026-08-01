@@ -988,9 +988,12 @@ impl BuzzClient {
                                     .map(str::to_string)
                             })
                             .unwrap_or(body_text);
-                        let message = if status == 403 && std::env::var("BUZZ_AUTH_TAG").is_ok() {
+                        let message = if status == 403
+                            && buzz_core::branding::env_alias("ZION_AUTH_TAG", "BUZZ_AUTH_TAG")
+                                .is_some()
+                        {
                             format!(
-                                "{message} (BUZZ_AUTH_TAG is set — it may be stale or revoked; try unsetting it)"
+                                "{message} (ZION_AUTH_TAG is set — it may be stale or revoked; try unsetting it)"
                             )
                         } else {
                             message
@@ -1268,9 +1271,11 @@ impl BuzzClient {
                         .map(|s| s.to_string())
                 })
                 .unwrap_or(body);
-            if status == 403 && std::env::var("BUZZ_AUTH_TAG").is_ok() {
+            if status == 403
+                && buzz_core::branding::env_alias("ZION_AUTH_TAG", "BUZZ_AUTH_TAG").is_some()
+            {
                 let message = format!(
-                    "{message} (BUZZ_AUTH_TAG is set — it may be stale or revoked; try unsetting it)"
+                    "{message} (ZION_AUTH_TAG is set — it may be stale or revoked; try unsetting it)"
                 );
                 return Err(CliError::Relay {
                     status,

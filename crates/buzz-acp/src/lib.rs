@@ -117,22 +117,22 @@ fn emit_runtime_lifecycle(
 /// Resolve the agent's owner pubkey at startup.
 ///
 /// Priority:
-/// 1. `BUZZ_AUTH_TAG` env var — NIP-OA attestation signed by the owner.
+/// 1. `ZION_AUTH_TAG` env var (or legacy alias) — NIP-OA attestation signed by the owner.
 ///    Verified against the agent's own pubkey to extract the owner pubkey.
-/// 2. `--agent-owner` CLI flag / `BUZZ_ACP_AGENT_OWNER` env var.
+/// 2. `--agent-owner` CLI flag / `ZION_ACP_AGENT_OWNER` env var.
 fn resolve_agent_owner(config: &Config) -> Option<String> {
-    // Try BUZZ_AUTH_TAG first (NIP-OA attestation).
-    if let Ok(auth_tag) = std::env::var("BUZZ_AUTH_TAG") {
+    // Try the canonical auth tag, then its legacy alias (NIP-OA attestation).
+    if let Some(auth_tag) = buzz_core::branding::env_alias("ZION_AUTH_TAG", "BUZZ_AUTH_TAG") {
         if !auth_tag.is_empty() {
             let agent_pk = config.keys.public_key();
             match buzz_sdk::nip_oa::verify_auth_tag(&auth_tag, &agent_pk) {
                 Ok(owner_pk) => {
                     let owner_hex = owner_pk.to_hex().to_ascii_lowercase();
-                    tracing::info!("owner resolved from BUZZ_AUTH_TAG: {owner_hex}");
+                    tracing::info!("owner resolved from ZION_AUTH_TAG: {owner_hex}");
                     return Some(owner_hex);
                 }
                 Err(e) => {
-                    tracing::warn!("BUZZ_AUTH_TAG verification failed: {e} — falling back");
+                    tracing::warn!("ZION_AUTH_TAG verification failed: {e} — falling back");
                 }
             }
         }
@@ -1290,11 +1290,11 @@ async fn tokio_main() -> Result<()> {
     if let Some(payload) = setup_mode::SetupPayload::from_env()
         .map_err(|e| anyhow::anyhow!("setup payload error: {e}"))?
     {
-        tracing::info!("buzz-acp: setup payload present, entering setup-listener mode");
+        tracing::info!("zion-acp: setup payload present, entering setup-listener mode");
         return setup_mode::run_setup_listener(config, payload).await;
     }
 
-    tracing::info!("buzz-acp starting: {}", config.summary());
+    tracing::info!("zion-acp starting: {}", config.summary());
 
     let observer = config
         .relay_observer
@@ -1334,11 +1334,11 @@ async fn tokio_main() -> Result<()> {
 
     let pubkey_hex = config.keys.public_key().to_hex();
 
-    // Parse BUZZ_AUTH_TAG into a nostr::Tag for NIP-OA relay membership delegation.
-    let relay_auth_tag: Option<nostr::Tag> = std::env::var("BUZZ_AUTH_TAG")
-        .ok()
-        .filter(|s| !s.is_empty())
-        .and_then(|s| buzz_sdk::nip_oa::parse_auth_tag(&s).ok());
+    // Parse the canonical auth tag (or legacy alias) for NIP-OA relay membership delegation.
+    let relay_auth_tag: Option<nostr::Tag> =
+        buzz_core::branding::env_alias("ZION_AUTH_TAG", "BUZZ_AUTH_TAG")
+            .filter(|s| !s.is_empty())
+            .and_then(|s| buzz_sdk::nip_oa::parse_auth_tag(&s).ok());
 
     let mut relay =
         HarnessRelay::connect(&config.relay_url, &config.keys, &pubkey_hex, relay_auth_tag)
@@ -1364,7 +1364,7 @@ async fn tokio_main() -> Result<()> {
     let presence_publisher = relay.event_publisher();
     let presence_keys = config.keys.clone();
 
-    // Priority: BUZZ_AUTH_TAG (NIP-OA attestation) → --agent-owner flag.
+    // Priority: ZION_AUTH_TAG (or legacy alias) → --agent-owner flag.
     let startup_owner: Option<String> = resolve_agent_owner(&config);
     if let Some(ref owner) = startup_owner {
         tracing::info!("agent owner: {owner}");
@@ -1377,7 +1377,7 @@ async fn tokio_main() -> Result<()> {
             RespondTo::OwnerOnly => {
                 tracing::warn!(
                     "respond-to=owner-only but no owner is set — all events will be \
-                     dropped. Set BUZZ_AUTH_TAG or --agent-owner, or use --respond-to=anyone."
+                     dropped. Set ZION_AUTH_TAG or --agent-owner, or use --respond-to=anyone."
                 );
             }
             RespondTo::Allowlist => {
@@ -1566,7 +1566,7 @@ async fn tokio_main() -> Result<()> {
     if !config.memory_enabled {
         tracing::info!(
             target: "engram::core",
-            "NIP-AE core memory injection disabled (re-enable by removing --no-memory / BUZZ_ACP_NO_MEMORY)"
+            "NIP-AE core memory injection disabled (re-enable by removing --no-memory / ZION_ACP_NO_MEMORY)"
         );
     }
 
@@ -2699,7 +2699,7 @@ async fn tokio_main() -> Result<()> {
     // for the background task to finish, rather than aborting immediately (#40).
     relay.shutdown().await;
 
-    tracing::info!("buzz-acp stopped");
+    tracing::info!("zion-acp stopped");
     Ok(())
 }
 
@@ -2814,7 +2814,7 @@ fn try_native_steer(
     // native and cancel+merge fallback share these so the agent gets the
     // same orientation regardless of transport). The single event block
     // is rendered by `queue::format_event_block`, the same function
-    // `queue::format_prompt` uses internally for `[Buzz event: …]`
+    // `queue::format_prompt` uses internally for `[Zion event: …]`
     // sections, so the rendering also cannot drift.
     //
     // Passing `None` for `channel_info` / `profile_lookup` is intentional:
@@ -2830,7 +2830,8 @@ fn try_native_steer(
         received_at: std::time::Instant::now(),
     };
     let event_block = queue::format_event_block(channel_id, None, &be, None);
-    let body = format!("{header}\n\n[Buzz event: {prompt_tag}]\n{event_block}\n\n{closing}");
+    let event_frame = queue::zion_event_frame(&prompt_tag, &event_block);
+    let body = format!("{header}\n\n{event_frame}\n\n{closing}");
 
     let (ack_tx, ack_rx) = tokio::sync::oneshot::channel::<pool::SteerAck>();
     let request = pool::SteerRequest {
@@ -3591,11 +3592,12 @@ mod agent_draft_prompt_tests {
     #[test]
     fn shared_base_prompt_teaches_portable_agent_drafts() {
         let prompt = include_str!("base_prompt.md");
-        assert!(prompt.contains("buzz agents draft-create"));
+        assert!(prompt.contains("zion agents draft-create"));
         assert!(prompt.contains("ask for at most two things"));
         assert!(prompt.contains("what it should do day-to-day"));
         assert!(prompt.contains("owner saves it"));
         assert!(prompt.contains("Do not ask about runtime, provider, model, credentials"));
+        assert!(!prompt.to_ascii_lowercase().contains("buzz"));
     }
 
     #[test]
@@ -3603,7 +3605,14 @@ mod agent_draft_prompt_tests {
         let prompt = include_str!("base_prompt.md");
         assert!(prompt.contains("pass real newline bytes through stdin"));
         assert!(prompt.contains("single-quoted shell strings preserve `\\n` literally"));
-        assert!(prompt.contains("buzz messages send ... --content -"));
+        assert!(prompt.contains("zion messages send ... --content -"));
+    }
+
+    #[test]
+    fn default_heartbeat_prompt_is_zion_only() {
+        let prompt = super::default_heartbeat_prompt();
+        assert!(prompt.contains("zion feed get"));
+        assert!(!prompt.to_ascii_lowercase().contains("buzz"), "{prompt}");
     }
 
     #[test]
@@ -3627,14 +3636,14 @@ fn default_heartbeat_prompt() -> String {
          You have been awakened for a routine heartbeat. You have NO incoming messages or\n\
          active channel context for this turn.\n\n\
          Your tasks:\n\
-         1. Run `buzz feed get --types needs_action` to check for pending workflow approvals or\n\
+         1. Run `zion feed get --types needs_action` to check for pending workflow approvals or\n\
             high-priority requests addressed to you.\n\
-         2. Run `buzz feed get --types mentions` to check for unanswered @mentions.\n\
+         2. Run `zion feed get --types mentions` to check for unanswered @mentions.\n\
          3. If you find actionable items, address them using the appropriate CLI commands\n\
-            (e.g., `buzz workflows approve --token <UUID>`, `buzz messages send`,\n\
-            `buzz messages send --reply-to <event-id>`).\n\
+            (e.g., `zion workflows approve --token <UUID>`, `zion messages send`,\n\
+            `zion messages send --reply-to <event-id>`).\n\
          4. If there are no pending actions or mentions, end your turn immediately.\n\n\
-         Do not run `buzz channels list` or `buzz messages search` unless you have a specific reason.\n\
+         Do not run `zion channels list` or `zion messages search` unless you have a specific reason.\n\
          Do not invent work — only act on items surfaced by the feed commands."
     )
 }
@@ -4167,11 +4176,11 @@ fn build_mcp_servers(config: &Config) -> Vec<McpServer> {
         env: {
             let mut env = vec![
                 EnvVar {
-                    name: "BUZZ_RELAY_URL".into(),
+                    name: "ZION_RELAY_URL".into(),
                     value: config.relay_url.clone(),
                 },
                 EnvVar {
-                    name: "BUZZ_PRIVATE_KEY".into(),
+                    name: "ZION_PRIVATE_KEY".into(),
                     // bech32 encoding of a valid secret key is infallible.
                     // Panic here is correct: injecting a bogus secret would cause
                     // delayed, hard-to-diagnose agent failures downstream.
@@ -4182,12 +4191,13 @@ fn build_mcp_servers(config: &Config) -> Vec<McpServer> {
                         .expect("secret key bech32 encoding should never fail"),
                 },
             ];
-            // Forward BUZZ_AUTH_TAG (NIP-OA owner attestation credential)
+            // Forward ZION_AUTH_TAG (NIP-OA owner attestation credential)
             // so the MCP server can attach it to every signed event.
-            if let Ok(auth_tag) = std::env::var("BUZZ_AUTH_TAG") {
+            if let Some(auth_tag) = buzz_core::branding::env_alias("ZION_AUTH_TAG", "BUZZ_AUTH_TAG")
+            {
                 if !auth_tag.is_empty() {
                     env.push(EnvVar {
-                        name: "BUZZ_AUTH_TAG".into(),
+                        name: "ZION_AUTH_TAG".into(),
                         value: auth_tag,
                     });
                 }
@@ -4196,10 +4206,12 @@ fn build_mcp_servers(config: &Config) -> Vec<McpServer> {
             // author name instead of the raw npub. Read from the process env
             // rather than Config: this is a pass-through of a contract owned
             // upstream, and absent simply means dev-mcp falls back to the npub.
-            if let Ok(display_name) = std::env::var("BUZZ_ACP_DISPLAY_NAME") {
+            if let Some(display_name) =
+                buzz_core::branding::env_alias("ZION_ACP_DISPLAY_NAME", "BUZZ_ACP_DISPLAY_NAME")
+            {
                 if !display_name.is_empty() {
                     env.push(EnvVar {
-                        name: "BUZZ_ACP_DISPLAY_NAME".into(),
+                        name: "ZION_ACP_DISPLAY_NAME".into(),
                         value: display_name,
                     });
                 }
@@ -5024,12 +5036,12 @@ mod build_mcp_servers_tests {
 
         let names: Vec<&str> = server.env.iter().map(|e| e.name.as_str()).collect();
         assert!(
-            names.contains(&"BUZZ_RELAY_URL"),
-            "missing BUZZ_RELAY_URL; got {names:?}"
+            names.contains(&"ZION_RELAY_URL"),
+            "missing ZION_RELAY_URL; got {names:?}"
         );
         assert!(
-            names.contains(&"BUZZ_PRIVATE_KEY"),
-            "missing BUZZ_PRIVATE_KEY; got {names:?}"
+            names.contains(&"ZION_PRIVATE_KEY"),
+            "missing ZION_PRIVATE_KEY; got {names:?}"
         );
     }
 
@@ -5042,10 +5054,10 @@ mod build_mcp_servers_tests {
         std::env::remove_var("BUZZ_AUTH_TAG");
 
         let server = &servers[0];
-        let auth_tag_env = server.env.iter().find(|e| e.name == "BUZZ_AUTH_TAG");
+        let auth_tag_env = server.env.iter().find(|e| e.name == "ZION_AUTH_TAG");
         assert!(
             auth_tag_env.is_some(),
-            "BUZZ_AUTH_TAG should be forwarded when set"
+            "legacy auth tag should be forwarded under ZION_AUTH_TAG"
         );
         assert_eq!(auth_tag_env.unwrap().value, "test-attestation-tag");
     }
@@ -5059,7 +5071,7 @@ mod build_mcp_servers_tests {
         std::env::remove_var("BUZZ_AUTH_TAG");
 
         let server = &servers[0];
-        let has_auth_tag = server.env.iter().any(|e| e.name == "BUZZ_AUTH_TAG");
+        let has_auth_tag = server.env.iter().any(|e| e.name == "ZION_AUTH_TAG");
         assert!(!has_auth_tag, "empty BUZZ_AUTH_TAG should not be forwarded");
     }
 
@@ -5074,7 +5086,7 @@ mod build_mcp_servers_tests {
         let entry = servers[0]
             .env
             .iter()
-            .find(|e| e.name == "BUZZ_ACP_DISPLAY_NAME");
+            .find(|e| e.name == "ZION_ACP_DISPLAY_NAME");
         assert_eq!(
             entry.map(|e| e.value.as_str()),
             Some("Duncan"),
@@ -5095,7 +5107,7 @@ mod build_mcp_servers_tests {
             !servers[0]
                 .env
                 .iter()
-                .any(|e| e.name == "BUZZ_ACP_DISPLAY_NAME"),
+                .any(|e| e.name == "ZION_ACP_DISPLAY_NAME"),
             "unset display name should not add the key"
         );
     }
@@ -5112,7 +5124,7 @@ mod build_mcp_servers_tests {
             !servers[0]
                 .env
                 .iter()
-                .any(|e| e.name == "BUZZ_ACP_DISPLAY_NAME"),
+                .any(|e| e.name == "ZION_ACP_DISPLAY_NAME"),
             "empty display name should not be forwarded"
         );
     }
@@ -6476,12 +6488,12 @@ mod observer_payload_trim_tests {
     fn test_multi_block_prompt_retains_every_section_header_after_elision() {
         // The real session/prompt fix: format_prompt now emits one block per
         // section, so the observer payload is params.prompt = [{text: "[Base]…"},
-        // {text: "[Agent Memory — core]…"}, … {text: "[Buzz event: …]…<huge>"}].
+        // {text: "[Agent Memory — core]…"}, … {text: "[Zion event: …]…<huge>"}].
         // An oversized section is its own leaf, so eliding its body keeps the
         // leaf's head-3000 (which begins with the section's [Header] line) — every
         // header survives, so the desktop "Prompt context" panel counts them all.
         // This is the regression the single-fat-leaf shape caused (the trailing
-        // [Buzz event] header fell into the elided middle and the count collapsed
+        // [Zion event] header fell into the elided middle and the count collapsed
         // to 1).
         let sections = [
             "[Base]\nyou are a helpful agent".to_string(),
@@ -6489,7 +6501,7 @@ mod observer_payload_trim_tests {
             "[Agent Memory — core]\nremember this".to_string(),
             "[Context]\nScope: thread".to_string(),
             // The triggering event body, oversized on its own.
-            format!("[Buzz event: @mention]\nContent: {}", "E".repeat(90_000)),
+            format!("[Zion event: @mention]\nContent: {}", "E".repeat(90_000)),
         ];
         let block_refs: Vec<&str> = sections.iter().map(String::as_str).collect();
         // Mirror the wire shape build_prompt_params produces: each block is its
@@ -6525,7 +6537,7 @@ mod observer_payload_trim_tests {
             "[System]",
             "[Agent Memory — core]",
             "[Context]",
-            "[Buzz event: @mention]",
+            "[Zion event: @mention]",
         ] {
             assert!(
                 texts.iter().any(|t| t.starts_with(header)),
@@ -6535,7 +6547,7 @@ mod observer_payload_trim_tests {
         // The oversized event body was elided in place (header kept, middle cut).
         let event_block = texts
             .iter()
-            .find(|t| t.starts_with("[Buzz event: @mention]"))
+            .find(|t| t.starts_with("[Zion event: @mention]"))
             .unwrap();
         assert!(
             event_block.contains("…[elided"),

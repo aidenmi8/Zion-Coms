@@ -413,10 +413,12 @@ impl PkceOAuthTokenSource {
         }
 
         // No usable token — return error instead of opening a browser.
-        Err(AgentError::LlmAuth(
-            "no cached Databricks token; run `buzz-agent auth databricks` first".into(),
-        ))
+        Err(AgentError::LlmAuth(no_cached_token_error()))
     }
+}
+
+fn no_cached_token_error() -> String {
+    "no cached Databricks token; run `zion-agent auth databricks` first".into()
 }
 
 // ---- helpers -------------------------------------------------------------
@@ -558,12 +560,9 @@ async fn browser_pkce_flow(
                 if let Some(sender) = tx.lock().await.take() {
                     let _ = sender.send(result.clone());
                 }
-                match result {
-                    Ok(_) => Html(
-                        "<h2>Buzz: signed in</h2><p>You can close this window.</p>".to_string(),
-                    ),
-                    Err(e) => Html(format!("<h2>Buzz auth failed</h2><pre>{e}</pre>")),
-                }
+                Html(oauth_callback_html(
+                    result.as_ref().map(|_| ()).map_err(String::as_str),
+                ))
             }
         }),
     );
@@ -629,9 +628,35 @@ async fn browser_pkce_flow(
     token_from_response(&v, None)
 }
 
+fn oauth_callback_html<E: std::fmt::Display>(result: Result<(), E>) -> String {
+    match result {
+        Ok(()) => "<h2>Zion: signed in</h2><p>You can close this window.</p>".to_string(),
+        Err(error) => format!("<h2>Zion auth failed</h2><pre>{error}</pre>"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn oauth_callback_html_is_zion_branded_for_success_and_failure() {
+        let success = oauth_callback_html(Ok::<(), &str>(()));
+        assert!(success.contains("Zion: signed in"));
+        assert!(!success.to_ascii_lowercase().contains("buzz"));
+
+        let failure = oauth_callback_html(Err("denied"));
+        assert!(failure.contains("Zion auth failed"));
+        assert!(failure.contains("denied"));
+        assert!(!failure.to_ascii_lowercase().contains("buzz"));
+    }
+
+    #[test]
+    fn noninteractive_auth_guidance_uses_canonical_launcher() {
+        let error = no_cached_token_error();
+        assert!(error.contains("zion-agent auth databricks"));
+        assert!(!error.to_ascii_lowercase().contains("buzz"));
+    }
 
     #[test]
     fn pkce_pair_produces_valid_challenge() {

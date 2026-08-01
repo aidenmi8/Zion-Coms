@@ -6,7 +6,8 @@ use crate::client::{normalize_events, normalize_write_response, BuzzClient};
 use crate::error::CliError;
 use crate::validate::{
     infer_language, parse_event_id, parse_uuid, read_or_stdin, truncate_diff,
-    validate_content_size, validate_hex64, validate_uuid, MAX_DIFF_BYTES,
+    validate_content_size, validate_hex64, validate_managed_agent_output, validate_uuid,
+    MAX_DIFF_BYTES,
 };
 use buzz_sdk::mentions::{
     extract_at_mentions_with_known, extract_nostr_uris, merge_mentions, strip_code_regions,
@@ -490,6 +491,7 @@ pub async fn cmd_send_message(
     // bugs for agent and human users alike.
     p.content = read_or_stdin(&p.content)?;
     validate_content_size(&p.content)?;
+    validate_managed_agent_output(&p.content)?;
     if let Some(ref r) = p.reply_to {
         validate_hex64(r)?;
     }
@@ -517,6 +519,7 @@ pub async fn cmd_send_message(
     } else {
         format!("{}{media_content}", p.content)
     };
+    validate_managed_agent_output(&final_content)?;
 
     // Build thread ref if replying. `--reply-to` is the immediate parent; the
     // thread root is derived from the parent's NIP-10 tags via the relay.
@@ -705,6 +708,7 @@ pub async fn cmd_edit_message(
 ) -> Result<(), CliError> {
     validate_hex64(event_id)?;
     validate_content_size(content)?;
+    validate_managed_agent_output(content)?;
 
     // Resolve channel_id from the event's h-tag
     let channel_uuid = resolve_channel_id(client, event_id).await?;

@@ -11,6 +11,11 @@ test("welcome canvas covers purpose, agent use, a first challenge, and help", ()
   assert.match(WELCOME_CANVAS_CONTENT, /Mention an agent/i);
   assert.match(WELCOME_CANVAS_CONTENT, /quick challenge/i);
   assert.match(WELCOME_CANVAS_CONTENT, /Zion user guide/i);
+  assert.match(
+    WELCOME_CANVAS_CONTENT,
+    /github\.com\/aidenmi8\/Zion-Coms#readme/i,
+  );
+  assert.doesNotMatch(WELCOME_CANVAS_CONTENT, /buzz/i);
 });
 
 test("ensureWelcomeCanvas seeds a fresh channel with no canvas", async () => {

@@ -30,7 +30,7 @@ const BACKGROUND_BLOCKED_STATES = new Set<UpdateStatus["state"]>([
   "manual-required",
 ]);
 
-const GITHUB_RELEASES_URL = "https://github.com/block/buzz/releases/latest";
+const ZION_RELEASES_URL = "https://github.com/aidenmi8/Zion-Coms/releases";
 
 function toErrorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
@@ -168,7 +168,7 @@ export function useUpdater() {
             setStatus({
               state: "manual-required",
               version: update.version,
-              releaseUrl: GITHUB_RELEASES_URL,
+              releaseUrl: ZION_RELEASES_URL,
             });
           }
         } else if (shouldShowQuietResult) {

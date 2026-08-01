@@ -54,6 +54,11 @@ import {
 import { Input } from "@/shared/ui/input";
 import { SettingsSectionHeader } from "./SettingsSectionHeader";
 
+// Hosted-community provisioning is intentionally paused until the Sentra /
+// Agents.do service contract is ready. Keep the existing integration code and
+// stored sessions intact, but do not initiate external sign-in from this page.
+const HOSTED_COMMUNITIES_ENABLED = false;
+
 function relayHost(url: string | null | undefined) {
   if (!url) return null;
   try {
@@ -113,6 +118,11 @@ export function HostedCommunitiesSettingsCard() {
   }, []);
 
   React.useEffect(() => {
+    if (!HOSTED_COMMUNITIES_ENABLED) {
+      setLoading(false);
+      return;
+    }
+
     let active = true;
     void invoke<BuilderlabAuth | null>("get_builderlab_auth")
       .then(async (nextAuth) => {
@@ -414,11 +424,34 @@ export function HostedCommunitiesSettingsCard() {
   const busy = action != null;
   const atCommunityLimit = communities.length >= MAX_COMMUNITIES;
 
+  if (!HOSTED_COMMUNITIES_ENABLED) {
+    return (
+      <section className="space-y-6" data-testid="hosted-communities-settings">
+        <SettingsSectionHeader
+          title="Hosted communities"
+          description="Zion works with Secure relay only. This page is only for relay hosting provided by Sentra - sign in with an Agents.do account to create and manage Your Company communities. sign-in is used on this page alone."
+        />
+        <div className="rounded-xl border border-border/70 p-5">
+          <h3 className="font-medium">
+            Hosted community management is temporarily unavailable
+          </h3>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Sign-in is disabled for now. You can connect to a Secure relay using
+            the regular community flow.
+          </p>
+          <Button className="mt-4" disabled type="button">
+            Sign-in disabled
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="space-y-6" data-testid="hosted-communities-settings">
       <SettingsSectionHeader
         title="Hosted communities"
-        description="Zion works with any relay. This page is only for relay hosting provided by Block — sign in with a Builderlab account to create and manage Block-hosted communities. Builderlab sign-in is used on this page alone."
+        description="Zion works with Secure relay only. This page is only for relay hosting provided by Sentra - sign in with an Agents.do account to create and manage Your Company communities. sign-in is used on this page alone."
       />
 
       {error ? (

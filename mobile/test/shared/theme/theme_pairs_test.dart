@@ -4,6 +4,11 @@ import 'package:buzz/shared/theme/theme.dart';
 
 void main() {
   group('themePairs', () {
+    test('first-party themes use Zion display labels', () {
+      expect(findTheme('buzz')!.displayName, 'Zion');
+      expect(findTheme('buzz-dark')!.displayName, 'Zion Dark');
+    });
+
     test('every pair member exists in the catalog', () {
       for (final entry in themePairs.entries) {
         expect(

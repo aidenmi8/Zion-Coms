@@ -1,0 +1,1016 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-01-02-normal-4632c55",
+  "previous_reviewed_sha": "f44b5a2477f3979ae66e49153b11be36538cf859",
+  "pinned_upstream_sha": "4632c55041c5d423d572a6f6411bb7b279c26f67",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-3701",
+      "title": "feat(desktop): add password-protected backups in settings",
+      "upstream_pr": 3701,
+      "entry_shas": [
+        "bd0bff24bfd2cffa2b3b3a995f7628af5e460a5c"
+      ]
+    },
+    {
+      "topic_id": "pr-3774",
+      "title": "Make relay reconnect backoff authoritative",
+      "upstream_pr": 3774,
+      "entry_shas": [
+        "cca8839034eb571a7ce943c3ace7f85a82330898"
+      ]
+    },
+    {
+      "topic_id": "pr-3568",
+      "title": "feat(release): make desktop releases immutable",
+      "upstream_pr": 3568,
+      "entry_shas": [
+        "1dfd89ea67b4ebce0c4d10390f280ed4e7ddde8a"
+      ]
+    },
+    {
+      "topic_id": "pr-3719",
+      "title": "Fix video reviews in thread replies",
+      "upstream_pr": 3719,
+      "entry_shas": [
+        "f48f3f055fdd6030d3832f615f8c0d8e5a81261a"
+      ]
+    },
+    {
+      "topic_id": "pr-3724",
+      "title": "Tighten continuation message rows",
+      "upstream_pr": 3724,
+      "entry_shas": [
+        "6e419b9f1c873549a7b40996970e0da7352adafb"
+      ]
+    },
+    {
+      "topic_id": "pr-3783",
+      "title": "perf(presence): reduce heartbeat frequency",
+      "upstream_pr": 3783,
+      "entry_shas": [
+        "bf139e8d0bdba10df9a5adbf16843140e0a78a59"
+      ]
+    },
+    {
+      "topic_id": "pr-3321",
+      "title": "feat(desktop): improve agent activity header ui",
+      "upstream_pr": 3321,
+      "entry_shas": [
+        "4d47aa83455a9fd024121a596154cd311dca1d76"
+      ]
+    },
+    {
+      "topic_id": "pr-3225",
+      "title": "Add Devin as a preset ACP harness",
+      "upstream_pr": 3225,
+      "entry_shas": [
+        "1b3ff96a5764303998fa629ff852e81f1a88d7ad"
+      ]
+    },
+    {
+      "topic_id": "pr-3670",
+      "title": "fix(db): isolate usage metrics advisory-lock test on scratch DB",
+      "upstream_pr": 3670,
+      "entry_shas": [
+        "dba97eecd9d8659c9c816cd6666fa6d687b6bca1"
+      ]
+    },
+    {
+      "topic_id": "pr-3368",
+      "title": "feat(desktop): raise the install ceiling and make installs observable",
+      "upstream_pr": 3368,
+      "entry_shas": [
+        "d40a33290e75791aa7ecf3ce7a252b66c2e35966"
+      ]
+    },
+    {
+      "topic_id": "pr-3800",
+      "title": "test(desktop): click visible thread collapse guide",
+      "upstream_pr": 3800,
+      "entry_shas": [
+        "b9e4ed616f39b812bc964e79c7a40223c4e93832"
+      ]
+    },
+    {
+      "topic_id": "pr-3358",
+      "title": "feat(relay): gate kind 30178 team-catalog reads behind the shared tag",
+      "upstream_pr": 3358,
+      "entry_shas": [
+        "114d40d9d37f05eff83ee90347ed93fb3da512c5"
+      ]
+    },
+    {
+      "topic_id": "pr-3657",
+      "title": "fix(desktop): don't gate hover affordances on the hover media query",
+      "upstream_pr": 3657,
+      "entry_shas": [
+        "29dfe4821ed577489a1879fd2a9bfe2a621a52b3"
+      ]
+    },
+    {
+      "topic_id": "pr-3812",
+      "title": "fix(desktop): report authenticated relay recovery",
+      "upstream_pr": 3812,
+      "entry_shas": [
+        "74cd5712191bffd84ae688d59bb8b451c6eec1b0"
+      ]
+    },
+    {
+      "topic_id": "pr-3811",
+      "title": "fix(desktop): allow linux-only media items as dead code off-linux",
+      "upstream_pr": 3811,
+      "entry_shas": [
+        "36571f4adcfdcf3714a17bd968c58c78bcbdd9ef"
+      ]
+    },
+    {
+      "topic_id": "pr-3635",
+      "title": "fix(relay): align NIP-11 max_limit with REQ ceiling",
+      "upstream_pr": 3635,
+      "entry_shas": [
+        "23f0c26b1ceba8e07bf3c160a1e08c7bda82ccd9"
+      ]
+    },
+    {
+      "topic_id": "pr-2230",
+      "title": "fix(desktop): align data deletion labels",
+      "upstream_pr": 2230,
+      "entry_shas": [
+        "ede26863345a518ec46edd6d7692e0281883491b"
+      ]
+    },
+    {
+      "topic_id": "pr-3642",
+      "title": "fix(desktop): channel topic and membership metadata cleanup",
+      "upstream_pr": 3642,
+      "entry_shas": [
+        "9e8fcfda099652926b921bca7fcc9bfecab0e140"
+      ]
+    },
+    {
+      "topic_id": "pr-3806",
+      "title": "fix(catalog): update Amp tagline",
+      "upstream_pr": 3806,
+      "entry_shas": [
+        "f3e5e812677f6f14bffe16a7aa02642d56faca4b"
+      ]
+    },
+    {
+      "topic_id": "pr-2937",
+      "title": "feat(desktop): locally stored NIP-49 encrypted key backup",
+      "upstream_pr": 2937,
+      "entry_shas": [
+        "468647a51f858b29d27eaf9fd07bf90294f99d39"
+      ]
+    },
+    {
+      "topic_id": "pr-3829",
+      "title": "feat(relay): raise hosted community limit to five",
+      "upstream_pr": 3829,
+      "entry_shas": [
+        "10d5a26414dc90dc89fd27de74b21e105d4fa622"
+      ]
+    },
+    {
+      "topic_id": "pr-3813",
+      "title": "feat(desktop): delete a message by clearing its edit to empty",
+      "upstream_pr": 3813,
+      "entry_shas": [
+        "d88313f369acfa17973029787ee4c0bbea07fa51"
+      ]
+    },
+    {
+      "topic_id": "pr-3266",
+      "title": "feat(desktop): upgrade Pocket TTS model",
+      "upstream_pr": 3266,
+      "entry_shas": [
+        "d48b0e0eec4d2958f90a3cafa9d974450abe8501"
+      ]
+    },
+    {
+      "topic_id": "pr-3763",
+      "title": "feat(agent): optional reply guard reminds a silent turn to publish",
+      "upstream_pr": 3763,
+      "entry_shas": [
+        "081f805d5ea25841ab885c7b67a568618a34aa59"
+      ]
+    },
+    {
+      "topic_id": "pr-3180",
+      "title": "feat(desktop): auto-enable huddle transcription for agents",
+      "upstream_pr": 3180,
+      "entry_shas": [
+        "4632c55041c5d423d572a6f6411bb7b279c26f67"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "bd0bff24bfd2cffa2b3b3a995f7628af5e460a5c",
+      "topic_id": "pr-3701",
+      "title": "feat(desktop): add password-protected backups in settings",
+      "areas": [
+        "desktop",
+        "security"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Key-backup and egress-guard changes are security-sensitive and require a dedicated security batch with explicit threat-model and storage review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3701",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated security lane for encrypted backup and egress-guard review",
+        "owner": "Zion security maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "cca8839034eb571a7ce943c3ace7f85a82330898",
+      "topic_id": "pr-3774",
+      "title": "Make relay reconnect backoff authoritative",
+      "areas": [
+        "desktop",
+        "relay"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The reconnect/session patch conflicts with the fork-owned relay client and needs a focused desktop relay-session adaptation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3774",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "focused relay reconnect adaptation with desktop E2E coverage",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "1dfd89ea67b4ebce0c4d10390f280ed4e7ddde8a",
+      "topic_id": "pr-3568",
+      "title": "feat(release): make desktop releases immutable",
+      "areas": [
+        "release",
+        "desktop"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Release workflow and publication changes are explicitly outside this source-only intake; no release or deployment work is authorized.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3568",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "f48f3f055fdd6030d3832f615f8c0d8e5a81261a",
+      "topic_id": "pr-3719",
+      "title": "Fix video reviews in thread replies",
+      "areas": [
+        "desktop",
+        "messages"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "The focused thread/video review behavior applies cleanly and preserves Zion presentation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3719",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+        "bcbdfa86c8e5c7144a0b28cad3794e491e94745a"
+        ]
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "6e419b9f1c873549a7b40996970e0da7352adafb",
+      "topic_id": "pr-3724",
+      "title": "Tighten continuation message rows",
+      "areas": [
+        "desktop",
+        "messages"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "The small row-height and continuation layout correction applies cleanly.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3724",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+        "824771ebe144fade4319a6671ddb029067958a0d"
+        ]
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "bf139e8d0bdba10df9a5adbf16843140e0a78a59",
+      "topic_id": "pr-3783",
+      "title": "perf(presence): reduce heartbeat frequency",
+      "areas": [
+        "relay",
+        "presence"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "The presence cadence reduction is an internal protocol-compatible efficiency fix; legacy storage names remain unchanged.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3783",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+        "684b639923bdaa8b576fb7680187b4313340a6bf"
+        ]
+      },
+      "verification": [
+        "./bin/cargo test -p buzz-pubsub --lib — PASS, 24 passed, 11 ignored (Redis-required)",
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "4d47aa83455a9fd024121a596154cd311dca1d76",
+      "topic_id": "pr-3321",
+      "title": "feat(desktop): improve agent activity header ui",
+      "areas": [
+        "desktop",
+        "agents"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "The activity header improvement is a bounded desktop presentation fix and emits no legacy brand copy.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3321",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+        "9e6f46116028f50a394d401fadef66dbf3c90807"
+        ]
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "1b3ff96a5764303998fa629ff852e81f1a88d7ad",
+      "topic_id": "pr-3225",
+      "title": "Add Devin as a preset ACP harness",
+      "areas": [
+        "desktop",
+        "agents"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Adding a new managed-agent provider is product-surface expansion outside the controlled Zion branding intake.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3225",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "dba97eecd9d8659c9c816cd6666fa6d687b6bca1",
+      "topic_id": "pr-3670",
+      "title": "fix(db): isolate usage metrics advisory-lock test on scratch DB",
+      "areas": [
+        "database",
+        "tests"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "Test-only database isolation is safe and removes cross-test interference.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3670",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+        "e6f0f9765fa476b1b622c48601e3a88dc49d0b91"
+        ]
+      },
+      "verification": [
+        "./bin/cargo test -p buzz-db --lib — PASS, 85 passed, 146 ignored (Postgres-required)",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "d40a33290e75791aa7ecf3ce7a252b66c2e35966",
+      "topic_id": "pr-3368",
+      "title": "feat(desktop): raise the install ceiling and make installs observable",
+      "areas": [
+        "desktop",
+        "agents",
+        "install"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Managed-agent installation and reporting changes are broad runtime architecture work requiring a dedicated agent-install review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3368",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated managed-agent install adaptation with runtime and redaction tests",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "b9e4ed616f39b812bc964e79c7a40223c4e93832",
+      "topic_id": "pr-3800",
+      "title": "test(desktop): click visible thread collapse guide",
+      "areas": [
+        "desktop",
+        "tests"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "The test-only click-target correction applies cleanly alongside the continuation-row fix.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3800",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+        "9e6f46116028f50a394d401fadef66dbf3c90807"
+        ]
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "114d40d9d37f05eff83ee90347ed93fb3da512c5",
+      "topic_id": "pr-3358",
+      "title": "feat(relay): gate kind 30178 team-catalog reads behind the shared tag",
+      "areas": [
+        "relay",
+        "authorization",
+        "catalog"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Authorization and catalog-read gating require a dedicated security/relay batch with complete dependency and protocol review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3358",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated relay authorization batch for team-catalog reads",
+        "owner": "Zion relay security maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "29dfe4821ed577489a1879fd2a9bfe2a621a52b3",
+      "topic_id": "pr-3657",
+      "title": "fix(desktop): don't gate hover affordances on the hover media query",
+      "areas": [
+        "desktop",
+        "accessibility"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "The accessibility/style correction is isolated and applies cleanly.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3657",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+        "9c59d156e3aa877910256b0fb1bedd541d6e81a6"
+        ]
+      },
+      "verification": [
+        "git diff --check — PASS",
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "74cd5712191bffd84ae688d59bb8b451c6eec1b0",
+      "topic_id": "pr-3812",
+      "title": "fix(desktop): report authenticated relay recovery",
+      "areas": [
+        "desktop",
+        "relay"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Relay recovery status and its E2E bridge conflict with current session handling and need focused verification.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3812",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "focused authenticated relay recovery adaptation with E2E verification",
+        "owner": "Zion desktop maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "36571f4adcfdcf3714a17bd968c58c78bcbdd9ef",
+      "topic_id": "pr-3811",
+      "title": "fix(desktop): allow linux-only media items as dead code off-linux",
+      "areas": [
+        "desktop",
+        "linux"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Linux-only media handling is outside the authorized Apple desktop/mobile target profile.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3811",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "23f0c26b1ceba8e07bf3c160a1e08c7bda82ccd9",
+      "topic_id": "pr-3635",
+      "title": "fix(relay): align NIP-11 max_limit with REQ ceiling",
+      "areas": [
+        "relay",
+        "nip-11",
+        "database"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The relay/NIP-11 and database query changes conflict with Zion relay metadata work and require a dedicated relay verification batch.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3635",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated relay metadata and query-ceiling adaptation with integration tests",
+        "owner": "Zion relay maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "ede26863345a518ec46edd6d7692e0281883491b",
+      "topic_id": "pr-2230",
+      "title": "fix(desktop): align data deletion labels",
+      "areas": [
+        "desktop",
+        "settings"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "The bounded settings-label correction applies cleanly and passed the visible-brand scanner.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/2230",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+        "7209294d233e1681b78793093fd3abdb0393598e"
+        ]
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "9e8fcfda099652926b921bca7fcc9bfecab0e140",
+      "topic_id": "pr-3642",
+      "title": "fix(desktop): channel topic and membership metadata cleanup",
+      "areas": [
+        "desktop",
+        "mobile",
+        "messages"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "The system-event copy cleanup improves blank-topic and membership captions across desktop/mobile without changing protocol identifiers.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3642",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+        "9e6f46116028f50a394d401fadef66dbf3c90807"
+        ]
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "f3e5e812677f6f14bffe16a7aa02642d56faca4b",
+      "topic_id": "pr-3806",
+      "title": "fix(catalog): update Amp tagline",
+      "areas": [
+        "desktop",
+        "catalog"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "included",
+      "rationale": "The one-line catalog copy update is adapted to retain Zion identity and passed the visible-brand scanner.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3806",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+        "8f4f92c2603e4e440c365f6a2c8b084ba97a4add"
+        ]
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs — PASS, 0 forbidden visible-brand hits",
+        "git diff --check — PASS"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "468647a51f858b29d27eaf9fd07bf90294f99d39",
+      "topic_id": "pr-2937",
+      "title": "feat(desktop): locally stored NIP-49 encrypted key backup",
+      "areas": [
+        "desktop",
+        "security",
+        "credentials"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Encrypted key storage is security-sensitive and requires a dedicated security batch with key-handling and recovery review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/2937",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated security lane for NIP-49 key backup review",
+        "owner": "Zion security maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "10d5a26414dc90dc89fd27de74b21e105d4fa622",
+      "topic_id": "pr-3829",
+      "title": "feat(relay): raise hosted community limit to five",
+      "areas": [
+        "relay",
+        "hosted-communities"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Hosted-community provisioning is disabled in the Zion UI and this operational limit change is outside the secure-relay-only scope.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3829",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "d88313f369acfa17973029787ee4c0bbea07fa51",
+      "topic_id": "pr-3813",
+      "title": "feat(desktop): delete a message by clearing its edit to empty",
+      "areas": [
+        "desktop",
+        "messages",
+        "retention"
+      ],
+      "risk": "medium",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This new destructive message feature needs a separate product and retention review; it is not required for the upstream intake gate.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3813",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "separate message deletion and retention review",
+        "owner": "Zion product maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "d48b0e0eec4d2958f90a3cafa9d974450abe8501",
+      "topic_id": "pr-3266",
+      "title": "feat(desktop): upgrade Pocket TTS model",
+      "areas": [
+        "desktop",
+        "huddle",
+        "dependencies"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The TTS dependency/model upgrade is broad native runtime work requiring an independent dependency and packaging review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3266",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated Pocket TTS dependency and packaging review",
+        "owner": "Zion macOS maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "081f805d5ea25841ab885c7b67a568618a34aa59",
+      "topic_id": "pr-3763",
+      "title": "feat(agent): optional reply guard reminds a silent turn to publish",
+      "areas": [
+        "agents",
+        "runtime"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Agent reply-guard behavior overlaps the fork-owned managed-agent output policy and requires a dedicated runtime/egress review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3763",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated managed-agent reply-guard adaptation with Zion egress tests",
+        "owner": "Zion agent maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "4632c55041c5d423d572a6f6411bb7b279c26f67",
+      "topic_id": "pr-3180",
+      "title": "feat(desktop): auto-enable huddle transcription for agents",
+      "areas": [
+        "desktop",
+        "huddle",
+        "agents"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Huddle/transcription runtime changes are broad native feature work requiring separate device and packaging verification.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3180",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated huddle transcription adaptation with device verification",
+        "owner": "Zion macOS maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    }
+  ],
+  "reclassifications": []
+}

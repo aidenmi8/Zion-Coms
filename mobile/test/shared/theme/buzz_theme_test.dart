@@ -58,30 +58,22 @@ void main() {
       );
     });
 
-    test(
-      'fallbacks expose the effective Buzz theme for gradient selection',
-      () {
-        final coerced = resolveSchemes('nord', ThemeMode.light);
-        expect(coerced.lightTheme?.name, buzzThemeName);
-        expect(
-          buzzTopSectionGradient(
-            coerced.lightTheme!.name,
-            coerced.light.brightness,
-          ),
-          isNotNull,
-        );
+    test('fallbacks expose the effective light theme without a gradient', () {
+      final coerced = resolveSchemes('nord', ThemeMode.light);
+      final expected = themeGroups().light.first;
+      expect(coerced.lightTheme, expected);
+      expect(
+        buzzTopSectionGradient(expected.name, coerced.light.brightness),
+        isNull,
+      );
 
-        final unknown = resolveSchemes('not-a-theme', ThemeMode.light);
-        expect(unknown.lightTheme?.name, buzzThemeName);
-        expect(
-          buzzTopSectionGradient(
-            unknown.lightTheme!.name,
-            unknown.light.brightness,
-          ),
-          isNotNull,
-        );
-      },
-    );
+      final unknown = resolveSchemes('not-a-theme', ThemeMode.light);
+      expect(unknown.lightTheme, expected);
+      expect(
+        buzzTopSectionGradient(expected.name, unknown.light.brightness),
+        isNull,
+      );
+    });
   });
 
   group('buzzTopSectionGradient', () {

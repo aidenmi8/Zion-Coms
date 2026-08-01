@@ -1170,7 +1170,7 @@ pub enum ReposCmd {
         /// Preferred Nostr relay(s) for repo discovery — can be specified multiple times
         #[arg(long = "nostr-relay")]
         relays: Vec<String>,
-        /// Channel UUID to bind the repo to. The `buzz-channel` tag is the
+        /// Channel UUID to bind the repo to. The channel binding tag is the
         /// git ACL: without it the relay 404s every clone/fetch/push until
         /// the author runs the `repos bind` command (issue #3527).
         #[arg(long)]
@@ -1196,7 +1196,7 @@ pub enum ReposCmd {
     },
     /// Bind (or rebind) one of your repositories to a channel.
     ///
-    /// The `buzz-channel` tag on the announcement is the git ACL: the relay
+    /// The channel binding tag on the announcement is the git ACL: the relay
     /// authorizes clone/fetch/push by membership in the bound channel. A
     /// repo announced without it (e.g. by a vanilla NIP-34 client) returns
     /// 404 for everyone until its author binds it here.

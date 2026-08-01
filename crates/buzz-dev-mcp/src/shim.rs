@@ -376,8 +376,13 @@ mod git_user_name_tests {
         std::env::remove_var("NOSTR_PRIVATE_KEY");
         let shim = Shim::install().expect("install shim");
         for launcher in ["zion", "buzz"] {
+            let launcher_path = if cfg!(windows) {
+                shim._dir.path().join(format!("{launcher}.exe"))
+            } else {
+                shim._dir.path().join(launcher)
+            };
             assert!(
-                shim._dir.path().join(launcher).exists(),
+                launcher_path.exists(),
                 "{launcher} launcher must be installed"
             );
         }

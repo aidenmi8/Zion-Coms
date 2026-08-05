@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-14-normal-8a7eb8d",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "8342dfcc5890b81a269a8ec3db73a8a56f76ce79",
+  "pinned_upstream_sha": "8a7eb8d3d71cd6ecc988963b36ff5777715f33ef",
+  "topics": [
+    {
+      "topic_id": "pr-4802",
+      "title": "fix(desktop): make missing-command error actionable for released builds",
+      "upstream_pr": 4802,
+      "entry_shas": ["6dbc94651201154ceb88c1b54653bf6e8ca77518"]
+    },
+    {
+      "topic_id": "pr-3165",
+      "title": "fix(mobile): serialize channel sections sync",
+      "upstream_pr": 3165,
+      "entry_shas": ["dc17965c792fc9f9d4d9e70028980821d5d89c71"]
+    },
+    {
+      "topic_id": "pr-4593",
+      "title": "Define private managed agent wire protocol",
+      "upstream_pr": 4593,
+      "entry_shas": ["067c085f37d9dcb2f598b0e2a6b6653903364783"]
+    },
+    {
+      "topic_id": "pr-4896",
+      "title": "fix(agent): recover from unsupported image input instead of poisoning the turn",
+      "upstream_pr": 4896,
+      "entry_shas": ["8a7eb8d3d71cd6ecc988963b36ff5777715f33ef"]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "6dbc94651201154ceb88c1b54653bf6e8ca77518",
+      "topic_id": "pr-4802",
+      "title": "fix(desktop): make missing-command error actionable for released builds",
+      "areas": ["desktop", "managed-agents", "error-copy"],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "included",
+      "rationale": "Keep the actionable released-build remediation but adapt visible reinstall copy to Zion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": "adapt_without_dependency",
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4802",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [
+        "node scripts/check-visible-zion-branding.mjs: passed with Forbidden visible-brand hits: 0",
+        "cargo test --manifest-path desktop/src-tauri/Cargo.toml managed_agents::discovery: 98 passed",
+        "git diff --check: passed"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "dc17965c792fc9f9d4d9e70028980821d5d89c71",
+      "topic_id": "pr-3165",
+      "title": "fix(mobile): serialize channel sections sync",
+      "areas": ["mobile", "relay-session", "channel-sections"],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "Prevents duplicate mobile live subscriptions and supports relay-session recovery without visible branding changes.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3165",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [
+        "dart format --output=none --set-exit-if-changed mobile/lib/features/channels/channel_sections/channel_sections_manager.dart mobile/test/features/channels/channel_sections/channel_sections_manager_test.dart: passed",
+        "flutter analyze mobile/lib/features/channels/channel_sections/channel_sections_manager.dart mobile/test/features/channels/channel_sections/channel_sections_manager_test.dart: passed",
+        "flutter test test/features/channels/channel_sections/channel_sections_manager_test.dart: 8 passed",
+        "node scripts/check-visible-zion-branding.mjs: passed with Forbidden visible-brand hits: 0",
+        "git diff --check: passed"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "067c085f37d9dcb2f598b0e2a6b6653903364783",
+      "topic_id": "pr-4593",
+      "title": "Define private managed agent wire protocol",
+      "areas": ["relay", "core", "managed-agents", "protocol-docs"],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Adds protocol kinds, relay ingest behavior, and docs that must be adapted against Zion managed-agent compatibility and branding.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4593",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued private managed-agent protocol adaptation with core kind parity, relay ingest tests, transcript compatibility checks, and Zion documentation review",
+        "fork_commits": []
+      },
+      "verification": ["queued only; no source patch applied in this pass"],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "8a7eb8d3d71cd6ecc988963b36ff5777715f33ef",
+      "topic_id": "pr-4896",
+      "title": "fix(agent): recover from unsupported image input instead of poisoning the turn",
+      "areas": ["agent", "llm", "mcp"],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Wanted recovery behavior, but the upstream patch conflicts with Zion's current agent runtime edits and needs focused regression coverage.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4896",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued agent image-input recovery adaptation with fake LLM/MCP regression tests and Zion prompt-output guard",
+        "fork_commits": []
+      },
+      "verification": ["git apply --check --3way reported conflicts in crates/buzz-agent/src/agent.rs, crates/buzz-agent/src/llm.rs, and crates/buzz-agent/tests/fake_llm.rs"],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

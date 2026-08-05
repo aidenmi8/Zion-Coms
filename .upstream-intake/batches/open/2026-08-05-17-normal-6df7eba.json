@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-17-normal-6df7eba",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "4674750b7ee1b3a6b299b79d69f11a8ec5128f26",
+  "pinned_upstream_sha": "6df7eba24d49b6a2c7f0188b19e24f3df999678c",
+  "topics": [
+    {
+      "topic_id": "pr-4778",
+      "title": "Polish mobile top navigation",
+      "upstream_pr": 4778,
+      "entry_shas": ["ff0b7982f1af694056acbb0e2f8c40faefc39c45"]
+    },
+    {
+      "topic_id": "pr-4913",
+      "title": "fix(desktop): allow shared agent mentions",
+      "upstream_pr": 4913,
+      "entry_shas": ["014562c063eae6ab1b7c6e3d20f2be3024c5f3a8"]
+    },
+    {
+      "topic_id": "pr-4897",
+      "title": "fix(desktop): remove join API token control",
+      "upstream_pr": 4897,
+      "entry_shas": ["2034e693a8b021eb02108d6bc47f409900c40848"]
+    },
+    {
+      "topic_id": "pr-4849",
+      "title": "Fix media attachment actions",
+      "upstream_pr": 4849,
+      "entry_shas": ["f2ce575b62f8a6dfee444263da00d1aa8419d92f"]
+    },
+    {
+      "topic_id": "pr-4911",
+      "title": "Polish mobile bottom sheets and profile cards",
+      "upstream_pr": 4911,
+      "entry_shas": ["27b51144f3002fb2b70229ff8171d940d79b7da7"]
+    },
+    {
+      "topic_id": "pr-4862",
+      "title": "Fix mobile message timeline bounce",
+      "upstream_pr": 4862,
+      "entry_shas": ["0c6842931b46c5c12f0f05ecc37af03de502a644"]
+    },
+    {
+      "topic_id": "pr-4805",
+      "title": "fix(buzz-agent): scope handoff cap per turn, not per session lifetime",
+      "upstream_pr": 4805,
+      "entry_shas": ["6df7eba24d49b6a2c7f0188b19e24f3df999678c"]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "ff0b7982f1af694056acbb0e2f8c40faefc39c45",
+      "topic_id": "pr-4778",
+      "title": "Polish mobile top navigation",
+      "areas": ["mobile", "navigation", "visual-ui"],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Broad mobile visual work must be adapted with Zion branding and device screenshots before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4778",
+        "local_backlog": "upstream-mobile-ui-followup",
+        "implementation_plan": "queued mobile top-navigation adaptation with Flutter tests, device smoke screenshots, and Zion visible-brand scan",
+        "fork_commits": []
+      },
+      "verification": ["queued only; broad mobile visual patch not applied in this pass"],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "014562c063eae6ab1b7c6e3d20f2be3024c5f3a8",
+      "topic_id": "pr-4913",
+      "title": "fix(desktop): allow shared agent mentions",
+      "areas": ["desktop", "agents", "mentions"],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Useful desktop mention behavior, but it touches mention/autocomplete flows and needs Zion mention-flow snapshots before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4913",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued shared-agent mention adaptation with desktop mention E2E and Zion-visible copy scan",
+        "fork_commits": []
+      },
+      "verification": ["queued only; broad desktop mention patch not applied in this pass"],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "2034e693a8b021eb02108d6bc47f409900c40848",
+      "topic_id": "pr-4897",
+      "title": "fix(desktop): remove join API token control",
+      "areas": ["desktop", "communities", "onboarding"],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "included",
+      "rationale": "Already present in Zion through the earlier dead-token removal and Zion invite-link adaptation; no upstream Buzz UI copy is taken.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": "adapt_without_dependency",
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4897",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": ["d1db36638"]
+      },
+      "verification": ["rg confirmed Add/Edit Community and onboarding paths have no active API token field; existing sidebar E2E asserts obsolete API token controls are absent"],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "f2ce575b62f8a6dfee444263da00d1aa8419d92f",
+      "topic_id": "pr-4849",
+      "title": "Fix media attachment actions",
+      "areas": ["desktop", "composer", "media"],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Useful composer/media behavior, but it needs desktop E2E coverage and Zion copy inspection before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4849",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued media attachment action adaptation with composer unit tests, desktop E2E file-attachment checks, and visible-brand scan",
+        "fork_commits": []
+      },
+      "verification": ["queued only; desktop composer/media patch not applied in this pass"],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "27b51144f3002fb2b70229ff8171d940d79b7da7",
+      "topic_id": "pr-4911",
+      "title": "Polish mobile bottom sheets and profile cards",
+      "areas": ["mobile", "bottom-sheets", "profile-ui"],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Broad visual work with native iOS presentation surface; needs separate Zion-branded device validation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4911",
+        "local_backlog": "upstream-mobile-ui-followup",
+        "implementation_plan": "queued mobile modal/profile adaptation with Flutter tests, iOS device smoke, and Zion visible-brand screenshots",
+        "fork_commits": []
+      },
+      "verification": ["queued only; broad mobile visual patch not applied in this pass"],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "0c6842931b46c5c12f0f05ecc37af03de502a644",
+      "topic_id": "pr-4862",
+      "title": "Fix mobile message timeline bounce",
+      "areas": ["mobile", "message-timeline", "scrolling"],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Relevant to mobile usability, but it conflicts with Zion's current channel detail page and needs focused Flutter/widget coverage.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4862",
+        "local_backlog": "upstream-mobile-followup",
+        "implementation_plan": "queued mobile timeline-bounce adaptation with channel detail widget tests and physical-device message-scroll smoke check",
+        "fork_commits": []
+      },
+      "verification": ["git apply --check --3way reported conflicts in mobile/lib/features/channels/channel_detail_page/message_list.dart and mobile/test/features/channels/channel_detail_page_test.dart"],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "6df7eba24d49b6a2c7f0188b19e24f3df999678c",
+      "topic_id": "pr-4805",
+      "title": "fix(buzz-agent): scope handoff cap per turn, not per session lifetime",
+      "areas": ["agent", "handoff", "configuration"],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Wanted behavior, but the patch conflicts with Zion's current agent runtime state and needs BUZZ_* compatibility allowlist review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4805",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued agent handoff-cap adaptation with regression tests, BUZZ_* compatibility allowlist review, and Zion transcript branding guard",
+        "fork_commits": []
+      },
+      "verification": ["git apply --check --3way reported conflicts in crates/buzz-agent/src/agent.rs and crates/buzz-agent/tests/regressions.rs"],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

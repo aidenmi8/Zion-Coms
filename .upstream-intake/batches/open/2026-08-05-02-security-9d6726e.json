@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-02-security-9d6726e",
+  "previous_reviewed_sha": "756dd7f65d6f2995e9188a0ffe54294057f8ef4f",
+  "pinned_upstream_sha": "9d6726e5b387310975f5809473ce8372f6fde0dc",
+  "kind": "security",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4139",
+      "title": "chore(deps): bump nostr-relay-pool for RUSTSEC-2026-0224",
+      "upstream_pr": 4139,
+      "entry_shas": [
+        "9d6726e5b387310975f5809473ce8372f6fde0dc"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "9d6726e5b387310975f5809473ce8372f6fde0dc",
+      "topic_id": "pr-4139",
+      "title": "chore(deps): bump nostr-relay-pool for RUSTSEC-2026-0224",
+      "areas": [
+        "security",
+        "dependencies",
+        "rust"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "RustSec dependency remediation is wanted, but it must land in a focused dependency batch with Rust checks rather than the mobile relay recovery commit.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "RUSTSEC-2026-0224 dependency update"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4139",
+        "local_backlog": "upstream-security-followup",
+        "implementation_plan": "queued RustSec dependency update with Cargo.lock review and Rust checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

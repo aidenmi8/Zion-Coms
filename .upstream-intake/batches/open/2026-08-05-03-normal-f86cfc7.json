@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-03-normal-f86cfc7",
+  "previous_reviewed_sha": "9d6726e5b387310975f5809473ce8372f6fde0dc",
+  "pinned_upstream_sha": "f86cfc7369d4471f8939ed98be6f597b0a4b0bb2",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4124",
+      "title": "perf(relay): serve relay-membership checks from the read replica",
+      "upstream_pr": 4124,
+      "entry_shas": [
+        "ac4fa13b8e4d947071d57deb6918dcf12bf74961"
+      ]
+    },
+    {
+      "topic_id": "pr-4203",
+      "title": "fix(nip-oa): accept raw Nostr tag form in parse_json_array",
+      "upstream_pr": 4203,
+      "entry_shas": [
+        "89bf03c05df795a3575b7abbe648be898ef13388"
+      ]
+    },
+    {
+      "topic_id": "pr-3748",
+      "title": "docs: formal spec for remote agents and their management",
+      "upstream_pr": 3748,
+      "entry_shas": [
+        "28ae6cd2174309529305724e455c7ca082f6fe4b"
+      ]
+    },
+    {
+      "topic_id": "pr-4020",
+      "title": "feat(projects): add buzz projects CLI commands (NIP-MP kind:30621)",
+      "upstream_pr": 4020,
+      "entry_shas": [
+        "b7bb15122e8a2053b545dc2210afc167f6c7a626"
+      ]
+    },
+    {
+      "topic_id": "pr-4297",
+      "title": "fix(git): allow deleting the default branch",
+      "upstream_pr": 4297,
+      "entry_shas": [
+        "fc598f5f8d70728d11d0712b9fa8e3acc44ea4c3"
+      ]
+    },
+    {
+      "topic_id": "pr-4289",
+      "title": "feat(k8s): Kubernetes backend plugin + desktop deploy path",
+      "upstream_pr": 4289,
+      "entry_shas": [
+        "6530b58a61d4602d0a371100fedf80c5998b1e34"
+      ]
+    },
+    {
+      "topic_id": "pr-3778",
+      "title": "fix(desktop): back/forward via keyboard chords, mouse X1/X2 buttons, and swipe gestures",
+      "upstream_pr": 3778,
+      "entry_shas": [
+        "f86cfc7369d4471f8939ed98be6f597b0a4b0bb2"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "ac4fa13b8e4d947071d57deb6918dcf12bf74961",
+      "topic_id": "pr-4124",
+      "title": "perf(relay): serve relay-membership checks from the read replica",
+      "areas": [
+        "relay",
+        "database",
+        "performance"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The relay read-replica optimization is compatible but requires a focused relay/database test pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4124",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued relay database performance intake with relay tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "89bf03c05df795a3575b7abbe648be898ef13388",
+      "topic_id": "pr-4203",
+      "title": "fix(nip-oa): accept raw Nostr tag form in parse_json_array",
+      "areas": [
+        "cli",
+        "nostr"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Raw Nostr tag parsing compatibility is wanted but should be taken with CLI-focused tests in a separate pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4203",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued CLI compatibility intake with parser tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "28ae6cd2174309529305724e455c7ca082f6fe4b",
+      "topic_id": "pr-3748",
+      "title": "docs: formal spec for remote agents and their management",
+      "areas": [
+        "docs",
+        "agents"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Large upstream remote-agent documentation is not runtime behavior and would require Zion-specific rewrite before publication.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3748",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "b7bb15122e8a2053b545dc2210afc167f6c7a626",
+      "topic_id": "pr-4020",
+      "title": "feat(projects): add buzz projects CLI commands (NIP-MP kind:30621)",
+      "areas": [
+        "cli",
+        "projects",
+        "sdk"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Projects CLI behavior is potentially useful, but the emitted command and help surfaces must be adapted to Zion before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4020",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued Zion-adapted projects CLI intake with visible-brand scan and CLI snapshots",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "fc598f5f8d70728d11d0712b9fa8e3acc44ea4c3",
+      "topic_id": "pr-4297",
+      "title": "fix(git): allow deleting the default branch",
+      "areas": [
+        "git",
+        "relay"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The git default-branch deletion fix is compatible but requires focused git-relay authorization and regression tests before source inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4297",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued git relay intake with default-branch deletion regression tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "6530b58a61d4602d0a371100fedf80c5998b1e34",
+      "topic_id": "pr-4289",
+      "title": "feat(k8s): Kubernetes backend plugin + desktop deploy path",
+      "areas": [
+        "desktop",
+        "agents",
+        "infrastructure"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The Kubernetes backend is large infrastructure work and is outside the current Docker relay/mobile recovery path.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4289",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated infrastructure-provider review with explicit Kubernetes scope approval",
+        "owner": "Zion infrastructure maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "f86cfc7369d4471f8939ed98be6f597b0a4b0bb2",
+      "topic_id": "pr-3778",
+      "title": "fix(desktop): back/forward via keyboard chords, mouse X1/X2 buttons, and swipe gestures",
+      "areas": [
+        "desktop",
+        "navigation"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Desktop navigation fixes are compatible but need a desktop-specific pass and tests, separate from the mobile relay recovery commit.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3778",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop navigation intake with Tauri and frontend tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

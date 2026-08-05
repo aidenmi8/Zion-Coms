@@ -1,0 +1,355 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-05-normal-f865c00",
+  "previous_reviewed_sha": "318fbf896ec335bc7bcb40edafde0b6ebca53428",
+  "pinned_upstream_sha": "f865c0054b0a400657126c9321b4d4cb7d9cc746",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4395",
+      "title": "feat(acp): deliver system prompt via _meta.systemPrompt for claude-agent-acp",
+      "upstream_pr": 4395,
+      "entry_shas": [
+        "7ff5fc31895efe6265a379d01637c8ee301872e5"
+      ]
+    },
+    {
+      "topic_id": "pr-3053",
+      "title": "fix(mobile): recover and pace live subscriptions",
+      "upstream_pr": 3053,
+      "entry_shas": [
+        "a5dbdf5e61e4c512acd99c219c79c154ddb57295"
+      ]
+    },
+    {
+      "topic_id": "pr-4411",
+      "title": "fix(desktop): stop the create-agent provider config probe from erasing keystrokes",
+      "upstream_pr": 4411,
+      "entry_shas": [
+        "2c0ac2467437b30953a95e00f419143488bcfcc7"
+      ]
+    },
+    {
+      "topic_id": "pr-4524",
+      "title": "ci(linux): enable mesh-llm feature in Linux release and canary builds",
+      "upstream_pr": 4524,
+      "entry_shas": [
+        "83a285f1b1a0be862d55781fad9c75ec8813886d"
+      ]
+    },
+    {
+      "topic_id": "pr-3918",
+      "title": "Polish mobile composer and messaging UI",
+      "upstream_pr": 3918,
+      "entry_shas": [
+        "857e63c4ddfb76f95ab40bb691e00544413f6b81"
+      ]
+    },
+    {
+      "topic_id": "pr-3580",
+      "title": "fix(config-bridge): add harness-definition env tier and fix equal-value model override",
+      "upstream_pr": 3580,
+      "entry_shas": [
+        "be95a8a986d02319b27e8fb57aefe59e33a1eb13"
+      ]
+    },
+    {
+      "topic_id": "pr-4140",
+      "title": "fix(desktop): make OpenAI key re-enterable after first save in card mint dialog",
+      "upstream_pr": 4140,
+      "entry_shas": [
+        "f810a2f49e213d25119f2aa75b5b577655119b74"
+      ]
+    },
+    {
+      "topic_id": "pr-4406",
+      "title": "fix(desktop): disambiguate provider API key labels and annotate mint key",
+      "upstream_pr": 4406,
+      "entry_shas": [
+        "5e0efb0bb95182f588390b55cc5affa09114c87e"
+      ]
+    },
+    {
+      "topic_id": "pr-4539",
+      "title": "feat(desktop): show saved Run on settings when editing an agent",
+      "upstream_pr": 4539,
+      "entry_shas": [
+        "f865c0054b0a400657126c9321b4d4cb7d9cc746"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "7ff5fc31895efe6265a379d01637c8ee301872e5",
+      "topic_id": "pr-4395",
+      "title": "feat(acp): deliver system prompt via _meta.systemPrompt for claude-agent-acp",
+      "areas": [
+        "agents",
+        "desktop",
+        "transcript"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "ACP metadata delivery is useful but touches managed-agent prompts and transcript rendering, so it needs a Zion egress/branding pass before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4395",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued ACP prompt metadata adaptation with Zion transcript branding checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "a5dbdf5e61e4c512acd99c219c79c154ddb57295",
+      "topic_id": "pr-3053",
+      "title": "fix(mobile): recover and pace live subscriptions",
+      "areas": [
+        "mobile",
+        "relay",
+        "messages"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "included",
+      "rationale": "This directly addresses mobile message awareness by recovering and pacing live subscriptions while preserving relay-only behavior and existing compatibility identifiers.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3053",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+          "416b4391f"
+        ]
+      },
+      "verification": [
+        ". ./bin/activate-hermit && cd mobile && dart format --output=none --set-exit-if-changed lib/shared/relay/relay_session.dart test/shared/relay/relay_session_test.dart",
+        ". ./bin/activate-hermit && cd mobile && flutter test test/shared/relay/relay_session_test.dart test/shared/relay/relay_closed_policy_test.dart test/shared/relay/relay_rate_limit_gate_test.dart",
+        "node scripts/check-visible-zion-branding.mjs",
+        "node scripts/check-zion-platform-brand-contract.mjs"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "2c0ac2467437b30953a95e00f419143488bcfcc7",
+      "topic_id": "pr-4411",
+      "title": "fix(desktop): stop the create-agent provider config probe from erasing keystrokes",
+      "areas": [
+        "desktop",
+        "agents"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The create-agent input preservation fix is compatible, but it requires desktop-focused tests outside the mobile relay recovery step.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4411",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop agent config intake with provider probe tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "83a285f1b1a0be862d55781fad9c75ec8813886d",
+      "topic_id": "pr-4524",
+      "title": "ci(linux): enable mesh-llm feature in Linux release and canary builds",
+      "areas": [
+        "ci",
+        "release"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Linux release and canary workflow changes are outside the fork's current iOS/macOS source intake scope.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4524",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "857e63c4ddfb76f95ab40bb691e00544413f6b81",
+      "topic_id": "pr-3918",
+      "title": "Polish mobile composer and messaging UI",
+      "areas": [
+        "mobile",
+        "ui",
+        "ios"
+      ],
+      "risk": "high",
+      "decision": "defer",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The mobile composer/UI polish is broad visual work and needs a separate Zion design and device verification pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3918",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": {
+        "trigger": "dedicated mobile UI parity review with screenshots and Zion branding scan",
+        "owner": "Zion mobile maintainer",
+        "tracking": "upstream-intake-followup"
+      }
+    },
+    {
+      "upstream_sha": "be95a8a986d02319b27e8fb57aefe59e33a1eb13",
+      "topic_id": "pr-3580",
+      "title": "fix(config-bridge): add harness-definition env tier and fix equal-value model override",
+      "areas": [
+        "desktop",
+        "agents",
+        "configuration"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The config-bridge fix is useful but touches managed-agent runtime configuration and must preserve Zion aliases and compatibility env tiers.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3580",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued config-bridge adaptation with Zion alias and env precedence tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "f810a2f49e213d25119f2aa75b5b577655119b74",
+      "topic_id": "pr-4140",
+      "title": "fix(desktop): make OpenAI key re-enterable after first save in card mint dialog",
+      "areas": [
+        "desktop",
+        "agents",
+        "credentials"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The card-mint key fix is useful but touches credential handling UI and needs focused desktop tests before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4140",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop credential UI intake with card-mint tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "5e0efb0bb95182f588390b55cc5affa09114c87e",
+      "topic_id": "pr-4406",
+      "title": "fix(desktop): disambiguate provider API key labels and annotate mint key",
+      "areas": [
+        "desktop",
+        "agents",
+        "ui"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Provider API key label clarity is useful, but visible copy must be reviewed against Zion branding before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4406",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued provider label adaptation with visible-brand scan and desktop UI tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "f865c0054b0a400657126c9321b4d4cb7d9cc746",
+      "topic_id": "pr-4539",
+      "title": "feat(desktop): show saved Run on settings when editing an agent",
+      "areas": [
+        "desktop",
+        "agents",
+        "ui"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Saved Run on settings are compatible but should land with desktop-specific tests and Zion-visible copy review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4539",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop Run on settings intake with UI tests and branding scan",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

@@ -1,0 +1,441 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-11-normal-8faf09f",
+  "previous_reviewed_sha": "7bee84da8267605ada939c4f911d90f1b0ff1a11",
+  "pinned_upstream_sha": "8faf09f9aedb4989e57c7b6c5bd1052a444a3370",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4750",
+      "title": "fix(local-archive): default both archive settings to enabled",
+      "upstream_pr": 4750,
+      "entry_shas": [
+        "5179726737108a4a91076d262c30a53d4a7237e9"
+      ]
+    },
+    {
+      "topic_id": "pr-4694",
+      "title": "Polish Huddle voice controls",
+      "upstream_pr": 4694,
+      "entry_shas": [
+        "ce3cf3cd2591f132f286fbc0a42a9e6699d0b08d"
+      ]
+    },
+    {
+      "topic_id": "pr-4779",
+      "title": "fix(desktop): integer-align custom reaction emoji",
+      "upstream_pr": 4779,
+      "entry_shas": [
+        "8b8d86c5d26e2fa8cf419fdd8d0e56433f95d71a"
+      ]
+    },
+    {
+      "topic_id": "pr-4781",
+      "title": "fix(desktop): wait for terminal frame before splash",
+      "upstream_pr": 4781,
+      "entry_shas": [
+        "65f7a100353b9a5302da2614f2d85edee1c136a2"
+      ]
+    },
+    {
+      "topic_id": "pr-4792",
+      "title": "fix(desktop): widen post-Enter timeouts in empty-edit-delete spec",
+      "upstream_pr": 4792,
+      "entry_shas": [
+        "7bcfe7e0a141900d6e1e5bd0b3bce488b57d6453"
+      ]
+    },
+    {
+      "topic_id": "pr-4791",
+      "title": "fix(ci): make desktop cache test version agnostic",
+      "upstream_pr": 4791,
+      "entry_shas": [
+        "383d9e1eafd569b44b9c835200dba69ef7cec9dc"
+      ]
+    },
+    {
+      "topic_id": "pr-4671",
+      "title": "feat(projects): support multiple repositories",
+      "upstream_pr": 4671,
+      "entry_shas": [
+        "e30db7028f9f1dc7646b5814ed03b4c54a4d2a48"
+      ]
+    },
+    {
+      "topic_id": "pr-4788",
+      "title": "chore(release): release Buzz Desktop version 0.5.5",
+      "upstream_pr": 4788,
+      "entry_shas": [
+        "b948c54792c4933b4e003d2b227dc6e1f7c05fb4"
+      ]
+    },
+    {
+      "topic_id": "pr-4762",
+      "title": "fix(desktop): serialize tray channel actions for frontend",
+      "upstream_pr": 4762,
+      "entry_shas": [
+        "4c665aeac366fca5097eaa1088fb87f3d248eac7"
+      ]
+    },
+    {
+      "topic_id": "pr-4695",
+      "title": "feat: Buzz entity links - rich preview cards and in-app navigation",
+      "upstream_pr": 4695,
+      "entry_shas": [
+        "a1d78f2959b41c63f063ff818076d38c31071a47"
+      ]
+    },
+    {
+      "topic_id": "pr-4797",
+      "title": "Revert release Buzz Desktop version 0.5.5",
+      "upstream_pr": 4797,
+      "entry_shas": [
+        "8faf09f9aedb4989e57c7b6c5bd1052a444a3370"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "5179726737108a4a91076d262c30a53d4a7237e9",
+      "topic_id": "pr-4750",
+      "title": "fix(local-archive): default both archive settings to enabled",
+      "areas": [
+        "desktop",
+        "local-archive",
+        "agents",
+        "privacy",
+        "storage"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Default archive policy changes affect local retention and agent observer metrics. The behavior is wanted, but it needs a separate Zion privacy/settings verification pass before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4750",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued local-archive default adaptation with retention migration review, settings read-back, and rollback notes",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "ce3cf3cd2591f132f286fbc0a42a9e6699d0b08d",
+      "topic_id": "pr-4694",
+      "title": "Polish Huddle voice controls",
+      "areas": [
+        "desktop",
+        "huddle",
+        "audio",
+        "notifications",
+        "ui"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The huddle voice-control polish is compatible in principle, but it touches audio routing, TTS controls, notifications, and visible UI copy. It needs a dedicated desktop huddle pass with Zion branding snapshots.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4694",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued Huddle adaptation with audio controls tests, desktop E2E coverage, and visible-brand scan",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "8b8d86c5d26e2fa8cf419fdd8d0e56433f95d71a",
+      "topic_id": "pr-4779",
+      "title": "fix(desktop): integer-align custom reaction emoji",
+      "areas": [
+        "desktop",
+        "messages",
+        "reactions",
+        "ui"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The custom reaction emoji alignment fix is narrow and compatible, but it is desktop visual polish and should be taken with desktop message-reaction screenshots rather than mixed into the mobile reliability work.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4779",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop reaction-alignment take with message reaction visual checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "65f7a100353b9a5302da2614f2d85edee1c136a2",
+      "topic_id": "pr-4781",
+      "title": "fix(desktop): wait for terminal frame before splash",
+      "areas": [
+        "desktop",
+        "terminal",
+        "tauri",
+        "ui",
+        "branding"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The terminal-frame sequencing fix depends on the queued upstream terminal feature and must be adapted under Zion Term branding rather than taking Buzz Term surfaces verbatim.",
+      "dependencies": [
+        "631b05c883f58e9533e9038b4669ebdfb1d9cf27"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4781",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued Zion Term adaptation with terminal bootstrap snapshots and visible-brand scan",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "7bcfe7e0a141900d6e1e5bd0b3bce488b57d6453",
+      "topic_id": "pr-4792",
+      "title": "fix(desktop): widen post-Enter timeouts in empty-edit-delete spec",
+      "areas": [
+        "desktop",
+        "tests",
+        "e2e"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This only widens an upstream desktop E2E timeout and does not change Zion source behavior needed for the current intake.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4792",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "383d9e1eafd569b44b9c835200dba69ef7cec9dc",
+      "topic_id": "pr-4791",
+      "title": "fix(ci): make desktop cache test version agnostic",
+      "areas": [
+        "ci",
+        "release",
+        "desktop"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This is upstream release-cache test maintenance and does not affect the Zion app behavior, relay behavior, or mobile message-awareness work.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4791",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "e30db7028f9f1dc7646b5814ed03b4c54a4d2a48",
+      "topic_id": "pr-4671",
+      "title": "feat(projects): support multiple repositories",
+      "areas": [
+        "desktop",
+        "projects",
+        "repositories",
+        "cli",
+        "agents"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Multi-repository project support is a large product feature touching desktop UI, Tauri git commands, CLI flows, tests, and project semantics. It is compatible but needs a separate Zion adaptation and full project workflow verification.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4671",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued multi-repository project adaptation with CLI, desktop, Tauri git, and agent prompt coverage",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "b948c54792c4933b4e003d2b227dc6e1f7c05fb4",
+      "topic_id": "pr-4788",
+      "title": "chore(release): release Buzz Desktop version 0.5.5",
+      "areas": [
+        "release",
+        "desktop",
+        "metadata"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Upstream Buzz Desktop release metadata is not a Zion source behavior change and must not be taken into this fork's release state.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4788",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "4c665aeac366fca5097eaa1088fb87f3d248eac7",
+      "topic_id": "pr-4762",
+      "title": "fix(desktop): serialize tray channel actions for frontend",
+      "areas": [
+        "desktop",
+        "tray",
+        "channels",
+        "tauri"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Serializing tray channel actions is a useful desktop correctness fix, but it touches native/frontend boundaries and should be adapted with tray action tests in a desktop-specific pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4762",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued tray channel-action adaptation with Tauri command and desktop navigation checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "a1d78f2959b41c63f063ff818076d38c31071a47",
+      "topic_id": "pr-4695",
+      "title": "feat: Buzz entity links - rich preview cards and in-app navigation",
+      "areas": [
+        "desktop",
+        "cli",
+        "markdown",
+        "projects",
+        "prompts",
+        "branding"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Entity links are useful, but upstream docs, prompts, generated links, and visible copy use Buzz framing. The feature must be adapted to Zion entity links with compatibility-only Buzz readers and zero visible Buzz output.",
+      "dependencies": [
+        "e30db7028f9f1dc7646b5814ed03b4c54a4d2a48"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4695",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued Zion entity-link adaptation with markdown snapshots, prompt snapshots, CLI tests, and visible-brand scan",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "8faf09f9aedb4989e57c7b6c5bd1052a444a3370",
+      "topic_id": "pr-4797",
+      "title": "Revert release Buzz Desktop version 0.5.5",
+      "areas": [
+        "release",
+        "desktop",
+        "metadata"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This is upstream release bookkeeping that only reverts a rejected Buzz Desktop release metadata commit; it has no Zion source behavior to apply.",
+      "dependencies": [
+        "b948c54792c4933b4e003d2b227dc6e1f7c05fb4"
+      ],
+      "blocked_by_rejected": [
+        "b948c54792c4933b4e003d2b227dc6e1f7c05fb4"
+      ],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4797",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

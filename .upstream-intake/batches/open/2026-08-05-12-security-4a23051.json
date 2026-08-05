@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-12-security-4a23051",
+  "previous_reviewed_sha": "8faf09f9aedb4989e57c7b6c5bd1052a444a3370",
+  "pinned_upstream_sha": "4a2305170eef565bf1836e2859247e67c030f8af",
+  "kind": "security",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4008",
+      "title": "fix: reauthenticate Databricks model discovery",
+      "upstream_pr": 4008,
+      "entry_shas": [
+        "4a2305170eef565bf1836e2859247e67c030f8af"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "4a2305170eef565bf1836e2859247e67c030f8af",
+      "topic_id": "pr-4008",
+      "title": "fix: reauthenticate Databricks model discovery",
+      "areas": [
+        "agents",
+        "auth",
+        "databricks",
+        "model-discovery",
+        "desktop"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Databricks model discovery reauthentication is an auth-sensitive provider fix. It should be adapted in a dedicated security batch with provider-token handling review and no secret logging before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "provider authentication refresh",
+        "Databricks model discovery OAuth flow"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4008",
+        "local_backlog": "upstream-intake-followup-security",
+        "implementation_plan": "queued Databricks reauthentication adaptation with token-redaction review, provider tests, and desktop model-discovery checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

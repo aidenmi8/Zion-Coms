@@ -1,5 +1,5 @@
 {
-  "last_discovered": "7bee84da8267605ada939c4f911d90f1b0ff1a11",
+  "last_discovered": "8342dfcc5890b81a269a8ec3db73a8a56f76ce79",
   "open_batches": [
     "2026-07-29-01-normal-90e058e",
     "2026-07-29-02-security-22be8bb",
@@ -20,8 +20,11 @@
     "2026-08-05-07-security-01c80aa",
     "2026-08-05-08-normal-ce56e34",
     "2026-08-05-09-normal-631b05c",
-    "2026-08-05-10-normal-7bee84d"
+    "2026-08-05-10-normal-7bee84d",
+    "2026-08-05-11-normal-8faf09f",
+    "2026-08-05-12-security-4a23051",
+    "2026-08-05-13-normal-8342dfc"
   ],
-  "reviewed_through": "7bee84da8267605ada939c4f911d90f1b0ff1a11",
+  "reviewed_through": "8342dfcc5890b81a269a8ec3db73a8a56f76ce79",
   "schema_version": 1
 }

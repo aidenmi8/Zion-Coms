@@ -1320,7 +1320,7 @@ class InitializationTests(unittest.TestCase):
 class ZionProfileTests(unittest.TestCase):
     """Zion's checked-in profile preserves fork identity and compatibility."""
 
-    REVIEWED_SHA = "7bee84da8267605ada939c4f911d90f1b0ff1a11"
+    REVIEWED_SHA = "8342dfcc5890b81a269a8ec3db73a8a56f76ce79"
 
     def setUp(self) -> None:
         self.tool = load_tool()

@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-04-security-318fbf8",
+  "previous_reviewed_sha": "f86cfc7369d4471f8939ed98be6f597b0a4b0bb2",
+  "pinned_upstream_sha": "318fbf896ec335bc7bcb40edafde0b6ebca53428",
+  "kind": "security",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4392",
+      "title": "fix(security): bump nostr crates for RUSTSEC-2026-0225..0232 + default sprig image to published digest",
+      "upstream_pr": 4392,
+      "entry_shas": [
+        "318fbf896ec335bc7bcb40edafde0b6ebca53428"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "318fbf896ec335bc7bcb40edafde0b6ebca53428",
+      "topic_id": "pr-4392",
+      "title": "fix(security): bump nostr crates for RUSTSEC-2026-0225..0232 + default sprig image to published digest",
+      "areas": [
+        "security",
+        "dependencies",
+        "sprig"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "RustSec remediation is wanted, but the Sprig image digest and release metadata must be adapted to Zion-owned artifacts before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "title keyword: security",
+        "RUSTSEC-2026-0225..0232 dependency update"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4392",
+        "local_backlog": "upstream-security-followup",
+        "implementation_plan": "queued security dependency adaptation with Zion Sprig artifact policy checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-15-security-efe1893",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "8a7eb8d3d71cd6ecc988963b36ff5777715f33ef",
+  "pinned_upstream_sha": "efe1893dd372cfb92ed2e8a3ada2ed7b62c9477a",
+  "topics": [
+    {
+      "topic_id": "pr-4608",
+      "title": "fix(git): revoke access for banned relay members",
+      "upstream_pr": 4608,
+      "entry_shas": ["997b8caaa4c9e5af69dd8a496b4995d09a69f694"]
+    },
+    {
+      "topic_id": "pr-4607",
+      "title": "fix(workflow): bind trigger author to the signed event",
+      "upstream_pr": 4607,
+      "entry_shas": ["885bed35eee3f933c48d333c8979fdbc038e98b9"]
+    },
+    {
+      "topic_id": "pr-4609",
+      "title": "fix(acp): reject unattended permission requests",
+      "upstream_pr": 4609,
+      "entry_shas": ["ad538bfb1e6bfebcb03afaf4dd4d22323e7e62bd"]
+    },
+    {
+      "topic_id": "pr-4612",
+      "title": "fix(channels): restrict private-channel invitations",
+      "upstream_pr": 4612,
+      "entry_shas": ["efe1893dd372cfb92ed2e8a3ada2ed7b62c9477a"]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "997b8caaa4c9e5af69dd8a496b4995d09a69f694",
+      "topic_id": "pr-4608",
+      "title": "fix(git): revoke access for banned relay members",
+      "areas": ["relay", "git", "authorization"],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "Banned relay members must lose git transport access; the upstream patch is narrow and applies cleanly.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": ["authorization revocation for banned relay members"],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4608",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [
+        "cargo test -p buzz-relay api::git::transport: 36 passed, 7 ignored Postgres tests",
+        "node scripts/check-visible-zion-branding.mjs: passed with Forbidden visible-brand hits: 0",
+        "git diff --check: passed"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "885bed35eee3f933c48d333c8979fdbc038e98b9",
+      "topic_id": "pr-4607",
+      "title": "fix(workflow): bind trigger author to the signed event",
+      "areas": ["workflow", "authorization", "signed-events"],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "Workflow trigger identity must be derived from the signed event rather than caller-controlled context; the upstream patch applies cleanly.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": ["signed-event author binding"],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4607",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [
+        "cargo test -p buzz-workflow: 158 passed, 2 ignored, doc-test ignored",
+        "node scripts/check-visible-zion-branding.mjs: passed with Forbidden visible-brand hits: 0",
+        "git diff --check: passed"
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "ad538bfb1e6bfebcb03afaf4dd4d22323e7e62bd",
+      "topic_id": "pr-4609",
+      "title": "fix(acp): reject unattended permission requests",
+      "areas": ["acp", "permissions", "agent-runtime"],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Rejecting unattended permission requests is wanted, but the patch conflicts with Zion ACP configuration and must be adapted with permission-flow tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": ["unattended agent permission requests"],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4609",
+        "local_backlog": "upstream-security-followup",
+        "implementation_plan": "queued ACP unattended-permission adaptation with permission request regression tests and managed-agent runtime checks",
+        "fork_commits": []
+      },
+      "verification": ["git apply --check --3way reported conflict in crates/buzz-acp/src/config.rs"],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "efe1893dd372cfb92ed2e8a3ada2ed7b62c9477a",
+      "topic_id": "pr-4612",
+      "title": "fix(channels): restrict private-channel invitations",
+      "areas": ["relay", "desktop", "mobile", "channel-permissions"],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The restriction is desired, but it spans relay, desktop, and mobile mention/invite flows and conflicts with current Zion UI state.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": ["private channel membership and invitation authorization"],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4612",
+        "local_backlog": "upstream-security-followup",
+        "implementation_plan": "queued private-channel invitation adaptation with relay e2e, desktop mention-flow tests, mobile compose tests, and Zion visible-brand scan",
+        "fork_commits": []
+      },
+      "verification": ["git apply --check --3way reported conflicts in desktop/src/features/messages/ui/useMentionSendFlow.ts, mobile/lib/features/channels/channel_management_provider.dart, and mobile/lib/features/channels/compose_bar/helpers.dart"],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

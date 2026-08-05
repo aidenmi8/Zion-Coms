@@ -1,0 +1,428 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-09-normal-631b05c",
+  "previous_reviewed_sha": "ce56e34411d2940e70a6c0de653ffae36d334701",
+  "pinned_upstream_sha": "631b05c883f58e9533e9038b4669ebdfb1d9cf27",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4575",
+      "title": "ci: add guarded desktop release cache prewarm",
+      "upstream_pr": 4575,
+      "entry_shas": [
+        "e1f6da7c42b0cac6f307023f0479e1e2c3a6d1c0"
+      ]
+    },
+    {
+      "topic_id": "pr-3968",
+      "title": "feat(desktop): make onboarding model defaults skippable",
+      "upstream_pr": 3968,
+      "entry_shas": [
+        "5c98932c59ee5344e9e8c14525c51f3de16ad2c2"
+      ]
+    },
+    {
+      "topic_id": "pr-4010",
+      "title": "fix(desktop): clarify inherited agent parallelism",
+      "upstream_pr": 4010,
+      "entry_shas": [
+        "d4a4570b9769743899d97480b3bf482860b51d9c"
+      ]
+    },
+    {
+      "topic_id": "pr-3834",
+      "title": "fix(reactions): wrap long popover names",
+      "upstream_pr": 3834,
+      "entry_shas": [
+        "79815978483ef0ab78f7159c0add3492da6457a1"
+      ]
+    },
+    {
+      "topic_id": "pr-3735",
+      "title": "Polish Share Compute settings",
+      "upstream_pr": 3735,
+      "entry_shas": [
+        "027a74a61c8643a1d1086d3e8307fad89d7735f7"
+      ]
+    },
+    {
+      "topic_id": "pr-4578",
+      "title": "feat(agents): model-tuning parity in global Agent Defaults editor",
+      "upstream_pr": 4578,
+      "entry_shas": [
+        "985cdcc6eac33ccd77bc50c26e22c701d07eda4e"
+      ]
+    },
+    {
+      "topic_id": "pr-3940",
+      "title": "feat(mobile): bring channel menus to desktop parity",
+      "upstream_pr": 3940,
+      "entry_shas": [
+        "ede8d22dd5b336f146e0a6d760fd9dff78a42613"
+      ]
+    },
+    {
+      "topic_id": "pr-4281",
+      "title": "feat(desktop): redesign the Huddle experience",
+      "upstream_pr": 4281,
+      "entry_shas": [
+        "b29c8cdaa456307ecdd63e565de4beb14402128e"
+      ]
+    },
+    {
+      "topic_id": "pr-4239",
+      "title": "feat(mobile): add channel scroll navigation",
+      "upstream_pr": 4239,
+      "entry_shas": [
+        "d5da74e4e078a9551b9ce9e47e77cf9ed5840596"
+      ]
+    },
+    {
+      "topic_id": "pr-4231",
+      "title": "feat(mobile): sync per-group channel sorting",
+      "upstream_pr": 4231,
+      "entry_shas": [
+        "b42b093613edfb7138acb0961a0ad9218b39691a"
+      ]
+    },
+    {
+      "topic_id": "pr-4347",
+      "title": "feat: ship Buzz Term",
+      "upstream_pr": 4347,
+      "entry_shas": [
+        "631b05c883f58e9533e9038b4669ebdfb1d9cf27"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "e1f6da7c42b0cac6f307023f0479e1e2c3a6d1c0",
+      "topic_id": "pr-4575",
+      "title": "ci: add guarded desktop release cache prewarm",
+      "areas": [
+        "ci",
+        "release",
+        "desktop"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Guarded release cache prewarm workflows are release infrastructure, not source behavior needed for this Zion desktop/mobile intake step.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4575",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "5c98932c59ee5344e9e8c14525c51f3de16ad2c2",
+      "topic_id": "pr-3968",
+      "title": "feat(desktop): make onboarding model defaults skippable",
+      "areas": [
+        "desktop",
+        "onboarding",
+        "agents",
+        "ui"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Skippable onboarding model defaults are compatible, but the onboarding copy and agent defaults need Zion visible-brand checks and desktop E2E coverage before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3968",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop onboarding adaptation with Zion copy snapshots and agent-defaults E2E tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "d4a4570b9769743899d97480b3bf482860b51d9c",
+      "topic_id": "pr-4010",
+      "title": "fix(desktop): clarify inherited agent parallelism",
+      "areas": [
+        "desktop",
+        "agents",
+        "configuration",
+        "ui"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Clarifying inherited agent parallelism is compatible, but it changes agent configuration UI and tests, so it should be adapted with Zion agent naming and settings-copy checks.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4010",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued agent parallelism UI adaptation with Zion labels and desktop tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "79815978483ef0ab78f7159c0add3492da6457a1",
+      "topic_id": "pr-3834",
+      "title": "fix(reactions): wrap long popover names",
+      "areas": [
+        "desktop",
+        "reactions",
+        "ui"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Long reaction-name wrapping is compatible and low risk, but it is desktop visual polish and is queued behind the mobile relay-session source fix.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3834",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop reaction-popover visual regression test",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "027a74a61c8643a1d1086d3e8307fad89d7735f7",
+      "topic_id": "pr-3735",
+      "title": "Polish Share Compute settings",
+      "areas": [
+        "desktop",
+        "mesh-compute",
+        "settings",
+        "ui"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Share Compute settings polish is compatible, but it is visible desktop settings copy and needs Zion naming, screenshots, and mesh-compute E2E coverage before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3735",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued Share Compute settings adaptation with Zion visible-brand screenshots",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "985cdcc6eac33ccd77bc50c26e22c701d07eda4e",
+      "topic_id": "pr-4578",
+      "title": "feat(agents): model-tuning parity in global Agent Defaults editor",
+      "areas": [
+        "desktop",
+        "agents",
+        "configuration",
+        "tauri"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Global Agent Defaults model-tuning parity is useful, but it is broad agent configuration work touching Tauri, managed-agent discovery, UI labels, and tests, so it needs a dedicated Zion alias and transcript safety pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4578",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued global Agent Defaults adaptation with Zion aliases, Tauri tests, desktop E2E tests, and visible-brand scans",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "ede8d22dd5b336f146e0a6d760fd9dff78a42613",
+      "topic_id": "pr-3940",
+      "title": "feat(mobile): bring channel menus to desktop parity",
+      "areas": [
+        "mobile",
+        "channels",
+        "ui"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Mobile channel-menu parity is compatible, but it changes visible mobile UI and needs a focused Zion mobile UI/device verification pass before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3940",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued mobile channel-menu adaptation with Zion UI tests and device smoke check",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "b29c8cdaa456307ecdd63e565de4beb14402128e",
+      "topic_id": "pr-4281",
+      "title": "feat(desktop): redesign the Huddle experience",
+      "areas": [
+        "desktop",
+        "huddle",
+        "audio",
+        "ui"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The Huddle redesign is a large desktop/audio/UI feature that may be valuable, but it touches many visible surfaces and runtime audio behavior and cannot be safely included without a separate Zion design and regression plan.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4281",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued Huddle redesign adaptation with Zion screenshots, audio/huddle tests, and desktop runtime smoke checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "d5da74e4e078a9551b9ce9e47e77cf9ed5840596",
+      "topic_id": "pr-4239",
+      "title": "feat(mobile): add channel scroll navigation",
+      "areas": [
+        "mobile",
+        "channels",
+        "scrolling",
+        "ui"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Mobile channel scroll navigation is compatible and pairs with the queued follow-boundary test, but it is visible navigation behavior and should land in a separate mobile UI parity pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4239",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued mobile channel scroll-navigation adaptation with follow-boundary test coverage",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "b42b093613edfb7138acb0961a0ad9218b39691a",
+      "topic_id": "pr-4231",
+      "title": "feat(mobile): sync per-group channel sorting",
+      "areas": [
+        "mobile",
+        "desktop",
+        "channels",
+        "sorting"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Per-group channel sorting is compatible, but it crosses desktop storage logic and mobile channel lists, so it needs a coordinated parity test pass before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4231",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued cross-platform channel sorting adaptation with desktop and mobile tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "631b05c883f58e9533e9038b4669ebdfb1d9cf27",
+      "topic_id": "pr-4347",
+      "title": "feat: ship Buzz Term",
+      "areas": [
+        "desktop",
+        "terminal",
+        "tauri",
+        "branding"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The terminal feature cannot be taken verbatim because it ships upstream Buzz Term naming and many desktop/Tauri surfaces. It is queued only for a future Zion Term adaptation with zero visible Buzz output proof.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4347",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued Zion Term adaptation with terminal runtime tests, desktop E2E, and strict visible-brand scans before inclusion",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-08-normal-ce56e34",
+  "previous_reviewed_sha": "01c80aa9b3eaa569361966877994438ad84a280a",
+  "pinned_upstream_sha": "ce56e34411d2940e70a6c0de653ffae36d334701",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4549",
+      "title": "feat(desktop): improve channel template discovery",
+      "upstream_pr": 4549,
+      "entry_shas": [
+        "c1b88af8d71d1cf6aaca517e92ce9e918cd0e8bd"
+      ]
+    },
+    {
+      "topic_id": "pr-4382",
+      "title": "fix(desktop): harden Windows installs against Defender block and orphaned Node",
+      "upstream_pr": 4382,
+      "entry_shas": [
+        "80315ac1a68024c40b61f3a062c9cb6bf7d4efb5"
+      ]
+    },
+    {
+      "topic_id": "pr-4545",
+      "title": "fix: report agent usage per provider round, not once per turn",
+      "upstream_pr": 4545,
+      "entry_shas": [
+        "09c86c56e52651c017743268fc8ce708bb83b265"
+      ]
+    },
+    {
+      "topic_id": "pr-3988",
+      "title": "docs(release): align desktop handoff instructions",
+      "upstream_pr": 3988,
+      "entry_shas": [
+        "44fa1e8e3af30d561de981a211ff7a79bfa36493"
+      ]
+    },
+    {
+      "topic_id": "pr-4559",
+      "title": "test(mobile): assert follow boundary semantics",
+      "upstream_pr": 4559,
+      "entry_shas": [
+        "6de85fe31d781122756aecf954bae7d357a56b9a"
+      ]
+    },
+    {
+      "topic_id": "pr-4562",
+      "title": "chore(release): release Buzz Desktop version 0.5.4",
+      "upstream_pr": 4562,
+      "entry_shas": [
+        "651f6372754e60e3f936b3397040eb0f1e44c9f3"
+      ]
+    },
+    {
+      "topic_id": "pr-4372",
+      "title": "fix(mobile): recover stale relay sessions",
+      "upstream_pr": 4372,
+      "entry_shas": [
+        "ce56e34411d2940e70a6c0de653ffae36d334701"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "c1b88af8d71d1cf6aaca517e92ce9e918cd0e8bd",
+      "topic_id": "pr-4549",
+      "title": "feat(desktop): improve channel template discovery",
+      "areas": [
+        "desktop",
+        "channels",
+        "settings",
+        "ui"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Improved channel template discovery is compatible, but it changes desktop settings and creation UI and needs a Zion-labeled desktop check before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4549",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop channel-template discovery adaptation with Zion settings UI checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "80315ac1a68024c40b61f3a062c9cb6bf7d4efb5",
+      "topic_id": "pr-4382",
+      "title": "fix(desktop): harden Windows installs against Defender block and orphaned Node",
+      "areas": [
+        "desktop",
+        "windows",
+        "agent-discovery"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Windows install hardening is outside the current iOS/macOS fork target scope and is not needed for the Zion desktop/mobile delivery path.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4382",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "09c86c56e52651c017743268fc8ce708bb83b265",
+      "topic_id": "pr-4545",
+      "title": "fix: report agent usage per provider round, not once per turn",
+      "areas": [
+        "agents",
+        "usage",
+        "telemetry"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Per-provider-round usage reporting is compatible, but agent output/accounting changes need a managed-agent transcript and Zion visible-brand pass before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4545",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued agent usage accounting adaptation with transcript and Zion branding checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "44fa1e8e3af30d561de981a211ff7a79bfa36493",
+      "topic_id": "pr-3988",
+      "title": "docs(release): align desktop handoff instructions",
+      "areas": [
+        "docs",
+        "release"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Upstream desktop release handoff documentation is release-process work and carries upstream Buzz release assumptions that are not appropriate for this source-only Zion intake step.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3988",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "6de85fe31d781122756aecf954bae7d357a56b9a",
+      "topic_id": "pr-4559",
+      "title": "test(mobile): assert follow boundary semantics",
+      "areas": [
+        "mobile",
+        "tests",
+        "scrolling"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The follow-boundary assertion is useful mobile regression coverage, but it should land with the related mobile channel scrolling/navigation adaptation rather than this relay-session fix.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4559",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued with mobile channel scrolling/navigation intake",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "651f6372754e60e3f936b3397040eb0f1e44c9f3",
+      "topic_id": "pr-4562",
+      "title": "chore(release): release Buzz Desktop version 0.5.4",
+      "areas": [
+        "release",
+        "desktop",
+        "versioning"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "The upstream Buzz Desktop release bump, changelog, and candidate metadata are not Zion release artifacts and are out of scope for this source intake.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4562",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "ce56e34411d2940e70a6c0de653ffae36d334701",
+      "topic_id": "pr-4372",
+      "title": "fix(mobile): recover stale relay sessions",
+      "areas": [
+        "mobile",
+        "relay",
+        "messages",
+        "websocket"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "included",
+      "rationale": "This directly targets the phone message-awareness problem by reconnecting stale mobile relay sessions after backgrounding and adding websocket ping liveness while preserving relay-only behavior and compatibility identifiers.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4372",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": [
+          "33b243ba8"
+        ]
+      },
+      "verification": [
+        ". ./bin/activate-hermit && cd mobile && dart format --output=none --set-exit-if-changed lib/shared/relay/relay_session.dart lib/shared/relay/relay_socket.dart test/shared/relay/relay_session_test.dart test/shared/relay/relay_socket_liveness_test.dart",
+        ". ./bin/activate-hermit && cd mobile && flutter test test/shared/relay/relay_session_test.dart test/shared/relay/relay_socket_liveness_test.dart",
+        ". ./bin/activate-hermit && just mobile-check",
+        ". ./bin/activate-hermit && just mobile-test",
+        "node scripts/check-visible-zion-branding.mjs",
+        "node scripts/check-zion-platform-brand-contract.mjs"
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

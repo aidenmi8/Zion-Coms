@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-16-normal-4674750",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "efe1893dd372cfb92ed2e8a3ada2ed7b62c9477a",
+  "pinned_upstream_sha": "4674750b7ee1b3a6b299b79d69f11a8ec5128f26",
+  "topics": [
+    {
+      "topic_id": "pr-4811",
+      "title": "fix(release): tag immutable desktop candidates",
+      "upstream_pr": 4811,
+      "entry_shas": ["4674750b7ee1b3a6b299b79d69f11a8ec5128f26"]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "4674750b7ee1b3a6b299b79d69f11a8ec5128f26",
+      "topic_id": "pr-4811",
+      "title": "fix(release): tag immutable desktop candidates",
+      "areas": ["release", "desktop", "ci"],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Immutable release-candidate tagging is useful, but release and signing policy are separate delivery gates and upstream Buzz release metadata cannot be taken verbatim into Zion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4811",
+        "local_backlog": "upstream-release-followup",
+        "implementation_plan": "queued Zion desktop release-candidate tag adaptation with release-script tests and no signing/notarization/deployment side effects",
+        "fork_commits": []
+      },
+      "verification": ["queued only; release workflow not changed in this pass"],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

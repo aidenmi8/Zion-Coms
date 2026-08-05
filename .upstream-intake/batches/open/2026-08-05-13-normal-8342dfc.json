@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-13-normal-8342dfc",
+  "previous_reviewed_sha": "4a2305170eef565bf1836e2859247e67c030f8af",
+  "pinned_upstream_sha": "8342dfcc5890b81a269a8ec3db73a8a56f76ce79",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4800",
+      "title": "chore(release): release Buzz Desktop version 0.5.5",
+      "upstream_pr": 4800,
+      "entry_shas": [
+        "a0ed13de14ee64dd90c32335790f7d3b4e94330d"
+      ]
+    },
+    {
+      "topic_id": "pr-4808",
+      "title": "Revert release Buzz Desktop version 0.5.5",
+      "upstream_pr": 4808,
+      "entry_shas": [
+        "79c52166cfe6b6d36bdc7686f943595c74e2f578"
+      ]
+    },
+    {
+      "topic_id": "pr-4801",
+      "title": "feat: paste composer text without formatting",
+      "upstream_pr": 4801,
+      "entry_shas": [
+        "25a9cf1be6d245fbd7373cb1160dbc790baf5bd5"
+      ]
+    },
+    {
+      "topic_id": "pr-4809",
+      "title": "chore(release): release Buzz Desktop version 0.5.5",
+      "upstream_pr": 4809,
+      "entry_shas": [
+        "8342dfcc5890b81a269a8ec3db73a8a56f76ce79"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "a0ed13de14ee64dd90c32335790f7d3b4e94330d",
+      "topic_id": "pr-4800",
+      "title": "chore(release): release Buzz Desktop version 0.5.5",
+      "areas": [
+        "release",
+        "desktop",
+        "metadata"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Upstream Buzz Desktop release metadata is not a Zion source behavior change and must not be taken into this fork's release state.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4800",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "79c52166cfe6b6d36bdc7686f943595c74e2f578",
+      "topic_id": "pr-4808",
+      "title": "Revert release Buzz Desktop version 0.5.5",
+      "areas": [
+        "release",
+        "desktop",
+        "metadata"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "This is upstream release bookkeeping that only reverts a rejected Buzz Desktop release metadata commit; it has no Zion source behavior to apply.",
+      "dependencies": [
+        "a0ed13de14ee64dd90c32335790f7d3b4e94330d"
+      ],
+      "blocked_by_rejected": [
+        "a0ed13de14ee64dd90c32335790f7d3b4e94330d"
+      ],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4808",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "25a9cf1be6d245fbd7373cb1160dbc790baf5bd5",
+      "topic_id": "pr-4801",
+      "title": "feat: paste composer text without formatting",
+      "areas": [
+        "desktop",
+        "composer",
+        "clipboard",
+        "messages",
+        "tauri"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Plain-text paste is a useful desktop composer behavior, but it touches native clipboard plumbing and rich-text editor behavior, so it should be adapted with focused composer and clipboard tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4801",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop plain-text paste adaptation with composer-selection-formatting E2E and Tauri clipboard checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "8342dfcc5890b81a269a8ec3db73a8a56f76ce79",
+      "topic_id": "pr-4809",
+      "title": "chore(release): release Buzz Desktop version 0.5.5",
+      "areas": [
+        "release",
+        "desktop",
+        "metadata"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Upstream Buzz Desktop release metadata is not a Zion source behavior change and must not be taken into this fork's release state.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4809",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

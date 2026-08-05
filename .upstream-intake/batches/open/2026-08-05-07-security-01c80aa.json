@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-07-security-01c80aa",
+  "previous_reviewed_sha": "b0c6d6f744e63ac88a1738f0e995680c163e1d13",
+  "pinned_upstream_sha": "01c80aa9b3eaa569361966877994438ad84a280a",
+  "kind": "security",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4022",
+      "title": "fix(desktop): save key backups to authorized path",
+      "upstream_pr": 4022,
+      "entry_shas": [
+        "01c80aa9b3eaa569361966877994438ad84a280a"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "01c80aa9b3eaa569361966877994438ad84a280a",
+      "topic_id": "pr-4022",
+      "title": "fix(desktop): save key backups to authorized path",
+      "areas": [
+        "desktop",
+        "tauri",
+        "key-backup",
+        "security"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Saving key backups only to an authorized path is a compatible security fix, but it touches private key backup export behavior and needs a dedicated desktop/Tauri security verification pass before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "private key backup export path authorization"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4022",
+        "local_backlog": "upstream-intake-security-followup",
+        "implementation_plan": "queued desktop key-backup path authorization adaptation with Tauri command tests",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

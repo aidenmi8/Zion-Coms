@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-01-normal-756dd7f",
+  "previous_reviewed_sha": "19d57b0d46baa55814ac737041a36d0b405c9f64",
+  "pinned_upstream_sha": "756dd7f65d6f2995e9188a0ffe54294057f8ef4f",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-4012",
+      "title": "fix(desktop): keep thread-open affordance in archived channels",
+      "upstream_pr": 4012,
+      "entry_shas": [
+        "8e81afa431deecd172f1ad6aab6f022f31cd812c"
+      ]
+    },
+    {
+      "topic_id": "pr-2613",
+      "title": "docs: fix stale kind count, quick-start numbering, and empty Further Reading",
+      "upstream_pr": 2613,
+      "entry_shas": [
+        "909a3b2c318b2ec477a3438a998a3b611f5b6d6a"
+      ]
+    },
+    {
+      "topic_id": "pr-4103",
+      "title": "docs: note that addressable channel events scope by d, not h",
+      "upstream_pr": 4103,
+      "entry_shas": [
+        "3d7712cc36e8da563cb1c121fc58bfc505d38496"
+      ]
+    },
+    {
+      "topic_id": "pr-3998",
+      "title": "fix(relay): allow open relays to set their NIP-11 workspace icon (kind:9033)",
+      "upstream_pr": 3998,
+      "entry_shas": [
+        "5765fc74b77224f0207ddd4b41736a5ff18d333d"
+      ]
+    },
+    {
+      "topic_id": "pr-3481",
+      "title": "docs(readme): clarify which release asset to download per platform",
+      "upstream_pr": 3481,
+      "entry_shas": [
+        "8d5afb606763fcaffd3af811be2106e41cc7347d"
+      ]
+    },
+    {
+      "topic_id": "pr-3426",
+      "title": "docs(chart): fix ArgoCD example for native OCI sources (full artifact repoURL + path)",
+      "upstream_pr": 3426,
+      "entry_shas": [
+        "36cf932ff0105a4cf574fc687deb4c1cb01bc0d1"
+      ]
+    },
+    {
+      "topic_id": "pr-3487",
+      "title": "docs(nostr): document #h requirement for live reaction subscriptions",
+      "upstream_pr": 3487,
+      "entry_shas": [
+        "756dd7f65d6f2995e9188a0ffe54294057f8ef4f"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "8e81afa431deecd172f1ad6aab6f022f31cd812c",
+      "topic_id": "pr-4012",
+      "title": "fix(desktop): keep thread-open affordance in archived channels",
+      "areas": [
+        "desktop",
+        "messages"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "The archived-channel thread affordance fix is compatible, but desktop UI changes are outside this mobile relay recovery step and need a focused desktop pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4012",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop-safe intake after mobile relay recovery",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "909a3b2c318b2ec477a3438a998a3b611f5b6d6a",
+      "topic_id": "pr-2613",
+      "title": "docs: fix stale kind count, quick-start numbering, and empty Further Reading",
+      "areas": [
+        "docs"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Upstream documentation-only cleanup is not needed for the current Zion source intake and may reintroduce visible Buzz wording.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/2613",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "3d7712cc36e8da563cb1c121fc58bfc505d38496",
+      "topic_id": "pr-4103",
+      "title": "docs: note that addressable channel events scope by d, not h",
+      "areas": [
+        "docs"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "AGENTS.md-only upstream wording is not needed in this fork pass and does not affect the current runtime issue.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4103",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "5765fc74b77224f0207ddd4b41736a5ff18d333d",
+      "topic_id": "pr-3998",
+      "title": "fix(relay): allow open relays to set their NIP-11 workspace icon (kind:9033)",
+      "areas": [
+        "relay",
+        "database",
+        "metadata"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The relay metadata behavior is useful, but it includes schema and NIP-11 output changes that require a separate Zion-branded relay test pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3998",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued relay metadata adaptation with NIP-11 Zion output verification",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "8d5afb606763fcaffd3af811be2106e41cc7347d",
+      "topic_id": "pr-3481",
+      "title": "docs(readme): clarify which release asset to download per platform",
+      "areas": [
+        "docs",
+        "release"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Upstream release-asset README copy is release-channel documentation and conflicts with Zion-specific release naming.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3481",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "36cf932ff0105a4cf574fc687deb4c1cb01bc0d1",
+      "topic_id": "pr-3426",
+      "title": "docs(chart): fix ArgoCD example for native OCI sources (full artifact repoURL + path)",
+      "areas": [
+        "deploy",
+        "docs"
+      ],
+      "risk": "medium",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Kubernetes, Helm, and ArgoCD deployment guidance is out of scope for the current Docker relay and mobile recovery path.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3426",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "756dd7f65d6f2995e9188a0ffe54294057f8ef4f",
+      "topic_id": "pr-3487",
+      "title": "docs(nostr): document #h requirement for live reaction subscriptions",
+      "areas": [
+        "docs",
+        "protocol"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Documentation-only NOSTR text is not required for the current fork intake and must not reintroduce upstream product wording.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3487",
+        "local_backlog": null,
+        "implementation_plan": null,
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

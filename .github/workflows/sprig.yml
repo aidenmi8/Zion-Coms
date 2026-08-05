@@ -1,9 +1,9 @@
 name: Sprig
 
 # Builds and publishes Sprig — one deploy-anywhere Linux multicall binary for:
-#   buzz-acp       ACP harness that bridges Buzz events to the LLM agent
-#   buzz-agent     ACP-compliant agent (spawns MCP, calls LLMs)
-#   buzz-dev-mcp   Developer MCP server (multicall: rg, tree, buzz,
+#   zion-acp       ACP harness that bridges Zion events to the LLM agent
+#   zion-agent     ACP-compliant agent (spawns MCP, calls LLMs)
+#   zion-dev-mcp   Developer MCP server (multicall: rg, tree, zion,
 #                    git-credential-nostr, git-sign-nostr)
 #
 # Targets: x86_64-unknown-linux-musl and aarch64-unknown-linux-musl (static
@@ -137,7 +137,12 @@ jobs:
           set -euo pipefail
           TAG="sprig-latest"
           TITLE="Sprig (rolling)"
-          NOTES="Rolling Linux build of Sprig (all-in-one buzz-acp + buzz-agent + buzz-dev-mcp), tracking \`main\` (\`${SHA}\`)."
+          NOTES="Rolling Linux build of Sprig (all-in-one zion-acp + zion-agent + zion-dev-mcp), tracking \`main\` (\`${SHA}\`)."
+
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::notice::Skipping rolling Sprig release because ${TAG} does not exist in ${REPO}."
+            exit 0
+          fi
 
           gh release edit "$TAG" \
             --prerelease \
@@ -180,5 +185,5 @@ jobs:
           set -euo pipefail
           gh release create "$TAG" \
             --title "Sprig v${VERSION}" \
-            --notes "Sprig v${VERSION} — Linux all-in-one builds of buzz-acp + buzz-agent + buzz-dev-mcp." \
+            --notes "Sprig v${VERSION} — Linux all-in-one builds of zion-acp + zion-agent + zion-dev-mcp." \
             dist/*

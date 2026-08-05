@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-05-06-normal-b0c6d6f",
+  "previous_reviewed_sha": "f865c0054b0a400657126c9321b4d4cb7d9cc746",
+  "pinned_upstream_sha": "b0c6d6f744e63ac88a1738f0e995680c163e1d13",
+  "kind": "normal",
+  "status": "reviewed",
+  "topics": [
+    {
+      "topic_id": "pr-3935",
+      "title": "Add channel activity hover menu",
+      "upstream_pr": 3935,
+      "entry_shas": [
+        "b0c6d6f744e63ac88a1738f0e995680c163e1d13"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "b0c6d6f744e63ac88a1738f0e995680c163e1d13",
+      "topic_id": "pr-3935",
+      "title": "Add channel activity hover menu",
+      "areas": [
+        "desktop",
+        "channels",
+        "ui",
+        "unread-state"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "The channel activity hover menu is compatible and useful, but it is broad desktop UI/unread-state work and needs a dedicated Zion visual pass plus desktop E2E screenshots before inclusion.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3935",
+        "local_backlog": "upstream-intake-followup",
+        "implementation_plan": "queued desktop channel activity adaptation with Zion visible-brand and unread E2E screenshot checks",
+        "fork_commits": []
+      },
+      "verification": [],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

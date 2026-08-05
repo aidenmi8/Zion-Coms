@@ -60,19 +60,31 @@ async fn spawn_fake_llm(responses: Vec<Value>) -> String {
 /// Like `spawn_fake_llm` but also captures the full JSON request body from each
 /// incoming HTTP request. Returns (url, captured_requests).
 async fn spawn_capturing_fake_llm(responses: Vec<Value>) -> (String, Arc<Mutex<Vec<Value>>>) {
+    spawn_capturing_fake_llm_with_gate(responses, None).await
+}
+
+async fn spawn_capturing_fake_llm_with_gate(
+    responses: Vec<Value>,
+    first_response_gate: Option<tokio::sync::oneshot::Receiver<()>>,
+) -> (String, Arc<Mutex<Vec<Value>>>) {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());
     let queue = Arc::new(Mutex::new(VecDeque::from(responses)));
     let captures: Arc<Mutex<Vec<Value>>> = Arc::new(Mutex::new(Vec::new()));
     let captures_clone = captures.clone();
+    let first_response_gate = first_response_gate.map(|rx| Arc::new(Mutex::new(Some(rx))));
     tokio::spawn(async move {
+        let mut request_num = 0usize;
         loop {
             let (mut sock, _) = match listener.accept().await {
                 Ok(p) => p,
                 Err(_) => return,
             };
+            request_num += 1;
+            let req_num = request_num;
             let queue = queue.clone();
             let captures = captures_clone.clone();
+            let first_response_gate = first_response_gate.clone();
             tokio::spawn(async move {
                 // Read headers.
                 let mut buf = Vec::new();
@@ -121,6 +133,15 @@ async fn spawn_capturing_fake_llm(responses: Vec<Value>) -> (String, Arc<Mutex<V
                     captures.lock().await.push(parsed);
                 }
 
+                if req_num == 1 {
+                    if let Some(gate) = first_response_gate {
+                        let rx = gate.lock().await.take();
+                        if let Some(rx) = rx {
+                            let _ = rx.await;
+                        }
+                    }
+                }
+
                 // Send canned response.
                 let body = queue
                     .lock()
@@ -137,7 +158,23 @@ async fn spawn_capturing_fake_llm(responses: Vec<Value>) -> (String, Arc<Mutex<V
             });
         }
     });
+
     (url, captures)
+}
+
+/// Like `spawn_capturing_fake_llm`, but the first response waits until the test
+/// releases it. Useful for races where the test must inject a message while the
+/// first provider request is still in flight.
+async fn spawn_gated_first_response_fake_llm(
+    responses: Vec<Value>,
+) -> (
+    String,
+    Arc<Mutex<Vec<Value>>>,
+    tokio::sync::oneshot::Sender<()>,
+) {
+    let (release_tx, release_rx) = tokio::sync::oneshot::channel::<()>();
+    let (url, captures) = spawn_capturing_fake_llm_with_gate(responses, Some(release_rx)).await;
+    (url, captures, release_tx)
 }
 
 struct Harness {
@@ -597,7 +634,7 @@ async fn steer_folds_into_active_turn_without_cancelling() {
     // A two-round turn (tool call → text). A steer sent once the run is live
     // must (a) be accepted with the matching runId, (b) NOT cancel the turn —
     // it still ends with end_turn — and (c) reach the provider as a user turn.
-    let (url, captures) = spawn_capturing_fake_llm(vec![
+    let (url, captures, release_first_response) = spawn_gated_first_response_fake_llm(vec![
         openai_tool_call("call_steer", "fake__noop", json!({})),
         openai_text("acknowledged the steer"),
     ])
@@ -629,35 +666,28 @@ async fn steer_folds_into_active_turn_without_cancelling() {
         )
         .await;
 
-    // Steer is accepted and echoes the run id it landed in.
-    let mut steer_ok = false;
-    let mut end_turn = false;
-    for _ in 0..40 {
-        let v = h.recv().await;
-        if v["id"] == json!(s_id) {
-            assert_eq!(
-                v["result"]["runId"],
-                json!(run_id),
-                "steer ran into the live turn"
-            );
-            assert!(
-                v["result"]["messageId"]
-                    .as_str()
-                    .is_some_and(|m| m.starts_with("steer_")),
-                "steer reply carries a messageId"
-            );
-            steer_ok = true;
-        } else if v["id"] == json!(p_id) {
-            // The turn was NOT cancelled — it completed normally.
-            assert_eq!(v["result"]["stopReason"], "end_turn");
-            end_turn = true;
-        }
-        if steer_ok && end_turn {
-            break;
-        }
-    }
-    assert!(steer_ok, "steer request was not accepted");
-    assert!(end_turn, "turn did not complete with end_turn after steer");
+    // Steer is accepted and echoes the run id it landed in while the first
+    // provider request is still in flight. Without this gate, the fake provider
+    // can finish both rounds before the steer is incorporated when this test
+    // file runs in parallel.
+    let v = h.recv_until(|v| v["id"] == json!(s_id)).await;
+    assert_eq!(
+        v["result"]["runId"],
+        json!(run_id),
+        "steer ran into the live turn"
+    );
+    assert!(
+        v["result"]["messageId"]
+            .as_str()
+            .is_some_and(|m| m.starts_with("steer_")),
+        "steer reply carries a messageId"
+    );
+
+    let _ = release_first_response.send(());
+
+    let v = h.recv_until(|v| v["id"] == json!(p_id)).await;
+    // The turn was NOT cancelled — it completed normally.
+    assert_eq!(v["result"]["stopReason"], "end_turn");
 
     // The steered text reached the provider as a user message in some round.
     let reqs = captures.lock().await;

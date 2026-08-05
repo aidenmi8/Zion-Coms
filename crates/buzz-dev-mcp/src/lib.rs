@@ -175,6 +175,7 @@ async fn async_main(cmd: String) -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
         .with_writer(std::io::stderr)
         .with_ansi(false)
+        .with_target(false)
         .init();
 
     let cwd = std::env::current_dir()?;

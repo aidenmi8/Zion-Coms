@@ -164,6 +164,7 @@ async fn async_main() {
     tracing_subscriber::fmt()
         .with_writer(std::io::stderr)
         .with_ansi(false)
+        .with_target(false)
         .init();
     let cfg = Config::from_env().unwrap_or_else(|e| die(e));
     let llm = Arc::new(Llm::new(&cfg).unwrap_or_else(|e| die(e.to_string())));

@@ -208,21 +208,21 @@
       "risk": "medium",
       "decision": "accept",
       "integration_method": "adapt",
-      "delivery": "queued",
-      "rationale": "Wanted behavior, but the patch conflicts with Zion's current agent runtime state and needs BUZZ_* compatibility allowlist review.",
+      "delivery": "included",
+      "rationale": "Adapted into the Zion agent runtime as the prerequisite for context-overflow recovery; the per-turn cap preserves the session-cumulative handoff counter and BUZZ_* compatibility surface.",
       "dependencies": [],
       "blocked_by_rejected": [],
-      "dependency_resolution": null,
+      "dependency_resolution": "adapt_without_dependency",
       "security_candidate": false,
       "security_reasons": [],
       "tracking": {
         "issue": null,
         "pull_request": "https://github.com/block/buzz/pull/4805",
         "local_backlog": "upstream-intake-followup",
-        "implementation_plan": "queued agent handoff-cap adaptation with regression tests, BUZZ_* compatibility allowlist review, and Zion transcript branding guard",
-        "fork_commits": []
+        "implementation_plan": "completed in the local Zion upstream-intake worktree with focused Rust tests and branding checks",
+        "fork_commits": ["c24cee7cc6c162324be67aef4a04caa65496b657"]
       },
-      "verification": ["git apply --check --3way reported conflicts in crates/buzz-agent/src/agent.rs and crates/buzz-agent/tests/regressions.rs"],
+      "verification": ["Adapted locally; cargo fmt --package buzz-agent -- --check passed; cargo test -p buzz-agent --lib passed 295/295; cargo test -p buzz-agent --test regressions passed 22/22; Zion visible-brand scan passed with 0 forbidden hits; platform-brand contract passed."],
       "revisit": null
     }
   ],

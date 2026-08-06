@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-07-normal-5677e4c",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "a7ea86cdcf2aa3cbb1486baabc4c9d6aea8c576c",
+  "pinned_upstream_sha": "5677e4ca050bcfe2aef16b89f7abe326e45d0b0d",
+  "topics": [
+    {
+      "topic_id": "pr-4917",
+      "title": "fix(acp): pace observer telemetry at 1/s with per-channel batch envelopes",
+      "upstream_pr": 4917,
+      "entry_shas": [
+        "4da7264d9070ae48c755819598294c9de44c6d3d"
+      ]
+    },
+    {
+      "topic_id": "pr-4993",
+      "title": "test(desktop): match attachment button label",
+      "upstream_pr": 4993,
+      "entry_shas": [
+        "5677e4ca050bcfe2aef16b89f7abe326e45d0b0d"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "4da7264d9070ae48c755819598294c9de44c6d3d",
+      "topic_id": "pr-4917",
+      "title": "fix(acp): pace observer telemetry at 1/s with per-channel batch envelopes",
+      "areas": [
+        "acp",
+        "desktop"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4917",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "5677e4ca050bcfe2aef16b89f7abe326e45d0b0d",
+      "topic_id": "pr-4993",
+      "title": "test(desktop): match attachment button label",
+      "areas": [
+        "desktop",
+        "tests"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [
+        "d42d60d64e983c13c7dd2c0ed5af7ca3af8ea79a"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4993",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

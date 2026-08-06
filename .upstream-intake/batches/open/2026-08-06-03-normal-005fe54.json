@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-03-normal-005fe54",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "2ea9385015fb922de2adf0a53e86fc5a21d07b90",
+  "pinned_upstream_sha": "005fe54d026a9844d22a26f0d482de6de5580b29",
+  "topics": [
+    {
+      "topic_id": "pr-4304",
+      "title": "fix(desktop): rename generic attachment action from Attach image to Attach file",
+      "upstream_pr": 4304,
+      "entry_shas": [
+        "d42d60d64e983c13c7dd2c0ed5af7ca3af8ea79a"
+      ]
+    },
+    {
+      "topic_id": "pr-4948",
+      "title": "style(messages): increase username contrast",
+      "upstream_pr": 4948,
+      "entry_shas": [
+        "cda33978b1fc86237ae54e150840df9dd513b1c7"
+      ]
+    },
+    {
+      "topic_id": "pr-4965",
+      "title": "fix(desktop): clamp thread panel to channel surface",
+      "upstream_pr": 4965,
+      "entry_shas": [
+        "24c79957403d2b3a58a8e0450020e59212307896"
+      ]
+    },
+    {
+      "topic_id": "pr-4969",
+      "title": "fix(desktop): outline the selected community",
+      "upstream_pr": 4969,
+      "entry_shas": [
+        "005fe54d026a9844d22a26f0d482de6de5580b29"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "d42d60d64e983c13c7dd2c0ed5af7ca3af8ea79a",
+      "topic_id": "pr-4304",
+      "title": "fix(desktop): rename generic attachment action from Attach image to Attach file",
+      "areas": [
+        "desktop",
+        "composer"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4304",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "cda33978b1fc86237ae54e150840df9dd513b1c7",
+      "topic_id": "pr-4948",
+      "title": "style(messages): increase username contrast",
+      "areas": [
+        "desktop",
+        "messages"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4948",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "24c79957403d2b3a58a8e0450020e59212307896",
+      "topic_id": "pr-4965",
+      "title": "fix(desktop): clamp thread panel to channel surface",
+      "areas": [
+        "desktop",
+        "threads"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4965",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "005fe54d026a9844d22a26f0d482de6de5580b29",
+      "topic_id": "pr-4969",
+      "title": "fix(desktop): outline the selected community",
+      "areas": [
+        "desktop",
+        "communities"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4969",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

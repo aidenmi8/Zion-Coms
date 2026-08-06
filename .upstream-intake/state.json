@@ -1,5 +1,5 @@
 {
-  "last_discovered": "6df7eba24d49b6a2c7f0188b19e24f3df999678c",
+  "last_discovered": "96ae141763e5459beb68a847e0082e931af72f4c",
   "open_batches": [
     "2026-07-29-01-normal-90e058e",
     "2026-07-29-02-security-22be8bb",
@@ -27,8 +27,19 @@
     "2026-08-05-14-normal-8a7eb8d",
     "2026-08-05-15-security-efe1893",
     "2026-08-05-16-normal-4674750",
-    "2026-08-05-17-normal-6df7eba"
+    "2026-08-05-17-normal-6df7eba",
+    "2026-08-06-01-normal-719f973",
+    "2026-08-06-02-normal-2ea9385",
+    "2026-08-06-03-normal-005fe54",
+    "2026-08-06-04-normal-e14fff7",
+    "2026-08-06-05-normal-06b60e6",
+    "2026-08-06-06-security-a7ea86c",
+    "2026-08-06-07-normal-5677e4c",
+    "2026-08-06-08-security-16cc3de",
+    "2026-08-06-09-normal-e2796d4",
+    "2026-08-06-10-normal-38bf642",
+    "2026-08-06-11-normal-96ae141"
   ],
-  "reviewed_through": "6df7eba24d49b6a2c7f0188b19e24f3df999678c",
+  "reviewed_through": "96ae141763e5459beb68a847e0082e931af72f4c",
   "schema_version": 1
 }

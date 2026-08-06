@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-05-normal-06b60e6",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "e14fff74d00623acd30945eec5be366e25b0cf09",
+  "pinned_upstream_sha": "06b60e682d5dd78e6cdcb8e93fe96c7ec4391e2a",
+  "topics": [
+    {
+      "topic_id": "pr-2198",
+      "title": "fix(desktop): enable message editing in Inbox",
+      "upstream_pr": 2198,
+      "entry_shas": [
+        "eb6a37569df2fcee5bd37e2ce9341181cdd2a10a"
+      ]
+    },
+    {
+      "topic_id": "pr-4633",
+      "title": "fix(mobile): merge relay recounts with locally seen thread replies",
+      "upstream_pr": 4633,
+      "entry_shas": [
+        "06b60e682d5dd78e6cdcb8e93fe96c7ec4391e2a"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "eb6a37569df2fcee5bd37e2ce9341181cdd2a10a",
+      "topic_id": "pr-2198",
+      "title": "fix(desktop): enable message editing in Inbox",
+      "areas": [
+        "desktop",
+        "inbox"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/2198",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "06b60e682d5dd78e6cdcb8e93fe96c7ec4391e2a",
+      "topic_id": "pr-4633",
+      "title": "fix(mobile): merge relay recounts with locally seen thread replies",
+      "areas": [
+        "mobile",
+        "threads"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4633",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

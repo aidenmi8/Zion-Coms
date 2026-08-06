@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-09-normal-e2796d4",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "16cc3de6d6bb23ebdc3a928172fb585494079232",
+  "pinned_upstream_sha": "e2796d4a8907586b457a65675c2c88c818973173",
+  "topics": [
+    {
+      "topic_id": "pr-4991",
+      "title": "fix(desktop): virtualize channel member lists",
+      "upstream_pr": 4991,
+      "entry_shas": [
+        "e2796d4a8907586b457a65675c2c88c818973173"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "e2796d4a8907586b457a65675c2c88c818973173",
+      "topic_id": "pr-4991",
+      "title": "fix(desktop): virtualize channel member lists",
+      "areas": [
+        "desktop",
+        "performance"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "take",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4991",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

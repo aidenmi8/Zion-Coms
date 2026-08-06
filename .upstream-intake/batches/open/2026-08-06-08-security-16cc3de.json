@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-08-security-16cc3de",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "5677e4ca050bcfe2aef16b89f7abe326e45d0b0d",
+  "pinned_upstream_sha": "16cc3de6d6bb23ebdc3a928172fb585494079232",
+  "topics": [
+    {
+      "topic_id": "pr-4053",
+      "title": "fix(desktop): enforce owner-only access in internal builds",
+      "upstream_pr": 4053,
+      "entry_shas": [
+        "16cc3de6d6bb23ebdc3a928172fb585494079232"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "16cc3de6d6bb23ebdc3a928172fb585494079232",
+      "topic_id": "pr-4053",
+      "title": "fix(desktop): enforce owner-only access in internal builds",
+      "areas": [
+        "desktop",
+        "security"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [
+        "6c40ce394f860d832b74323bd9b5ca70c46c1285"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "authorization and owner-only access enforcement"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4053",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

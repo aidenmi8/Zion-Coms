@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-02-normal-2ea9385",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "719f9730d46541f816946bba8d693e11ff49b439",
+  "pinned_upstream_sha": "2ea9385015fb922de2adf0a53e86fc5a21d07b90",
+  "topics": [
+    {
+      "topic_id": "pr-3833",
+      "title": "fix(reactions): support max-length custom emoji",
+      "upstream_pr": 3833,
+      "entry_shas": [
+        "2ea9385015fb922de2adf0a53e86fc5a21d07b90"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "2ea9385015fb922de2adf0a53e86fc5a21d07b90",
+      "topic_id": "pr-3833",
+      "title": "fix(reactions): support max-length custom emoji",
+      "areas": [
+        "relay",
+        "database",
+        "migration"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3833",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

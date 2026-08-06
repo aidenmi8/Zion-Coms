@@ -130,22 +130,13 @@ impl Llm {
     ) -> Result<LlmResponse, AgentError> {
         let effort = cfg.thinking_effort;
         let result = match cfg.provider {
-            Provider::Anthropic => {
-                let v = self
-                    .post_anthropic(
-                        cfg,
-                        &anthropic_body(
-                            cfg,
-                            system_prompt,
-                            history,
-                            tools,
-                            effective_model,
-                            effort,
-                        ),
-                    )
-                    .await?;
-                parse_anthropic(v)
-            }
+            Provider::Anthropic => self
+                .post_anthropic(
+                    cfg,
+                    &anthropic_body(cfg, system_prompt, history, tools, effective_model, effort),
+                )
+                .await
+                .and_then(parse_anthropic),
             Provider::OpenAi | Provider::Databricks => {
                 self.openai_request(
                     cfg,
@@ -222,6 +213,9 @@ impl Llm {
             AgentError::Llm(s) => AgentError::Llm(format!("({effective_model}) {s}")),
             AgentError::LlmModelNotFound(s) => {
                 AgentError::LlmModelNotFound(format!("({effective_model}) {s}"))
+            }
+            AgentError::LlmContextExceeded(s) => {
+                AgentError::LlmContextExceeded(format!("({effective_model}) {s}"))
             }
             other => other,
         })
@@ -956,6 +950,17 @@ fn responses_body(
     body
 }
 
+/// Recognize only provider messages that identify an input context overflow.
+/// The caller pairs this matcher with HTTP 400 so unrelated size or auth
+/// failures remain terminal.
+fn is_context_length_error(body: &str) -> bool {
+    let body = body.to_ascii_lowercase();
+    body.contains("context_length_exceeded")
+        || body.contains("maximum context length")
+        || body.contains("context window")
+        || body.contains("prompt is too long")
+}
+
 /// Narrow matcher for "you should be on the Responses API" provider errors,
 /// the signal we use to auto-upgrade. Triggers on the literal path
 /// `/v1/responses` (Databricks GPT-5.5 phrasing) or the prose
@@ -1476,9 +1481,14 @@ where
             ))));
         }
         if !status.is_success() {
+            let body = read_error_body(resp).await;
+            if status == 400 && is_context_length_error(&body) {
+                return Err(PostError::Agent(AgentError::LlmContextExceeded(format!(
+                    "{status}: {body}"
+                ))));
+            }
             return Err(PostError::Agent(AgentError::Llm(format!(
-                "{status}: {}",
-                read_error_body(resp).await
+                "{status}: {body}"
             ))));
         }
         if let Some(len) = resp.content_length() {
@@ -2458,6 +2468,17 @@ mod tests {
         ] {
             assert_eq!(is_responses_required_error(body), want, "body={body:?}");
         }
+    }
+
+    #[test]
+    fn context_length_error_classifier_requires_context_language() {
+        assert!(is_context_length_error(
+            r#"{"error":{"code":"context_length_exceeded"}}"#
+        ));
+        assert!(is_context_length_error("prompt is too long: 300000 tokens"));
+        assert!(!is_context_length_error(
+            r#"{"error":{"code":"invalid_request_error","message":"bad max_tokens"}}"#
+        ));
     }
 
     #[test]

@@ -6,7 +6,7 @@ use tokio::task::JoinSet;
 
 use crate::builtin;
 use crate::config::{Config, MAX_PROMPT_BYTES, MAX_TOOL_CALLS_PER_TURN, MAX_TOOL_RESULT_BYTES};
-use crate::handoff::HandoffOutcome;
+use crate::handoff::{ContextRecovery, HandoffOutcome};
 use crate::hints::SkillEntry;
 use crate::llm::Llm;
 use crate::mcp::McpRegistry;
@@ -79,6 +79,12 @@ impl RunCtx<'_> {
         *self.turn_input_tokens = None;
         *self.turn_output_tokens = None;
 
+        // Handoff attempts are capped per prompt turn; handoff_count remains
+        // session-cumulative for log context.
+        let mut handoff_attempts = 0usize;
+        // max_rounds may be unbounded, so reactive recovery has its own cap.
+        let mut context_recoveries = 0u32;
+
         let mut round = 0u32;
         // Per-prompt `_Stop` objection count. Bounded per prompt (not per
         // session) so a stubborn exchange can't permanently disable the stop
@@ -96,7 +102,7 @@ impl RunCtx<'_> {
             // its next request — the turn continues, it is not restarted. Drain
             // non-blocking; an empty queue is the common case.
             self.drain_steers();
-            match self.maybe_handoff().await {
+            match self.maybe_handoff(&mut handoff_attempts).await {
                 HandoffOutcome::Cancelled => return Ok(StopReason::Cancelled),
                 // Context was just reset — the prior request's token count no
                 // longer describes the (now much smaller) history. Clear both
@@ -121,7 +127,7 @@ impl RunCtx<'_> {
             let response = tokio::select! {
                 biased;
                 _ = self.cancel.changed() => return Ok(StopReason::Cancelled),
-                r = self.llm.complete(self.cfg, self.system_prompt, self.history, &tools, self.effective_model) => r?,
+                r = self.llm.complete(self.cfg, self.system_prompt, self.history, &tools, self.effective_model) => r,
                 _ = async {
                     // Keepalive ticker: emit a lightweight session update every 30s
                     // while waiting on the LLM provider. This resets the ACP harness
@@ -143,6 +149,30 @@ impl RunCtx<'_> {
                         .await;
                     }
                 } => unreachable!(),
+            };
+
+            let response = match response {
+                Ok(response) => response,
+                Err(AgentError::LlmContextExceeded(error)) => {
+                    match self
+                        .recover_from_context_overflow(&mut context_recoveries)
+                        .await
+                    {
+                        ContextRecovery::Recovered => {
+                            // The rejected request consumed a round before
+                            // the provider refused it; refund it for retry.
+                            round = round.saturating_sub(1);
+                            *self.last_request_input_tokens = None;
+                            *self.last_request_history_bytes = None;
+                            continue;
+                        }
+                        ContextRecovery::Cancelled => return Ok(StopReason::Cancelled),
+                        ContextRecovery::Exhausted => {
+                            return Err(AgentError::LlmContextExceeded(error));
+                        }
+                    }
+                }
+                Err(error) => return Err(error),
             };
 
             // Record provider-reported input usage so the next loop iteration's

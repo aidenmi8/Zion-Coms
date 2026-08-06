@@ -655,6 +655,14 @@ pub const HANDOFF_ORIGINAL_TASK_MAX_BYTES: usize = 16 * 1024;
 
 pub const HANDOFF_MAX_TOOL_NAMES: usize = 20;
 
+/// Maximum reactive context-recovery attempts per `run()`. A provider
+/// context-window 400 is recoverable, but the retry must be bounded because
+/// `max_rounds` may be unbounded.
+pub const MAX_CONTEXT_RECOVERIES_PER_RUN: u32 = 3;
+
+/// Minimum history-prompt budget for a useful reactive handoff.
+pub const HANDOFF_MIN_PROMPT_BUDGET_BYTES: usize = 4 * 1024;
+
 const DEFAULT_SYSTEM_PROMPT: &str =
     "You are Zion agent. Use the provided tools to act. Tool calls are your only output.";
 

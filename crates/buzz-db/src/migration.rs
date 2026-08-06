@@ -560,7 +560,7 @@ mod tests {
         let mut migrations: Vec<_> = MIGRATOR.iter().collect();
         migrations.sort_by_key(|migration| migration.version);
 
-        assert_eq!(migrations.len(), 27);
+        assert_eq!(migrations.len(), 28);
         assert_eq!(migrations[0].version, 1);
         assert_eq!(&*migrations[0].description, "initial schema");
         assert!(migrations[0]
@@ -980,7 +980,13 @@ mod tests {
             desired_schema.contains("idx_channels_id_live"),
             "desired-state schema must carry the channel-id lookup index",
         );
-    }
+
+        assert_eq!(migrations[27].version, 28);
+        let long_reactions = migrations[27].sql.as_str();
+        assert!(
+            long_reactions.contains("ALTER TABLE reactions ALTER COLUMN emoji TYPE VARCHAR(66)")
+        );
+        assert!(desired_schema.contains("emoji               VARCHAR(66) NOT NULL"));
     }
 
     #[test]

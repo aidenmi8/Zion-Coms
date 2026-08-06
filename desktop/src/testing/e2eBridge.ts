@@ -287,6 +287,8 @@ type E2eConfig = {
     /** Reject successive mock WebSocket connect attempts, then resume. */
     websocketConnectErrors?: string[];
     stallWebsocketSends?: boolean;
+    /** Hold sent message live echoes until the test releases them. */
+    deferSendMessageLiveEcho?: boolean;
     userSearchDelayMs?: number;
     // NIP-IA gate inputs — see tests/helpers/bridge.ts:MockBridgeOptions for
     // semantics. These three drive the archive-button gate matrix in
@@ -988,6 +990,8 @@ declare global {
       command: string;
       payload: unknown;
     }>;
+    /** Release mock send events that were stored but withheld from live subscribers. */
+    __BUZZ_E2E_RELEASE_SEND_MESSAGE_LIVE_ECHO__?: () => number;
     __BUZZ_E2E_WEBVIEW_ZOOM__?: number;
     __BUZZ_E2E_HAS_MOCK_LIVE_SUBSCRIPTION__?: (input: {
       channelName: string;
@@ -2785,6 +2789,10 @@ const mockChannels: MockChannel[] = [
 
 const mockMessages = new Map<string, RelayEvent[]>();
 const mockLiveThreadSummaryCreatedAt = new Map<string, number>();
+const deferredSendMessageLiveEchoes: Array<{
+  channelId: string;
+  event: RelayEvent;
+}> = [];
 const mockUserStatuses: RelayEvent[] = [];
 const mockReminderEvents: RelayEvent[] = [];
 let mockRelayMembers: RawRelayMember[] = [];
@@ -3879,6 +3887,18 @@ function emitMockLiveMessageAndThreadSummary(
     id: mockEventId(),
     created_at: createdAt,
   });
+}
+
+function emitOrDeferMockSendMessageLiveEcho(
+  channelId: string,
+  event: RelayEvent,
+  config: E2eConfig | undefined,
+) {
+  if (config?.mock?.deferSendMessageLiveEcho) {
+    deferredSendMessageLiveEchoes.push({ channelId, event });
+    return;
+  }
+  emitMockLiveMessageAndThreadSummary(channelId, event);
 }
 
 function emitMockGlobalEvent(event: RelayEvent) {
@@ -8317,7 +8337,7 @@ async function handleSendChannelMessage(
         ...extraTags,
       ]);
       recordMockMessage(args.channelId, event);
-      emitMockLiveMessageAndThreadSummary(args.channelId, event);
+      emitOrDeferMockSendMessageLiveEcho(args.channelId, event, config);
 
       return {
         event_id: event.id,
@@ -8380,7 +8400,7 @@ async function handleSendChannelMessage(
     };
 
     recordMockMessage(args.channelId, event);
-    emitMockLiveMessageAndThreadSummary(args.channelId, event);
+    emitOrDeferMockSendMessageLiveEcho(args.channelId, event, config);
 
     return {
       event_id: event.id,
@@ -9179,6 +9199,7 @@ export function maybeInstallE2eTauriMocks() {
   }
 
   mockClosedChannelLiveSubscription = false;
+  deferredSendMessageLiveEchoes.length = 0;
   mockGlobalAgentConfig = config.mock?.globalAgentConfig
     ? { ...config.mock.globalAgentConfig }
     : null;
@@ -9398,6 +9419,13 @@ export function maybeInstallE2eTauriMocks() {
       sendWsClose(socket.handler, 1012, "relay restarting");
     }
     return sockets.length;
+  };
+  window.__BUZZ_E2E_RELEASE_SEND_MESSAGE_LIVE_ECHO__ = () => {
+    const queued = deferredSendMessageLiveEchoes.splice(0);
+    for (const { channelId, event } of queued) {
+      emitMockLiveMessageAndThreadSummary(channelId, event);
+    }
+    return queued.length;
   };
   // Tests vary mesh admission and models to exercise provider discovery and
   // the managed-agent start preflight.

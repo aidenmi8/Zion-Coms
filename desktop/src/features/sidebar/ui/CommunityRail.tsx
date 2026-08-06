@@ -422,7 +422,6 @@ export function CommunityRail({
         </TooltipContent>
       </Tooltip>
       <EditCommunityDialog
-        canRemove={communities.length > 1}
         onOpenChange={(open) => {
           if (!open) setEditingCommunity(null);
         }}

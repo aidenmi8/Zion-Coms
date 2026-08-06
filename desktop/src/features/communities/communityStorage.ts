@@ -6,6 +6,8 @@ const COMMUNITIES_KEY = "buzz-communities";
 const ACTIVE_COMMUNITY_KEY = "buzz-active-community-id";
 const LEGACY_WORKSPACES_KEY = "buzz-workspaces";
 const LEGACY_ACTIVE_WORKSPACE_KEY = "buzz-active-workspace-id";
+const COMMUNITY_DISCOVERY_AFTER_LEAVE_KEY =
+  "buzz-community-discovery-after-leave";
 
 /**
  * Expand a leading `~` to the user's home directory. The backend rejects
@@ -57,9 +59,12 @@ export function loadCommunities(): Community[] {
     if (!Array.isArray(parsed)) {
       return [];
     }
-    // Migration: strip secret-shaped fields older builds persisted but no
-    // longer consume. `nsec` was superseded by the on-disk identity.key, while
-    // `token` became dead when relay auth moved to Nostr keys.
+    if (parsed.length > 0) {
+      localStorage.removeItem(COMMUNITY_DISCOVERY_AFTER_LEAVE_KEY);
+    }
+    // Strip secret-shaped fields older builds persisted but no longer consume.
+    // `nsec` is superseded by the on-disk identity.key, while `token` became
+    // dead when relay auth moved to Nostr keys.
     let didStrip = false;
     const cleaned = (parsed as Array<Record<string, unknown>>).map((entry) => {
       if (
@@ -91,10 +96,37 @@ export function saveCommunities(communities: Community[]): boolean {
     } = community as unknown as Record<string, unknown>;
     return rest;
   });
-  return setLocalStorageItemWithRecovery(
+  const didSave = setLocalStorageItemWithRecovery(
     COMMUNITIES_KEY,
     JSON.stringify(cleaned),
   );
+  if (didSave && communities.length > 0) {
+    localStorage.removeItem(COMMUNITY_DISCOVERY_AFTER_LEAVE_KEY);
+  }
+  return didSave;
+}
+
+export function loadCommunityDiscoveryAfterLeave(
+  storage: Storage = localStorage,
+): boolean {
+  return storage.getItem(COMMUNITY_DISCOVERY_AFTER_LEAVE_KEY) === "1";
+}
+
+export function markCommunityDiscoveryAfterLeave(
+  storage: Storage = localStorage,
+): boolean {
+  if (typeof window !== "undefined" && storage === window.localStorage) {
+    return setLocalStorageItemWithRecovery(
+      COMMUNITY_DISCOVERY_AFTER_LEAVE_KEY,
+      "1",
+    );
+  }
+  try {
+    storage.setItem(COMMUNITY_DISCOVERY_AFTER_LEAVE_KEY, "1");
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function clearCommunityStorage(storage: Storage = localStorage): void {

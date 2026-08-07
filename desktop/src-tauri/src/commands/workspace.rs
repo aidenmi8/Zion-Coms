@@ -224,7 +224,7 @@ pub async fn apply_workspace(
             // stranded tombstones and archive requests publish on this boot
             // instead of being abandoned by the storage cutover.
             migrate_legacy_retention_into(&restore_app, &scope);
-            crate::event_sync::spawn_event_sync(
+            crate::event_sync::spawn_event_sync_scoped(
                 restore_app.clone(),
                 scope.owner_keys,
                 scope.db_path,

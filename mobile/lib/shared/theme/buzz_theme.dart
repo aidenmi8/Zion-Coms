@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'accent_colors.dart';
 import 'app_colors.dart';
+
 /// Name of the first-party Buzz theme. Buzz reuses the GitHub Light palette for
 /// every base color; the one thing that sets it apart is a branded gradient
 /// painted across the app's top section. Mirrors desktop, where the same
@@ -69,6 +70,7 @@ int effectiveAccentIndex(String themeName, String storedAccent) {
   if (isBuzzTheme(themeName)) return neutralAccentIndex;
   return accentIndexForWireValue(storedAccent) ?? defaultAccentIndex;
 }
+
 /// Gradient stops, matching desktop's `--buzz-gradient-*` custom properties.
 const _lightTop = Color(0xFFE6E6B6);
 const _lightBottom = Color(0xFFC4D0DA);

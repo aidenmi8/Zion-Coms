@@ -1,3 +1,4 @@
+use super::deploy::ensure_remote_provider_supported;
 use super::*;
 use crate::managed_agents::AgentDefinition;
 
@@ -53,10 +54,8 @@ fn bare_agent_record(
         name_pool: vec![],
         is_builtin: false,
         is_active: true,
-        shared: false,
         source_team: None,
         source_team_persona_slug: None,
-        catalog_source: None,
         relay_mesh: None,
         auto_restart_on_config_change: false,
         definition_respond_to: None,
@@ -77,10 +76,8 @@ fn persona_record(id: &str, model: Option<&str>, provider: Option<&str>) -> Agen
         name_pool: vec![],
         is_builtin: false,
         is_active: true,
-        shared: false,
         source_team: None,
         source_team_persona_slug: None,
-        catalog_source: None,
         env_vars: BTreeMap::new(),
         respond_to: None,
         respond_to_allowlist: vec![],
@@ -229,7 +226,7 @@ fn normalize_relay_mesh_rejects_empty_model_ref() {
 
     assert_eq!(
         normalize_relay_mesh(Some(&config), &BackendKind::Local).unwrap_err(),
-        "Buzz shared compute model is required"
+        "Zion shared compute model is required"
     );
 }
 
@@ -245,7 +242,7 @@ fn normalize_relay_mesh_rejects_non_local_backend() {
 
     assert_eq!(
         normalize_relay_mesh(Some(&config), &backend).unwrap_err(),
-        "Buzz shared compute agents must use the local backend"
+        "Zion shared compute agents must use the local backend"
     );
 }
 
@@ -436,14 +433,48 @@ fn deploy_payload_for_policy(
 /// richest deploy request produced by the real desktop serializers.
 #[test]
 fn deploy_payload_matches_the_shared_full_launch_fixture() {
-    let fixture_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
-        "../../crates/buzz-backend-kubernetes/tests/fixtures/provider-wire/deploy-full-launch.request.json",
-    );
-    let fixture: serde_json::Value = serde_json::from_str(
-        &std::fs::read_to_string(&fixture_path)
-            .unwrap_or_else(|error| panic!("read {}: {error}", fixture_path.display())),
-    )
-    .expect("parse shared provider fixture");
+    let fixture = serde_json::json!({
+        "agent": {
+            "agent_args": [],
+            "agent_command": "goose",
+            "auth_tag": "tag-1",
+            "env_vars": {"USER_KEY": "user-value"},
+            "idle_timeout_seconds": null,
+            "launch": {
+                "args": ["acp"],
+                "command": "goose",
+                "env": {
+                    "GOOSE_MODEL": "gpt-5",
+                    "GOOSE_PROVIDER": "openai",
+                    "USER_KEY": "user-value"
+                },
+                "owner_pubkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "policy_env": {
+                    "BUZZ_ACP_AGENTS": "10",
+                    "BUZZ_ACP_DISPLAY_NAME": "worker",
+                    "BUZZ_ACP_LAZY_POOL": "true",
+                    "BUZZ_ACP_MODEL": "gpt-5",
+                    "BUZZ_ACP_RELAY_OBSERVER": "true",
+                    "BUZZ_ACP_SESSION_TITLE": "worker",
+                    "GOOSE_MODE": "auto"
+                }
+            },
+            "max_turn_duration_seconds": null,
+            "model": "gpt-5",
+            "name": "worker",
+            "parallelism": 10,
+            "private_key_nsec": "nsec1vl029mgpspedva04g90vltkh6fvh240zqtv9k0t9af8935ke9laqsnlfe5",
+            "provider": "openai",
+            "relay_url": "wss://relay.example",
+            "respond_to": "allowlist",
+            "respond_to_allowlist": [
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            ],
+            "system_prompt": null,
+            "turn_timeout_seconds": 300
+        }
+    });
     let record: ManagedAgentRecord = serde_json::from_value(serde_json::json!({
         "pubkey": "abcd1234",
         "name": "worker",
@@ -508,25 +539,26 @@ fn deploy_payload_matches_the_shared_full_launch_fixture() {
 }
 
 #[test]
-fn tauri_platform_configs_bundle_kubernetes_only_on_supported_hosts() {
+fn tauri_platform_configs_keep_zion_compatibility_binaries() {
     use tauri_utils::{config::parse::read_from, platform::Target};
 
     let config_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-    for (target, expected) in [
-        (Target::MacOS, true),
-        (Target::Linux, true),
-        (Target::Windows, false),
-    ] {
+    for target in [Target::MacOS, Target::Linux, Target::Windows] {
         let (config, paths) = read_from(target, config_root).expect("read Tauri config");
         let external_bins = config["bundle"]["externalBin"]
             .as_array()
             .expect("bundle.externalBin array");
-        let has_kubernetes = external_bins
+        assert!(external_bins
             .iter()
-            .any(|value| value == "binaries/buzz-backend-kubernetes");
-        assert_eq!(
-            has_kubernetes, expected,
-            "unexpected Kubernetes externalBin for {target}; merged {paths:?}"
+            .any(|value| value == "binaries/zion-acp"));
+        assert!(external_bins
+            .iter()
+            .any(|value| value == "binaries/buzz-acp"));
+        assert!(
+            external_bins
+                .iter()
+                .any(|value| value == "binaries/zion-agent"),
+            "missing Zion agent binary for {target}; merged {paths:?}"
         );
     }
 }

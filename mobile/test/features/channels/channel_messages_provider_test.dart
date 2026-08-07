@@ -663,6 +663,30 @@ NostrEvent _event({
   );
 }
 
+NostrEvent _summary({
+  required String rootId,
+  required int replyCount,
+  required int createdAt,
+}) {
+  return NostrEvent(
+    id: 'summary-$rootId-$createdAt',
+    pubkey: 'relay',
+    createdAt: createdAt,
+    kind: EventKind.channelThreadSummary,
+    tags: [
+      ['e', rootId],
+      ['h', _channelId],
+    ],
+    content: jsonEncode({
+      'reply_count': replyCount,
+      'descendant_count': replyCount,
+      'last_reply_at': createdAt,
+      'participants': ['alice'],
+    }),
+    sig: 'sig',
+  );
+}
+
 NostrEvent _bounds({
   bool hasMore = false,
   int? cursorCreatedAt,

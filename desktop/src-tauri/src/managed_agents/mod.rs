@@ -32,7 +32,9 @@ pub mod retention;
 mod runtime;
 mod runtime_commands;
 mod runtime_types;
+#[cfg(test)]
 pub(crate) mod spawn_hash;
+pub(crate) mod spawn_snapshot;
 pub(crate) mod storage;
 pub(crate) mod team_events;
 mod team_repair;

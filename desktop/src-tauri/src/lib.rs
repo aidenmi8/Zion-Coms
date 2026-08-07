@@ -7,10 +7,6 @@ mod deep_link;
 mod event_sync;
 mod events;
 mod huddle;
-mod identity_storage;
-mod initial_window;
-mod key_backup;
-mod linux_media;
 #[cfg(target_os = "macos")]
 mod macos_notifications;
 mod managed_agents;

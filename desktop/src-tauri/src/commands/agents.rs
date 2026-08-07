@@ -1365,9 +1365,9 @@ mod deploy;
 pub(super) mod provider_access;
 use deploy::build_deploy_payload;
 #[cfg(test)]
-use deploy::{deploy_payload_json, DeployProjections};
-#[cfg(test)]
 pub(crate) use deploy::resolve_deploy_model_provider;
+#[cfg(test)]
+use deploy::{deploy_payload_json, DeployProjections};
 
 #[path = "agents_profile.rs"]
 mod profile;

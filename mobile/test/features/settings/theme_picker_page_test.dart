@@ -205,6 +205,8 @@ void main() {
       );
 
       for (final accent in accentColors) {
+        await tester.ensureVisible(find.text(accent.name));
+        await tester.pumpAndSettle();
         expect(find.text(accent.name), findsOneWidget);
       }
       expect(find.byIcon(LucideIcons.check), findsOneWidget);

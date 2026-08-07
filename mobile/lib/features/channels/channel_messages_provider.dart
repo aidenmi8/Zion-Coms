@@ -202,6 +202,7 @@ class ChannelMessagesNotifier extends Notifier<AsyncValue<List<NostrEvent>>> {
     final isTimelineRow = EventKind.channelTimelineContentKinds.contains(
       event.kind,
     );
+    final isThreadSummary = event.kind == EventKind.channelThreadSummary;
     final thread = isTimelineRow ? event.threadReference : null;
     if (thread?.parentId != null) {
       final rootId = thread?.rootId;
@@ -227,6 +228,7 @@ class ChannelMessagesNotifier extends Notifier<AsyncValue<List<NostrEvent>>> {
       // best-effort recount is delayed, lost, or older than this reply.
     }
     if (!isTimelineRow &&
+        !isThreadSummary &&
         !EventKind.channelAuxEventKinds.contains(event.kind)) {
       return false;
     }

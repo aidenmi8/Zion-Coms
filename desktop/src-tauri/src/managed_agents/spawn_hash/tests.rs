@@ -784,8 +784,20 @@ fn openclaw_above_cap_parallelism_snapshots_equal() {
     at_8.parallelism = 8;
 
     assert_eq!(
-        snapshot(&at_10, &[], &[], "wss://ws.example", &Default::default()),
-        snapshot(&at_8, &[], &[], "wss://ws.example", &Default::default()),
+        crate::managed_agents::spawn_snapshot::prospective_spawn_config_snapshot(
+            &at_10,
+            &[],
+            &[],
+            "wss://ws.example",
+            &Default::default(),
+        ),
+        crate::managed_agents::spawn_snapshot::prospective_spawn_config_snapshot(
+            &at_8,
+            &[],
+            &[],
+            "wss://ws.example",
+            &Default::default(),
+        ),
         "parallelism 10 and 8 both clamp to 5 for OpenClaw — snapshots must be equal, no restart badge"
     );
 }
@@ -805,8 +817,20 @@ fn openclaw_cap_crossing_parallelism_snapshots_differ() {
     at_3.parallelism = 3;
 
     assert_ne!(
-        snapshot(&at_8, &[], &[], "wss://ws.example", &Default::default()),
-        snapshot(&at_3, &[], &[], "wss://ws.example", &Default::default()),
+        crate::managed_agents::spawn_snapshot::prospective_spawn_config_snapshot(
+            &at_8,
+            &[],
+            &[],
+            "wss://ws.example",
+            &Default::default(),
+        ),
+        crate::managed_agents::spawn_snapshot::prospective_spawn_config_snapshot(
+            &at_3,
+            &[],
+            &[],
+            "wss://ws.example",
+            &Default::default(),
+        ),
         "parallelism 8 (clamps to 5) and 3 (runs as 3) must produce different snapshots"
     );
 }

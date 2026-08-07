@@ -437,7 +437,7 @@ pub struct ManagedAgentProcess {
     /// `needs_restart` on mismatch. Agents adopted via a persisted
     /// `runtime_pid` have no `ManagedAgentProcess` entry, so their spawn
     /// config is unknown and the badge stays off.
-    pub spawn_config_hash: u64,
+    pub spawn_config: crate::managed_agents::spawn_snapshot::SpawnConfigSnapshot,
     /// Whether this process was spawned in setup-listener mode (i.e.
     /// `BUZZ_ACP_SETUP_PAYLOAD` was set at launch because the agent was
     /// `NotReady`). Runtime-only — never persisted. Used by

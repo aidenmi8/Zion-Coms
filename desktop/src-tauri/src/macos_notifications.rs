@@ -28,8 +28,8 @@ use objc2_user_notifications::{
     UNNotificationRequest, UNNotificationResponse, UNNotificationSettings,
     UNUserNotificationCenter, UNUserNotificationCenterDelegate,
 };
-use tauri::{AppHandle, Emitter};
 use tauri::Manager;
+use tauri::{AppHandle, Emitter};
 
 use crate::commands::NATIVE_NOTIFICATION_ACTIVATED_EVENT;
 

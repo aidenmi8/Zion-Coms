@@ -27,7 +27,6 @@ import { Input } from "@/shared/ui/input";
 import { setManagedAgentAutoRestart } from "@/shared/api/tauriManagedAgents";
 import { EditAgentAdvancedFields } from "./EditAgentAdvancedFields";
 import {
-  ADVANCED_FIELDS_MOTION_TRANSITION,
   AUTO_PROVIDER_DROPDOWN_VALUE,
   BLOCK_BUILD_HIDDEN_PROVIDER_IDS,
   CUSTOM_PROVIDER_DROPDOWN_VALUE,
@@ -64,10 +63,9 @@ import {
   type RuntimeModelProviderSelection,
 } from "./runtimeModelProviderSelection";
 import { AgentCreationPreview } from "./AgentCreationPreview";
-import { OwnerOnlyAccessField } from "./OwnerOnlyAccessField";
+import { AgentInstanceIdentityFields } from "./AgentInstanceIdentityFields";
 import type { EnvVarsValue } from "./EnvVarsEditor";
 import { useRequiredCredentialState } from "./useRequiredCredentialState";
-import { RunOnSummarySection } from "./RunOnSummarySection";
 import { PersonaDropdownField } from "./PersonaDropdownField";
 import {
   MODEL_DISCOVERY_LOADING_VALUE,
@@ -78,10 +76,7 @@ import {
   getBakedModelInheritLabel,
   getBakedProviderInheritLabel,
 } from "./bakedEnvHelpers";
-import {
-  getProviderApiKeyEnvVar,
-  getProviderApiKeyLabel,
-} from "./agentConfigOptions";
+import { getProviderApiKeyEnvVar } from "./agentConfigOptions";
 import { useAgentDialogDefaults } from "./useAgentDialogDefaults";
 import { AgentAiDefaultsNotice } from "./AgentAiDefaults";
 import { AgentDefaultsDialog } from "./AgentDefaultsDialog";
@@ -89,12 +84,11 @@ import { useProviderApiKeyFieldState } from "./providerApiKeyFieldState";
 import { resolveModelFieldStatusMessage } from "./agentConfigControls";
 import { AdvancedRequiredBadge } from "./AdvancedRequiredBadge";
 import { showAgentProfileSyncWarning } from "./agentProfileSyncWarning";
-import { AddCustomHarnessDialog } from "./AddCustomHarnessDialog";
-import {
-  ADD_CUSTOM_HARNESS_OPTION,
-  runtimeDropdownAction,
-  usePendingHarnessSelection,
-} from "./addCustomHarness";
+
+const ADVANCED_FIELDS_MOTION_TRANSITION = {
+  duration: 0.18,
+  ease: [0.23, 1, 0.32, 1],
+} as const;
 
 export function AgentInstanceEditDialog({
   agent,
@@ -164,7 +158,6 @@ export function AgentInstanceEditDialog({
   const [avatarUrl, setAvatarUrl] = React.useState(agent.avatarUrl ?? "");
   const [isAvatarUploadPending, setIsAvatarUploadPending] =
     React.useState(false);
-  const [isAddHarnessOpen, setIsAddHarnessOpen] = React.useState(false);
   const shouldReduceMotion = useReducedMotion();
 
   // Runtime selector: defaults to "custom" until the dialog opens and the
@@ -199,7 +192,6 @@ export function AgentInstanceEditDialog({
       setAvatarUrl(agent.avatarUrl ?? "");
       setShowAdvancedFields(false);
       setIsAvatarUploadPending(false);
-      setIsAddHarnessOpen(false);
       runtimeTouched.current = false;
       const matched =
         runtimes.find((r) => r.command?.trim() === agent.agentCommand.trim()) ??
@@ -253,7 +245,6 @@ export function AgentInstanceEditDialog({
         value: selectedRuntimeId,
       });
     }
-    options.push(ADD_CUSTOM_HARNESS_OPTION);
     return options;
   }, [sortedRuntimes, selectedRuntimeId]);
 
@@ -301,15 +292,6 @@ export function AgentInstanceEditDialog({
 
   const llmProviderFieldVisible =
     runtimeSupportsLlmProviderSelection(prospectiveRuntimeId);
-
-  const prospectiveRuntime = runtimes.find(
-    (r) => r.id === prospectiveRuntimeId,
-  );
-  const runtimeCatalogStatus = runtimesQuery.isLoading
-    ? ("loading" as const)
-    : runtimesQuery.isError
-      ? ("error" as const)
-      : ("ready" as const);
 
   // One-shot focus: when the dialog opens from a card deep-link, scroll and
   // focus the relevant field. The effect re-runs when `llmProviderFieldVisible`
@@ -495,12 +477,8 @@ export function AgentInstanceEditDialog({
   }
 
   function handleRuntimeDropdownChange(nextValue: string) {
-    const action = runtimeDropdownAction(nextValue);
-    if (action.kind === "add-custom-harness") {
-      setIsAddHarnessOpen(true);
-      return;
-    }
-    const nextRuntimeId = action.runtimeId;
+    const nextRuntimeId =
+      nextValue === NO_RUNTIME_DROPDOWN_VALUE ? "" : nextValue;
     const previousRuntimeId = selectedRuntimeId;
     const nextRuntime = runtimes.find((r) => r.id === nextRuntimeId);
 
@@ -546,16 +524,6 @@ export function AgentInstanceEditDialog({
       }),
     );
   }
-
-  // Routed through the normal change handler so a harness registered inline
-  // pins its command and resets model/provider like a hand-picked one. Scoped
-  // to `open` so a pending id can't outlive the dialog that started the
-  // registration.
-  const selectSavedHarness = usePendingHarnessSelection(
-    runtimes,
-    handleRuntimeDropdownChange,
-    open,
-  );
 
   function handleProviderDropdownChange(nextValue: string) {
     const nextProvider =
@@ -909,42 +877,16 @@ export function AgentInstanceEditDialog({
             )}
           </div>
           <div className="space-y-5">
-            <div className="space-y-1.5">
-              <label
-                className="text-sm font-medium text-foreground"
-                htmlFor="edit-agent-name"
-              >
-                Agent name
-              </label>
-              <div
-                className={cn(
-                  "flex min-h-11 items-center px-3",
-                  PERSONA_FIELD_SHELL_CLASS,
-                )}
-              >
-                <Input
-                  autoCorrect="off"
-                  className={cn(
-                    "h-8 px-0 py-0 leading-6",
-                    PERSONA_FIELD_CONTROL_CLASS,
-                  )}
-                  disabled={updateMutation.isPending}
-                  id="edit-agent-name"
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Agent name"
-                  value={name}
-                />
-              </div>
-            </div>
-            <OwnerOnlyAccessField
+            <AgentInstanceIdentityFields
               accessLocked={agentAccessOwnerOnly === true}
               allowlist={respondToAllowlist}
               disabled={updateMutation.isPending}
-              mode={respondTo}
               onAllowlistChange={setRespondToAllowlist}
               onModeChange={setRespondTo}
+              onNameChange={setName}
+              name={name}
+              respondTo={respondTo}
             />
-            <RunOnSummarySection backend={agent.backend} />
 
             {/* Provider (runtime) */}
             <div className="space-y-1.5">
@@ -972,11 +914,6 @@ export function AgentInstanceEditDialog({
                   </span>
                 </p>
               ) : null}
-              <AddCustomHarnessDialog
-                onOpenChange={setIsAddHarnessOpen}
-                onSaved={selectSavedHarness}
-                open={isAddHarnessOpen}
-              />
             </div>
             {selectedRuntimeId === "custom" && !inheritHarness ? (
               <div className="space-y-1.5">
@@ -1061,11 +998,14 @@ export function AgentInstanceEditDialog({
             {llmProviderFieldVisible && topLevelSecretEnvVar ? (
               <PersonaProviderApiKeyField
                 disabled={updateMutation.isPending}
-                envVarName={topLevelSecretEnvVar}
                 isInherited={apiKeyIsInherited}
                 inheritedLabel={apiKeyInheritedLabel}
                 isRequired={apiKeyIsRequired}
-                label={getProviderApiKeyLabel(effectiveProvider) ?? "API Key"}
+                label={
+                  effectiveProvider === "anthropic"
+                    ? "Anthropic API Key"
+                    : "OpenAI API Key"
+                }
                 onValueChange={(next) => {
                   setEnvVars((prev) => ({
                     ...prev,
@@ -1197,8 +1137,6 @@ export function AgentInstanceEditDialog({
                       parallelism={parallelism}
                       provider={effectiveProvider}
                       requiredEnvKeys={advancedRequiredEnvKeys}
-                      catalogStatus={runtimeCatalogStatus}
-                      selectedRuntime={prospectiveRuntime}
                       systemPrompt={systemPrompt}
                       onAcpCommandChange={setAcpCommand}
                       onAgentArgsChange={setAgentArgs}

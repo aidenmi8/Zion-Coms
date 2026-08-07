@@ -46,7 +46,7 @@ type CommunityRailProps = {
   onAddCommunity: () => void;
   onUpdateCommunity: (
     id: string,
-    updates: Partial<Pick<Community, "name" | "relayUrl" | "token">>,
+    updates: Partial<Pick<Community, "name" | "relayUrl">>,
   ) => void;
   onReorderCommunities: (orderedIds: string[]) => void;
 };
@@ -417,9 +417,7 @@ export function CommunityRail({
             <Plus className="h-4 w-4" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="right">
-          Add community
-        </TooltipContent>
+        <TooltipContent side="right">Add community</TooltipContent>
       </Tooltip>
       <EditCommunityDialog
         onOpenChange={(open) => {

@@ -17,22 +17,15 @@ import {
   AGENT_PARALLELISM_PLACEHOLDER,
   parallelismCapHint,
 } from "../lib/agentParallelism";
+import { BuzzAgentModelTuningFields } from "./buzzAgentModelTuningFields";
 import {
-  BuzzAgentModelTuningFields,
-  NumericTuningFields,
-} from "./buzzAgentModelTuningFields";
-import {
-  CARD_MINT_KEY_ANNOTATIONS,
   PERSONA_FIELD_CONTROL_CLASS,
   PERSONA_FIELD_SHELL_CLASS,
   PERSONA_LABEL_OPTIONAL_CLASS,
 } from "./agentConfigOptions";
 import type { AcpRuntimeCatalogEntry } from "@/shared/api/types";
-import {
-  deriveNumericDescriptors,
-  structuredEnvKeys,
-  type RuntimeCatalogStatus,
-} from "../lib/agentConfigCore";
+
+type RuntimeCatalogStatus = "loading" | "error" | "ready";
 
 export function PersonaAdvancedFields({
   behaviorDraft,
@@ -49,7 +42,7 @@ export function PersonaAdvancedFields({
   requiredEnvKeys = [],
   fileSatisfiedEnvKeys = [],
   hiddenEnvKeys = [],
-  catalogStatus = "ready" as RuntimeCatalogStatus,
+  catalogStatus: _catalogStatus = "ready" as RuntimeCatalogStatus,
   selectedRuntime,
 }: {
   behaviorDraft: PersonaBehaviorDraft;
@@ -92,25 +85,14 @@ export function PersonaAdvancedFields({
     ? "owner-only"
     : (behaviorDraft.respondTo ?? "owner-only");
 
-  // Numeric tuning descriptors — gate on catalog status so that loading/error
-  // never collapses to "no controls": keys stay visible as generic rows.
-  const numericDescriptors = React.useMemo(
-    () =>
-      catalogStatus === "ready"
-        ? deriveNumericDescriptors(selectedRuntime)
-        : [],
-    [catalogStatus, selectedRuntime],
-  );
-
   const effectiveHiddenKeys = React.useMemo(
     () => [
       ...hiddenEnvKeys,
       ...(isBuzzAgentRuntime(modelTuningRuntimeId)
         ? [BUZZ_AGENT_THINKING_EFFORT]
         : []),
-      ...structuredEnvKeys(numericDescriptors),
     ],
-    [hiddenEnvKeys, modelTuningRuntimeId, numericDescriptors],
+    [hiddenEnvKeys, modelTuningRuntimeId],
   );
 
   // Persona hint: definitions keep a portable requested value across harnesses.
@@ -235,30 +217,10 @@ export function PersonaAdvancedFields({
         disabled={disabled}
         fileSatisfiedKeys={fileSatisfiedEnvKeys}
         hiddenKeys={effectiveHiddenKeys}
-        keyAnnotations={CARD_MINT_KEY_ANNOTATIONS}
         onChange={onEnvVarsChange}
         requiredKeys={requiredEnvKeys}
         value={envVars}
       />
-
-      {/* Descriptor-driven numeric tuning knobs — shown when catalog has settled
-          and the runtime exposes numeric env-var fields. */}
-      {numericDescriptors.length > 0 ? (
-        <NumericTuningFields
-          descriptors={numericDescriptors}
-          envVars={envVars}
-          inheritedEnvVars={inheritedEnvVars}
-          onEnvVarChange={(key, value) => {
-            const next = { ...envVars };
-            if (value === "") {
-              delete next[key];
-            } else {
-              next[key] = value;
-            }
-            onEnvVarsChange(next);
-          }}
-        />
-      ) : null}
 
       {/* Effort-tuning knob — only shown for buzz-agent. */}
       {isBuzzAgentRuntime(modelTuningRuntimeId) ? (

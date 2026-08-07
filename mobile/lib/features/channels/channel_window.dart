@@ -259,11 +259,33 @@ ChannelPageCursor? channelWindowNextCursor(ChannelWindowStore store) =>
 Map<String, ChannelWindowThreadSummary> channelWindowThreadSummaries(
   ChannelWindowStore store,
 ) {
-  return {
+  final summaries = <String, ChannelWindowThreadSummary>{
     for (final page in store.pages)
       for (final row in page.rows)
         if (row.thread != null) row.event.id: row.thread!,
   };
+
+  for (final event in store.liveAux) {
+    if (event.kind != EventKind.channelThreadSummary) continue;
+    final rootId = event.getTagValue('e');
+    if (rootId == null) continue;
+    try {
+      final payload = _parseJsonMap(event, 'thread summary');
+      final participants = payload['participants'];
+      summaries[rootId] = ChannelWindowThreadSummary(
+        replyCount: (payload['reply_count'] as num).toInt(),
+        descendantCount: (payload['descendant_count'] as num).toInt(),
+        lastReplyAt: (payload['last_reply_at'] as num?)?.toInt(),
+        participantPubkeys: participants is List
+            ? participants.whereType<String>().toList()
+            : const [],
+      );
+    } catch (_) {
+      // A malformed live recount must not break the channel timeline.
+    }
+  }
+
+  return summaries;
 }
 
 Map<String, dynamic> _parseJsonMap(NostrEvent event, String label) {

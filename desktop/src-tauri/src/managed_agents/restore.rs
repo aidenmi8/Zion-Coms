@@ -18,7 +18,7 @@ use tauri::Manager;
 /// restore would kill reconcile's lazy child by its receipt and replace it with
 /// an eager one, flipping the pair's laziness on a startup race.
 enum SpawnOutcome {
-    Spawned(super::ManagedAgentRuntimeKey, ManagedAgentProcess),
+    Spawned(super::ManagedAgentRuntimeKey, Box<ManagedAgentProcess>),
     Skipped,
     Failed(String),
 }
@@ -338,7 +338,9 @@ pub async fn restore_managed_agents_on_launch(
                                                 owner_hex_ref,
                                             )
                                         }) {
-                                        Ok(process) => SpawnOutcome::Spawned(key, process),
+                                        Ok(process) => {
+                                            SpawnOutcome::Spawned(key, Box::new(process))
+                                        }
                                         Err(error) => SpawnOutcome::Failed(error),
                                     }
                                 }
@@ -376,7 +378,8 @@ pub async fn restore_managed_agents_on_launch(
             // Skipped means a concurrent reconcile already owns a live child for
             // this pair; leave its runtime and record state untouched.
             SpawnOutcome::Skipped => continue,
-            SpawnOutcome::Spawned(key, mut process) => {
+            SpawnOutcome::Spawned(key, boxed_process) => {
+                let mut process = *boxed_process;
                 let Ok(record) = find_managed_agent_mut(&mut records, &pubkey) else {
                     continue;
                 };

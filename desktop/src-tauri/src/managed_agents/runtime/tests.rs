@@ -88,7 +88,7 @@ fn marker_entry_is_namespaced_by_instance_id() {
 fn buzz_agent_has_mcp_hooks() {
     let p = known_acp_runtime("buzz-agent").expect("should resolve");
     assert!(p.mcp_hooks);
-    assert_eq!(p.mcp_command, Some("buzz-dev-mcp"));
+    assert_eq!(p.mcp_command, Some("zion-dev-mcp"));
 }
 
 #[test]
@@ -280,10 +280,8 @@ fn persona_with_provider(
         name_pool: Vec::new(),
         is_builtin: false,
         is_active: true,
-        shared: false,
         source_team: None,
         source_team_persona_slug: None,
-        catalog_source: None,
         env_vars: std::collections::BTreeMap::new(),
         respond_to: None,
         respond_to_allowlist: Vec::new(),

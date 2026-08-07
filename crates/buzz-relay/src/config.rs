@@ -481,9 +481,9 @@ impl Config {
                         "BUZZ_DRAIN_JITTER_MS must be a non-negative integer".to_string(),
                     )
                 })?
-                 .min(MAX_DRAIN_JITTER_MS),
-             Err(_) => 0,
-         };
+                .min(MAX_DRAIN_JITTER_MS),
+            Err(_) => 0,
+        };
         let redis_url =
             std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
 

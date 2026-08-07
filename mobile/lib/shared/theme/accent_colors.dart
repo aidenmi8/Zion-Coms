@@ -102,7 +102,7 @@ Color accentColorForScheme(ColorScheme scheme, int accentIndex) {
 ///
 /// Keep this at the end of [accentColors] so existing saved accent indexes keep
 /// pointing at the same colors.
-const defaultAccentIndex = 9;
+const defaultAccentIndex = 10;
 const neutralAccentIndex = 0;
 
 /// Legacy default: Catppuccin Mauve/the base theme primary.

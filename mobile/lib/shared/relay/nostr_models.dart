@@ -70,6 +70,7 @@ abstract final class EventKind {
     huddleParticipantJoined, // 48101 — huddle lifecycle metadata
     huddleParticipantLeft, // 48102 — huddle lifecycle metadata
     huddleEnded, // 48103 — visible huddle ended row
+    channelThreadSummary, // 39005 — live channel-window thread recount
   ];
 
   /// Auxiliary timeline kinds that overlay or hide existing rows.

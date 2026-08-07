@@ -5695,6 +5695,7 @@ async function handleSearchUsers(
     for (const agent of mockRelayAgents) {
       const normalizedPubkey = agent.pubkey.toLowerCase();
       const profile = profilesByPubkey.get(normalizedPubkey);
+      const hasExplicitProfileOverride = mockProfiles.has(normalizedPubkey);
       profilesByPubkey.set(
         normalizedPubkey,
         profile
@@ -5702,7 +5703,13 @@ async function handleSearchUsers(
               ...profile,
               display_name: profile.display_name ?? agent.name,
               name: profile.name ?? agent.name,
-              is_agent: true,
+              // A test-provided search profile is authoritative. This lets
+              // people-picker specs reuse a pubkey that is also present in
+              // the default relay-agent directory without turning the person
+              // into an agent after the directory merge.
+              is_agent: hasExplicitProfileOverride
+                ? (profile.is_agent ?? false)
+                : true,
             }
           : {
               pubkey: agent.pubkey,

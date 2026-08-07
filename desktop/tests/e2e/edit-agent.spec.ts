@@ -89,7 +89,7 @@ test.describe("agent definition dialog", () => {
     await page.goto("/");
     await page.getByTestId("open-agents-view").click();
     await page.getByTestId("new-agent-card").click();
-    await page.getByRole("menuitem", { name: "Create agent" }).click();
+    await page.getByRole("menuitem", { name: "Create from scratch" }).click();
 
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Advanced", exact: true }).click();

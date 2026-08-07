@@ -10,6 +10,7 @@ import { attachManagedAgentToChannel } from "@/features/agents/channelAgents";
 import {
   coalesceAgentAutocompleteCandidates,
   isAgentIdentityInManagedList,
+  relayAgentIsSharedWithUser,
 } from "@/features/agents/lib/agentAutocompleteEligibility";
 import { useIsArchivedPredicate } from "@/features/identity-archive/hooks";
 import { useClassifiedMembers } from "@/features/channels/lib/useClassifiedMembers";
@@ -263,6 +264,17 @@ export function MembersSidebar({
         agent,
       ]),
     );
+    const authorizedRelayAgents = (relayAgentsQuery.data ?? []).filter(
+      (agent) =>
+        relayAgentIsSharedWithUser(
+          agent,
+          new Set(selfMember && channelId ? [channelId] : []),
+          currentPubkey,
+        ),
+    );
+    const relayAgentPubkeys = new Set(
+      authorizedRelayAgents.map((agent) => normalizePubkey(agent.pubkey)),
+    );
     const memberAgentLabels = new Set(
       rawMembers
         .filter((member) => member.isAgent === true || member.role === "bot")
@@ -280,7 +292,8 @@ export function MembersSidebar({
           )) ||
         memberPubkeys.has(pubkey) ||
         isArchivedDiscovery(pubkey) ||
-        !isAgentIdentityInManagedList(candidate, managedAgentPubkeys)
+        (!isAgentIdentityInManagedList(candidate, managedAgentPubkeys) &&
+          !relayAgentPubkeys.has(pubkey))
       ) {
         return;
       }
@@ -318,7 +331,7 @@ export function MembersSidebar({
       );
     }
 
-    for (const agent of relayAgentsQuery.data ?? []) {
+    for (const agent of authorizedRelayAgents) {
       addCandidate({
         pubkey: agent.pubkey,
         displayName: agent.name,
@@ -367,6 +380,8 @@ export function MembersSidebar({
     relayAgentsQuery.data,
     userSearchResults,
     rawMembers,
+    channelId,
+    selfMember,
   ]);
   const isAddSearchLoading =
     userSearchQuery.isLoading ||

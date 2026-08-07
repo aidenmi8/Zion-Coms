@@ -91,6 +91,12 @@ fn main() {
         println!("cargo:rustc-env=BUZZ_DESKTOP_BUILD_AGENT_METRIC_ARCHIVE_DEFAULT=1");
     }
 
+    // Presence-only release capability: internal desktop builds enforce
+    // owner-only managed-agent access. OSS builds leave this unset.
+    if std::env::var("BUZZ_BUILD_AGENT_ACCESS_OWNER_ONLY").is_ok() {
+        println!("cargo:rustc-env=BUZZ_DESKTOP_BUILD_AGENT_ACCESS_OWNER_ONLY=1");
+    }
+
     // Presence-only release capability: internal desktop builds opt into
     // auto-connecting their configured default relay on first run. OSS builds
     // leave this unset and retain explicit community selection.

@@ -514,9 +514,13 @@ function MessageComposerImpl({
       if (isSendingRef.current || isUploadingRef.current) return;
       const currentPendingImeta = media.pendingImetaRef.current;
       const hasMedia = currentPendingImeta.length > 0;
-      // Empty text + zero attachments is a no-op (don't let edit become an
-      // effective deletion).
-      if (!trimmed && !hasMedia) return;
+      // Empty text + zero attachments is deletion shorthand for Inbox edits.
+      // Let the owning surface open its confirmation dialog before clearing
+      // the composer, so Cancel can leave edit mode intact.
+      if (!trimmed && !hasMedia) {
+        await onEditSaveRef.current("", [], []);
+        return;
+      }
 
       // Build the edit's body + imeta tag set. Coerce `mediaTags ?? []`
       // because edit semantics use `[]` as the explicit "wipe all

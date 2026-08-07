@@ -5686,7 +5686,39 @@ async function handleSearchUsers(
 
     const limit = args.limit ?? 8;
     const page = Math.max(Number(args.cursor ?? 1) || 1, 1);
-    const allResults = listMockProfiles()
+    const profilesByPubkey = new Map(
+      listMockProfiles().map((profile) => [
+        profile.pubkey.toLowerCase(),
+        profile,
+      ]),
+    );
+    for (const agent of mockRelayAgents) {
+      const normalizedPubkey = agent.pubkey.toLowerCase();
+      const profile = profilesByPubkey.get(normalizedPubkey);
+      profilesByPubkey.set(
+        normalizedPubkey,
+        profile
+          ? {
+              ...profile,
+              display_name: profile.display_name ?? agent.name,
+              name: profile.name ?? agent.name,
+              is_agent: true,
+            }
+          : {
+              pubkey: agent.pubkey,
+              display_name: agent.name,
+              name: agent.name,
+              avatar_url: null,
+              about: null,
+              nip05_handle: null,
+              owner_pubkey: null,
+              is_agent: true,
+              has_profile_event: false,
+            },
+      );
+    }
+
+    const allResults = [...profilesByPubkey.values()]
       .filter((profile) => {
         if (normalizedQuery.length === 0) {
           return true;
@@ -8512,20 +8544,25 @@ async function handleSendManagedAgentChannelMessage(
 }
 
 /**
- * Mock the `delete_message` Tauri command. Removes the event from the
- * in-memory mock store so the query-cache invalidation in
- * `useDeleteMessageMutation.onSuccess` (which filters by eventId) finds
- * nothing to keep, and the row disappears from the timeline.
+ * Mock the `delete_message` Tauri command. Keep the original event and append
+ * the NIP-09 deletion marker that the relay would publish, so structural-event
+ * refreshes and live subscriptions both remove the target from the timeline.
  */
-function handleDeleteMessage(args: {
-  channelId: string;
-  eventId: string;
-}): void {
-  const history = mockMessages.get(args.channelId);
-  if (history) {
-    const index = history.findIndex((ev) => ev.id === args.eventId);
-    if (index !== -1) history.splice(index, 1);
-  }
+function handleDeleteMessage(
+  args: {
+    channelId: string;
+    eventId: string;
+  },
+  config: E2eConfig | undefined,
+): void {
+  const deletion = createMockEvent(
+    KIND_DELETION,
+    "",
+    [["e", args.eventId]],
+    getMockMemberPubkey(config),
+  );
+  recordMockMessage(args.channelId, deletion);
+  emitMockLiveEvent(args.channelId, deletion);
 }
 
 /**
@@ -9689,6 +9726,8 @@ export function maybeInstallE2eTauriMocks() {
         }
         return;
       }
+      case "plugin:app|version":
+        return "0.0.0-e2e";
       case "get_profile":
         return handleGetProfile(activeConfig);
       case "update_profile":
@@ -10911,6 +10950,7 @@ export function maybeInstallE2eTauriMocks() {
       case "delete_message":
         handleDeleteMessage(
           payload as Parameters<typeof handleDeleteMessage>[0],
+          activeConfig,
         );
         return null;
       case "edit_message":

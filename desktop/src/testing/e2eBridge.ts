@@ -1108,7 +1108,9 @@ declare global {
     __BUZZ_E2E_CLOSE_LIVE_SUBSCRIPTIONS__?: (reason: string) => number;
     /** Queue CLOSED responses for channel history REQs. */
     __BUZZ_E2E_QUEUE_CHANNEL_HISTORY_CLOSES__?: (reasons: string[]) => void;
-    __BUZZ_E2E_SET_MOCK_WEBSOCKET_UNAVAILABLE__?: (unavailable: boolean) => void;
+    __BUZZ_E2E_SET_MOCK_WEBSOCKET_UNAVAILABLE__?: (
+      unavailable: boolean,
+    ) => void;
     __BUZZ_E2E_GET_WEBSOCKET_CONNECT_ATTEMPTS__?: () => number[];
     __BUZZ_E2E_ACTIVATE_RELAY_RATE_LIMIT__?: (seconds: number) => void;
     __BUZZ_E2E_RESET_WEBSOCKET_CONNECT_ATTEMPTS__?: () => void;
@@ -8990,8 +8992,16 @@ function sendToMockSocket(args: {
 
   if (type === "AUTH") {
     const event = rest[0] as RelayEvent;
-    const response = mockAuthResponses.shift() ?? { success: true, message: "" };
-    sendWsText(socket.handler, ["OK", event.id, response.success, response.message]);
+    const response = mockAuthResponses.shift() ?? {
+      success: true,
+      message: "",
+    };
+    sendWsText(socket.handler, [
+      "OK",
+      event.id,
+      response.success,
+      response.message,
+    ]);
     return;
   }
 

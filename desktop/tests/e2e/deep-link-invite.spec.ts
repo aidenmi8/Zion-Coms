@@ -357,7 +357,7 @@ test("required Welcome creation failure keeps community onboarding open", async 
   );
   await page.goto("/");
 
- for (const [slug, name] of [
+  for (const [slug, name] of [
     ["fizz", "Fizz"],
     ["honey", "Honey"],
     ["bumble", "Bumble"],

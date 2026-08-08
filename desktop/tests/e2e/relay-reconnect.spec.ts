@@ -73,29 +73,6 @@ async function emitMockMessages(
   }, messages);
 }
 
-async function queueAuthResponses(
-  page: import("@playwright/test").Page,
-  responses: Array<{ success: boolean; message: string }>,
-) {
-  await page.evaluate((queued) => {
-    const queue = window.__BUZZ_E2E_QUEUE_AUTH_RESPONSES__;
-    if (!queue) throw new Error("E2E AUTH response seam is not installed.");
-    queue(queued);
-  }, responses);
-}
-
-async function closeLiveSubscriptions(
-  page: import("@playwright/test").Page,
-  reason: string,
-) {
-  const closed = await page.evaluate((message) => {
-    const close = window.__BUZZ_E2E_CLOSE_LIVE_SUBSCRIPTIONS__;
-    if (!close) throw new Error("E2E live CLOSED seam is not installed.");
-    return close(message);
-  }, reason);
-  expect(closed).toBeGreaterThan(0);
-}
-
 async function queueChannelHistoryCloses(
   page: import("@playwright/test").Page,
   reasons: string[],

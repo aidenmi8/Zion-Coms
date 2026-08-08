@@ -6,10 +6,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-import {
-  isAgentCardAvatarLoading,
-  resolveAgentCardAvatarUrl,
-} from "@/features/agents/lib/agentCardAvatar";
+import { resolveAgentCardAvatarUrl } from "@/features/agents/lib/agentCardAvatar";
 import { resolveAgentCardModelLabel } from "@/features/agents/lib/agentCardModelLabel";
 import { friendlyAgentLastError } from "@/features/agents/lib/friendlyAgentLastError";
 import { isManagedAgentActive } from "@/features/agents/lib/managedAgentControlActions";

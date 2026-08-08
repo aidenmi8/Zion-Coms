@@ -202,6 +202,7 @@ class ChannelMessagesNotifier extends Notifier<AsyncValue<List<NostrEvent>>> {
     final isTimelineRow = EventKind.channelTimelineContentKinds.contains(
       event.kind,
     );
+    final isThreadSummary = event.kind == EventKind.channelThreadSummary;
     final thread = isTimelineRow ? event.threadReference : null;
     if (thread?.parentId != null) {
       final rootId = thread?.rootId;
@@ -220,9 +221,14 @@ class ChannelMessagesNotifier extends Notifier<AsyncValue<List<NostrEvent>>> {
           ),
         );
       }
-      if (!_isBroadcastReply(event)) return false;
+      // Replies are kept in the store rather than dropped here, matching
+      // desktop: the main timeline filters them out at render
+      // (`buildMainTimelineEntries`), and their parent's "N replies" row needs
+      // them as the local half of the summary merge when the relay's
+      // best-effort recount is delayed, lost, or older than this reply.
     }
     if (!isTimelineRow &&
+        !isThreadSummary &&
         !EventKind.channelAuxEventKinds.contains(event.kind)) {
       return false;
     }
@@ -459,12 +465,6 @@ class ChannelMessagesNotifier extends Notifier<AsyncValue<List<NostrEvent>>> {
     });
     return true;
   }
-}
-
-bool _isBroadcastReply(NostrEvent event) {
-  return event.tags.any(
-    (tag) => tag.length >= 2 && tag[0] == 'broadcast' && tag[1] == '1',
-  );
 }
 
 int _currentUnixSeconds() => DateTime.now().millisecondsSinceEpoch ~/ 1000;

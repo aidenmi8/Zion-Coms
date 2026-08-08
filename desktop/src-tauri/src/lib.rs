@@ -7,6 +7,8 @@ mod deep_link;
 mod event_sync;
 mod events;
 mod huddle;
+#[cfg(target_os = "macos")]
+mod macos_notifications;
 mod managed_agents;
 mod media_proxy;
 #[cfg(feature = "mesh-llm")]
@@ -358,6 +360,10 @@ pub fn run() {
         .manage(commands::pairing::PairingHandle::new())
         .setup(move |app| {
             let app_handle = app.handle().clone();
+            #[cfg(target_os = "macos")]
+            {
+                macos_notifications::init(&app_handle)?;
+            }
 
             // ── Phase 2: boot-time sentinel wipe ──────────────────────────────
             // Must run before migrations and identity resolution so the wipe
@@ -656,7 +662,6 @@ pub fn run() {
                     }
                 });
             }
-
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -767,10 +772,18 @@ pub fn run() {
             remove_reaction,
             get_event,
             show_native_notification,
+            #[cfg(target_os = "macos")]
+            macos_notifications::take_pending_activations,
+            #[cfg(target_os = "macos")]
+            macos_notifications::notification_permission_state,
+            #[cfg(target_os = "macos")]
+            macos_notifications::request_notification_access,
             upload_media,
             pick_and_upload_media,
             pick_and_upload_image,
             upload_media_bytes,
+            upload_media_bytes_raw,
+            cancel_media_upload,
             download_image,
             save_png_data_url,
             download_file,
@@ -807,6 +820,7 @@ pub fn run() {
             get_managed_agent_log,
             get_agent_models,
             discover_agent_models,
+            agent_access_owner_only,
             get_agent_config_surface,
             get_runtime_file_config,
             get_baked_build_env_keys,
@@ -917,7 +931,6 @@ pub fn run() {
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
-
     let shutdown_done = Arc::new(AtomicBool::new(false));
 
     #[cfg(unix)]

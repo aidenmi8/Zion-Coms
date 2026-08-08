@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-11-normal-96ae141",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "38bf642fcfa7a9fc1e06d6cf87d66ae94da29341",
+  "pinned_upstream_sha": "96ae141763e5459beb68a847e0082e931af72f4c",
+  "topics": [
+    {
+      "topic_id": "pr-5004",
+      "title": "fix(desktop): skip native notifications outside app bundles",
+      "upstream_pr": 5004,
+      "entry_shas": [
+        "96ae141763e5459beb68a847e0082e931af72f4c"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "96ae141763e5459beb68a847e0082e931af72f4c",
+      "topic_id": "pr-5004",
+      "title": "fix(desktop): skip native notifications outside app bundles",
+      "areas": [
+        "desktop",
+        "macos"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [
+        "7334ad1e164a050902dadfc659c82b5ef777531f"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5004",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

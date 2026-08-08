@@ -246,6 +246,8 @@ type MockBridgeOptions = {
   applyCommunityDelayMs?: number;
   openDmDelayMs?: number;
   sendMessageDelayMs?: number;
+  /** Hold mock send live echoes until the E2E release seam is invoked. */
+  deferSendMessageLiveEcho?: boolean;
   /** Close the first channel-window live REQ; its retry is accepted. */
   closeChannelLiveSubscriptionOnce?: boolean;
   /** Reject successive kind-9 sends with these messages, then resume. */
@@ -325,6 +327,8 @@ type MockBridgeOptions = {
    * explicit `[]` is honoured (models a picker cancel / no files selected).
    */
   uploadDelayMs?: number;
+  /** Exercise the production composer path that queues files until send. */
+  deferredComposerUploads?: boolean;
   /** Delay (ms) applied to `encode_agent_snapshot_for_send` so E2E tests can
    *  observe the "preparing" phase before the upload begins. 0/undefined = instant. */
   encodeDelayMs?: number;
@@ -412,6 +416,7 @@ type MockBridgeOptions = {
     model: string | null;
     preferred_runtime?: string | null;
   };
+  ownerOnlyAccessBuild?: boolean;
   /** File-layer config returned by runtime id. */
   runtimeFileConfigs?: Record<
     string,

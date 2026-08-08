@@ -1,15 +1,31 @@
+import * as React from "react";
+import { useAgentAccessOwnerOnlyQuery } from "../useAgentAccessOwnerOnly";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
 import { EnvVarsEditor, type EnvVarsValue } from "./EnvVarsEditor";
-import { CreateAgentRespondToField } from "./RespondToField";
+import {
+  CreateAgentRespondToField,
+  OWNER_ONLY_ACCESS_DISABLED_REASON,
+} from "./RespondToField";
 import type { PersonaBehaviorDraft } from "./personaBehaviorDraft";
-import { isBuzzAgentRuntime } from "./buzzAgentConfig";
+import {
+  isBuzzAgentRuntime,
+  BUZZ_AGENT_THINKING_EFFORT,
+} from "./buzzAgentConfig";
+import {
+  AGENT_PARALLELISM_HELP,
+  AGENT_PARALLELISM_PLACEHOLDER,
+  parallelismCapHint,
+} from "../lib/agentParallelism";
 import { BuzzAgentModelTuningFields } from "./buzzAgentModelTuningFields";
 import {
   PERSONA_FIELD_CONTROL_CLASS,
   PERSONA_FIELD_SHELL_CLASS,
   PERSONA_LABEL_OPTIONAL_CLASS,
 } from "./agentConfigOptions";
+import type { AcpRuntimeCatalogEntry } from "@/shared/api/types";
+
+type RuntimeCatalogStatus = "loading" | "error" | "ready";
 
 export function PersonaAdvancedFields({
   behaviorDraft,
@@ -26,6 +42,8 @@ export function PersonaAdvancedFields({
   requiredEnvKeys = [],
   fileSatisfiedEnvKeys = [],
   hiddenEnvKeys = [],
+  catalogStatus: _catalogStatus = "ready" as RuntimeCatalogStatus,
+  selectedRuntime,
 }: {
   behaviorDraft: PersonaBehaviorDraft;
   disabled: boolean;
@@ -35,7 +53,7 @@ export function PersonaAdvancedFields({
   inheritedEnvVars?: EnvVarsValue;
   /** Active LLM model — forwarded to BuzzAgentModelTuningFields for effort filtering. */
   model?: string;
-  /** Runtime id for the buzz-agent tuning knobs visibility gate. */
+  /** Runtime id for the buzz-agent effort-tuning knob visibility gate. */
   modelTuningRuntimeId?: string;
   namePoolText: string;
   onBehaviorDraftChange: (value: PersonaBehaviorDraft) => void;
@@ -46,13 +64,65 @@ export function PersonaAdvancedFields({
   requiredEnvKeys?: readonly string[];
   fileSatisfiedEnvKeys?: readonly string[];
   hiddenEnvKeys?: readonly string[];
+  /**
+   * Lifecycle status of the runtime catalog query. Controls the numeric-tuning
+   * gate and hidden-key behaviour:
+   * - `loading` or `error`: no structured controls; keys not hidden — saved
+   *   values stay visible as generic rows.
+   * - `ready`: descriptors derived from `selectedRuntime` (empty when the
+   *   runtime has no numeric env-var fields).
+   */
+  catalogStatus?: RuntimeCatalogStatus;
+  /**
+   * The catalog entry for the selected runtime. Drives descriptor-based
+   * numeric tuning fields. When undefined after the catalog has settled,
+   * no numeric controls render.
+   */
+  selectedRuntime?: AcpRuntimeCatalogEntry;
 }) {
+  const { data: agentAccessOwnerOnly = false } = useAgentAccessOwnerOnlyQuery();
+  const respondToMode = agentAccessOwnerOnly
+    ? "owner-only"
+    : (behaviorDraft.respondTo ?? "owner-only");
+
+  const effectiveHiddenKeys = React.useMemo(
+    () => [
+      ...hiddenEnvKeys,
+      ...(isBuzzAgentRuntime(modelTuningRuntimeId)
+        ? [BUZZ_AGENT_THINKING_EFFORT]
+        : []),
+    ],
+    [hiddenEnvKeys, modelTuningRuntimeId],
+  );
+
+  // Persona hint: definitions keep a portable requested value across harnesses.
+  // When the selected harness has a cap and the draft's parallelism exceeds it,
+  // explain that the agent will run at the cap — without clamping the stored value.
+  const personaParallelismHint = React.useMemo(() => {
+    if (
+      selectedRuntime?.maxParallelism === undefined ||
+      behaviorDraft.parallelism === ""
+    ) {
+      return null;
+    }
+    const requested = parseInt(behaviorDraft.parallelism, 10);
+    if (Number.isNaN(requested)) return null;
+    return parallelismCapHint(
+      selectedRuntime.label,
+      selectedRuntime.maxParallelism,
+      requested,
+    );
+  }, [selectedRuntime, behaviorDraft.parallelism]);
+
   return (
     <div className="space-y-5 pt-2">
       <CreateAgentRespondToField
-        allowlist={behaviorDraft.respondToAllowlist}
-        disabled={disabled}
-        mode={behaviorDraft.respondTo ?? "owner-only"}
+        allowlist={agentAccessOwnerOnly ? [] : behaviorDraft.respondToAllowlist}
+        disabled={disabled || agentAccessOwnerOnly}
+        disabledReason={
+          agentAccessOwnerOnly ? OWNER_ONLY_ACCESS_DISABLED_REASON : undefined
+        }
+        mode={respondToMode}
         onAllowlistChange={(allowlist) =>
           onBehaviorDraftChange({
             ...behaviorDraft,
@@ -82,7 +152,7 @@ export function PersonaAdvancedFields({
           >
             <Input
               className={cn(
-                "h-8 px-0 py-0 leading-6",
+                "h-8 px-0 py-0 leading-6 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
                 PERSONA_FIELD_CONTROL_CLASS,
               )}
               disabled={disabled}
@@ -96,14 +166,19 @@ export function PersonaAdvancedFields({
                   parallelism: event.target.value,
                 })
               }
-              placeholder="1"
+              placeholder={AGENT_PARALLELISM_PLACEHOLDER}
               type="number"
               value={behaviorDraft.parallelism}
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            How many conversations each running instance handles at once (1–32).
+            {AGENT_PARALLELISM_HELP}
           </p>
+          {personaParallelismHint !== null ? (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              {personaParallelismHint}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -141,13 +216,13 @@ export function PersonaAdvancedFields({
       <EnvVarsEditor
         disabled={disabled}
         fileSatisfiedKeys={fileSatisfiedEnvKeys}
-        hiddenKeys={hiddenEnvKeys}
+        hiddenKeys={effectiveHiddenKeys}
         onChange={onEnvVarsChange}
         requiredKeys={requiredEnvKeys}
         value={envVars}
       />
 
-      {/* Tier-1 buzz-agent model-tuning knobs — only shown for buzz-agent. */}
+      {/* Effort-tuning knob — only shown for buzz-agent. */}
       {isBuzzAgentRuntime(modelTuningRuntimeId) ? (
         <BuzzAgentModelTuningFields
           envVars={envVars}

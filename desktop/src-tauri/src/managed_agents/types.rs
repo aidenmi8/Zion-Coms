@@ -437,7 +437,7 @@ pub struct ManagedAgentProcess {
     /// `needs_restart` on mismatch. Agents adopted via a persisted
     /// `runtime_pid` have no `ManagedAgentProcess` entry, so their spawn
     /// config is unknown and the badge stays off.
-    pub spawn_config_hash: u64,
+    pub spawn_config: crate::managed_agents::spawn_snapshot::SpawnConfigSnapshot,
     /// Whether this process was spawned in setup-listener mode (i.e.
     /// `BUZZ_ACP_SETUP_PAYLOAD` was set at launch because the agent was
     /// `NotReady`). Runtime-only — never persisted. Used by
@@ -631,16 +631,14 @@ pub struct AcpRuntimeCatalogEntry {
     /// Whether this entry came from the compiled-in catalog or a user-supplied
     /// JSON file in `custom_harnesses/`. The UI uses this to decide editability.
     pub source: HarnessSource,
-    /// Definition-level environment variables for `source: custom` entries.
-    ///
-    /// Populated from `HarnessDefinition.env` so the edit form can read them
-    /// back and the user doesn't silently lose env vars when saving.  Always
-    /// empty for `builtin` and `preset` entries (those env values come from the
-    /// runtime metadata path, not user-editable JSON).
-    ///
-    /// Skipped in serialization when empty to keep the catalog payload compact.
+    /// Definition-level env vars for `source: custom` entries; populated from
+    /// `HarnessDefinition.env` so saves don't silently erase existing vars.
+    /// Absent for builtin/preset entries. Skipped when empty in serialization.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub definition_env: BTreeMap<String, String>,
+    /// Spawn-time parallelism cap; absent for uncapped harnesses.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_parallelism: Option<u32>,
 }
 
 /// Result of a single install step (CLI or adapter).

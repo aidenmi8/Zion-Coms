@@ -28,6 +28,9 @@ pub(crate) fn runtime_metadata_env_vars<'a>(
 /// `spawn_hash` so the restart badge hashes the same key the spawn writes.
 pub(crate) const SESSION_TITLE_ENV_VAR: &str = "BUZZ_ACP_SESSION_TITLE";
 
+/// Stable managed-agent display name forwarded to the ACP tool surface.
+pub(crate) const DISPLAY_NAME_ENV_VAR: &str = "BUZZ_ACP_DISPLAY_NAME";
+
 /// Resolve the session title for an agent: its `display_name` when it has one,
 /// otherwise its unique `name` handle. `None` when both are blank, so the
 /// caller clears the env var rather than exporting an empty title.

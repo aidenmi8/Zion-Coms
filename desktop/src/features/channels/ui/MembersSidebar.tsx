@@ -10,6 +10,7 @@ import { attachManagedAgentToChannel } from "@/features/agents/channelAgents";
 import {
   coalesceAgentAutocompleteCandidates,
   isAgentIdentityInManagedList,
+  relayAgentIsSharedWithUser,
 } from "@/features/agents/lib/agentAutocompleteEligibility";
 import { useIsArchivedPredicate } from "@/features/identity-archive/hooks";
 import { useClassifiedMembers } from "@/features/channels/lib/useClassifiedMembers";
@@ -23,6 +24,7 @@ import {
 import { formatOwnerLabel } from "@/features/profile/lib/identity";
 import { rankUserCandidatesBySearch } from "@/features/profile/lib/userCandidateSearch";
 import { usePresenceQuery } from "@/features/presence/hooks";
+import { VirtualizedList } from "@/shared/ui/VirtualizedList";
 import { useIdentityQuery } from "@/shared/api/hooks";
 import { changeChannelMemberRole } from "@/shared/api/tauri";
 import type {
@@ -191,7 +193,6 @@ export function MembersSidebar({
       ),
     [bots, currentPubkey, people],
   );
-
   const allMemberPubkeys = React.useMemo(
     () => rawMembers.map((member) => member.pubkey),
     [rawMembers],
@@ -209,9 +210,7 @@ export function MembersSidebar({
     if (!normalizedSearchQuery) {
       return activeMembers;
     }
-
     const profiles = memberProfilesQuery.data?.profiles ?? {};
-
     return activeMembers.filter((member) => {
       const normalizedPubkey = normalizePubkey(member.pubkey);
       const profile = profiles[normalizedPubkey] ?? null;
@@ -265,6 +264,17 @@ export function MembersSidebar({
         agent,
       ]),
     );
+    const authorizedRelayAgents = (relayAgentsQuery.data ?? []).filter(
+      (agent) =>
+        relayAgentIsSharedWithUser(
+          agent,
+          new Set(selfMember && channelId ? [channelId] : []),
+          currentPubkey,
+        ),
+    );
+    const relayAgentPubkeys = new Set(
+      authorizedRelayAgents.map((agent) => normalizePubkey(agent.pubkey)),
+    );
     const memberAgentLabels = new Set(
       rawMembers
         .filter((member) => member.isAgent === true || member.role === "bot")
@@ -282,7 +292,8 @@ export function MembersSidebar({
           )) ||
         memberPubkeys.has(pubkey) ||
         isArchivedDiscovery(pubkey) ||
-        !isAgentIdentityInManagedList(candidate, managedAgentPubkeys)
+        (!isAgentIdentityInManagedList(candidate, managedAgentPubkeys) &&
+          !relayAgentPubkeys.has(pubkey))
       ) {
         return;
       }
@@ -320,7 +331,7 @@ export function MembersSidebar({
       );
     }
 
-    for (const agent of relayAgentsQuery.data ?? []) {
+    for (const agent of authorizedRelayAgents) {
       addCandidate({
         pubkey: agent.pubkey,
         displayName: agent.name,
@@ -369,6 +380,8 @@ export function MembersSidebar({
     relayAgentsQuery.data,
     userSearchResults,
     rawMembers,
+    channelId,
+    selfMember,
   ]);
   const isAddSearchLoading =
     userSearchQuery.isLoading ||
@@ -782,11 +795,14 @@ export function MembersSidebar({
                     ) : null}
                   </div>
                 ) : filteredActiveMembers.length > 0 ? (
-                  <div>
-                    {filteredActiveMembers.map((member) =>
-                      renderMemberCard(member, isBot(member)),
-                    )}
-                  </div>
+                  <VirtualizedList
+                    className="h-[calc(100%_-_2.25rem)]"
+                    getItemKey={(member) => member.pubkey}
+                    items={filteredActiveMembers}
+                    renderItem={(member) =>
+                      renderMemberCard(member, isBot(member))
+                    }
+                  />
                 ) : (
                   <p className="px-4 py-3 text-sm text-muted-foreground">
                     {membersQuery.isLoading

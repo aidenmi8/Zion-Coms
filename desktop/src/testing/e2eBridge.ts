@@ -1,4 +1,5 @@
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils.js";
+import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import { decode } from "nostr-tools/nip19";
 import { finalizeEvent, getPublicKey } from "nostr-tools/pure";
@@ -287,6 +288,8 @@ type E2eConfig = {
     /** Reject successive mock WebSocket connect attempts, then resume. */
     websocketConnectErrors?: string[];
     stallWebsocketSends?: boolean;
+    /** Hold sent message live echoes until the test releases them. */
+    deferSendMessageLiveEcho?: boolean;
     userSearchDelayMs?: number;
     // NIP-IA gate inputs — see tests/helpers/bridge.ts:MockBridgeOptions for
     // semantics. These three drive the archive-button gate matrix in
@@ -310,6 +313,8 @@ type E2eConfig = {
     // (e.g. a generic PDF) without a real upload pipeline. See
     // tests/helpers/bridge.ts:MockBridgeOptions.uploadDescriptors.
     uploadDelayMs?: number;
+    /** Exercise the production composer path that queues files until send. */
+    deferredComposerUploads?: boolean;
     /** Delay (ms) applied to `encode_agent_snapshot_for_send` so E2E tests can
      *  observe the "preparing" phase before the upload begins. 0/undefined = instant. */
     encodeDelayMs?: number;
@@ -391,6 +396,8 @@ type E2eConfig = {
       model: string | null;
       preferred_runtime?: string | null;
     };
+    /** Explicit owner-only agent-access capability; independent of baked defaults. */
+    ownerOnlyAccessBuild?: boolean;
     /** File-layer config returned by runtime id. */
     runtimeFileConfigs?: Record<string, RuntimeFileConfigSubset | null>;
     /** Baked build env returned by the display and key-name Tauri commands. */
@@ -984,10 +991,21 @@ declare global {
       command: string;
       payload: unknown;
     }>;
+    __BUZZ_E2E_EMIT_MEDIA_UPLOAD_PHASE__?: (input: {
+      id: string;
+      phase: string;
+    }) => Promise<void>;
+    __BUZZ_E2E_EMIT_MEDIA_UPLOAD_PROGRESS__?: (input: {
+      id: string;
+      sent: number;
+      total: number;
+    }) => Promise<void>;
     __BUZZ_E2E_COMMAND_LOG__?: Array<{
       command: string;
       payload: unknown;
     }>;
+    /** Release mock send events that were stored but withheld from live subscribers. */
+    __BUZZ_E2E_RELEASE_SEND_MESSAGE_LIVE_ECHO__?: () => number;
     __BUZZ_E2E_WEBVIEW_ZOOM__?: number;
     __BUZZ_E2E_HAS_MOCK_LIVE_SUBSCRIPTION__?: (input: {
       channelName: string;
@@ -2785,6 +2803,10 @@ const mockChannels: MockChannel[] = [
 
 const mockMessages = new Map<string, RelayEvent[]>();
 const mockLiveThreadSummaryCreatedAt = new Map<string, number>();
+const deferredSendMessageLiveEchoes: Array<{
+  channelId: string;
+  event: RelayEvent;
+}> = [];
 const mockUserStatuses: RelayEvent[] = [];
 const mockReminderEvents: RelayEvent[] = [];
 let mockRelayMembers: RawRelayMember[] = [];
@@ -3879,6 +3901,18 @@ function emitMockLiveMessageAndThreadSummary(
     id: mockEventId(),
     created_at: createdAt,
   });
+}
+
+function emitOrDeferMockSendMessageLiveEcho(
+  channelId: string,
+  event: RelayEvent,
+  config: E2eConfig | undefined,
+) {
+  if (config?.mock?.deferSendMessageLiveEcho) {
+    deferredSendMessageLiveEchoes.push({ channelId, event });
+    return;
+  }
+  emitMockLiveMessageAndThreadSummary(channelId, event);
 }
 
 function emitMockGlobalEvent(event: RelayEvent) {
@@ -5664,7 +5698,46 @@ async function handleSearchUsers(
 
     const limit = args.limit ?? 8;
     const page = Math.max(Number(args.cursor ?? 1) || 1, 1);
-    const allResults = listMockProfiles()
+    const profilesByPubkey = new Map(
+      listMockProfiles().map((profile) => [
+        profile.pubkey.toLowerCase(),
+        profile,
+      ]),
+    );
+    for (const agent of mockRelayAgents) {
+      const normalizedPubkey = agent.pubkey.toLowerCase();
+      const profile = profilesByPubkey.get(normalizedPubkey);
+      const hasExplicitProfileOverride = mockProfiles.has(normalizedPubkey);
+      profilesByPubkey.set(
+        normalizedPubkey,
+        profile
+          ? {
+              ...profile,
+              display_name: profile.display_name ?? agent.name,
+              name: profile.name ?? agent.name,
+              // A test-provided search profile is authoritative. This lets
+              // people-picker specs reuse a pubkey that is also present in
+              // the default relay-agent directory without turning the person
+              // into an agent after the directory merge.
+              is_agent: hasExplicitProfileOverride
+                ? (profile.is_agent ?? false)
+                : true,
+            }
+          : {
+              pubkey: agent.pubkey,
+              display_name: agent.name,
+              name: agent.name,
+              avatar_url: null,
+              about: null,
+              nip05_handle: null,
+              owner_pubkey: null,
+              is_agent: true,
+              has_profile_event: false,
+            },
+      );
+    }
+
+    const allResults = [...profilesByPubkey.values()]
       .filter((profile) => {
         if (normalizedQuery.length === 0) {
           return true;
@@ -8272,6 +8345,35 @@ async function resolveMockUploadDescriptors(
   ];
 }
 
+async function resolveMockUploadDescriptorForBytes(
+  args: { data: number[] | Uint8Array; filename?: string | null },
+  config: E2eConfig | undefined,
+): Promise<RawBlobDescriptor> {
+  const configured = config?.mock?.uploadDescriptors;
+  if (configured !== undefined) {
+    const descriptors = await resolveMockUploadDescriptors(config);
+    const descriptor = descriptors[0];
+    if (!descriptor) throw new Error("mock upload returned no descriptor");
+    return descriptor;
+  }
+
+  const bytes = Uint8Array.from(args.data);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const sha256 = Array.from(new Uint8Array(digest), (value) =>
+    value.toString(16).padStart(2, "0"),
+  ).join("");
+  const filename = args.filename ?? "upload.bin";
+  const isAgentJson = filename.toLowerCase().endsWith(".agent.json");
+  return {
+    url: `https://mock.relay/media/${sha256}${isAgentJson ? ".json" : ".bin"}`,
+    sha256,
+    size: bytes.length,
+    type: isAgentJson ? "application/json" : "application/octet-stream",
+    uploaded: Math.floor(Date.now() / 1000),
+    filename,
+  };
+}
+
 async function handleSendChannelMessage(
   args: {
     channelId: string;
@@ -8317,7 +8419,7 @@ async function handleSendChannelMessage(
         ...extraTags,
       ]);
       recordMockMessage(args.channelId, event);
-      emitMockLiveMessageAndThreadSummary(args.channelId, event);
+      emitOrDeferMockSendMessageLiveEcho(args.channelId, event, config);
 
       return {
         event_id: event.id,
@@ -8380,7 +8482,7 @@ async function handleSendChannelMessage(
     };
 
     recordMockMessage(args.channelId, event);
-    emitMockLiveMessageAndThreadSummary(args.channelId, event);
+    emitOrDeferMockSendMessageLiveEcho(args.channelId, event, config);
 
     return {
       event_id: event.id,
@@ -8490,20 +8592,25 @@ async function handleSendManagedAgentChannelMessage(
 }
 
 /**
- * Mock the `delete_message` Tauri command. Removes the event from the
- * in-memory mock store so the query-cache invalidation in
- * `useDeleteMessageMutation.onSuccess` (which filters by eventId) finds
- * nothing to keep, and the row disappears from the timeline.
+ * Mock the `delete_message` Tauri command. Keep the original event and append
+ * the NIP-09 deletion marker that the relay would publish, so structural-event
+ * refreshes and live subscriptions both remove the target from the timeline.
  */
-function handleDeleteMessage(args: {
-  channelId: string;
-  eventId: string;
-}): void {
-  const history = mockMessages.get(args.channelId);
-  if (history) {
-    const index = history.findIndex((ev) => ev.id === args.eventId);
-    if (index !== -1) history.splice(index, 1);
-  }
+function handleDeleteMessage(
+  args: {
+    channelId: string;
+    eventId: string;
+  },
+  config: E2eConfig | undefined,
+): void {
+  const deletion = createMockEvent(
+    KIND_DELETION,
+    "",
+    [["e", args.eventId]],
+    getMockMemberPubkey(config),
+  );
+  recordMockMessage(args.channelId, deletion);
+  emitMockLiveEvent(args.channelId, deletion);
 }
 
 /**
@@ -9031,6 +9138,11 @@ function sendToMockSocket(args: {
   if (type === "EVENT") {
     const event = rest[0] as RelayEvent;
 
+    if (event.kind === 28936) {
+      sendWsText(socket.handler, ["OK", event.id, true, ""]);
+      return;
+    }
+
     if ([9030, 9031, 9032].includes(event.kind)) {
       const accepted = updateMockRelayMembershipFromAdminEvent(event);
       sendWsText(socket.handler, [
@@ -9174,6 +9286,7 @@ export function maybeInstallE2eTauriMocks() {
   }
 
   mockClosedChannelLiveSubscription = false;
+  deferredSendMessageLiveEchoes.length = 0;
   mockGlobalAgentConfig = config.mock?.globalAgentConfig
     ? { ...config.mock.globalAgentConfig }
     : null;
@@ -9195,6 +9308,12 @@ export function maybeInstallE2eTauriMocks() {
   window.__BUZZ_E2E_COMMAND_LOG__ = [];
   window.__BUZZ_E2E_SIGNED_EVENTS__ = [];
   window.__BUZZ_E2E_WEBVIEW_ZOOM__ = 1;
+  window.__BUZZ_E2E_EMIT_MEDIA_UPLOAD_PHASE__ = async (input) => {
+    await emit("media-upload-phase", input);
+  };
+  window.__BUZZ_E2E_EMIT_MEDIA_UPLOAD_PROGRESS__ = async (input) => {
+    await emit("media-upload-progress", input);
+  };
   window.__BUZZ_E2E_EMIT_MOCK_MESSAGE__ = ({
     channelName,
     content,
@@ -9394,6 +9513,13 @@ export function maybeInstallE2eTauriMocks() {
     }
     return sockets.length;
   };
+  window.__BUZZ_E2E_RELEASE_SEND_MESSAGE_LIVE_ECHO__ = () => {
+    const queued = deferredSendMessageLiveEchoes.splice(0);
+    for (const { channelId, event } of queued) {
+      emitMockLiveMessageAndThreadSummary(channelId, event);
+    }
+    return queued.length;
+  };
   // Tests vary mesh admission and models to exercise provider discovery and
   // the managed-agent start preflight.
   window.__BUZZ_E2E_SET_MESH__ = (mesh) => {
@@ -9454,6 +9580,9 @@ export function maybeInstallE2eTauriMocks() {
     const identity = getActiveIdentity(activeConfig);
     window.__BUZZ_E2E_COMMANDS__?.push(command);
     const loggedPayload = (() => {
+      if (payload instanceof Uint8Array) {
+        return { rawByteLength: payload.byteLength };
+      }
       try {
         return JSON.parse(JSON.stringify(payload ?? null));
       } catch {
@@ -9654,6 +9783,8 @@ export function maybeInstallE2eTauriMocks() {
         }
         return;
       }
+      case "plugin:app|version":
+        return "0.0.0-e2e";
       case "get_profile":
         return handleGetProfile(activeConfig);
       case "update_profile":
@@ -10735,6 +10866,8 @@ export function maybeInstallE2eTauriMocks() {
       }
       case "get_baked_build_env_keys":
         return (config?.mock?.bakedBuildEnv ?? []).map((entry) => entry.key);
+      case "agent_access_owner_only":
+        return config?.mock?.ownerOnlyAccessBuild ?? false;
       case "update_managed_agent":
         return handleUpdateManagedAgent(
           payload as Parameters<typeof handleUpdateManagedAgent>[0],
@@ -10874,6 +11007,7 @@ export function maybeInstallE2eTauriMocks() {
       case "delete_message":
         handleDeleteMessage(
           payload as Parameters<typeof handleDeleteMessage>[0],
+          activeConfig,
         );
         return null;
       case "edit_message":
@@ -10898,7 +11032,15 @@ export function maybeInstallE2eTauriMocks() {
       case "pick_and_upload_image":
         return (await resolveMockUploadDescriptors(activeConfig))[0] ?? null;
       case "upload_media_bytes":
-        return (await resolveMockUploadDescriptors(activeConfig))[0];
+        return resolveMockUploadDescriptorForBytes(
+          payload as { data: number[]; filename?: string | null },
+          activeConfig,
+        );
+      case "upload_media_bytes_raw":
+        return resolveMockUploadDescriptorForBytes(
+          { data: payload as Uint8Array },
+          activeConfig,
+        );
       case "fetch_media_bytes": {
         // The real command fetches relay media through Rust reqwest and
         // replies with raw bytes (`tauri::ipc::Response` → ArrayBuffer). In

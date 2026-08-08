@@ -12,8 +12,8 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    expect(container.read(accentProvider), 9);
-    expect(prefs.getInt('buzz_accent_color'), 9);
+    expect(container.read(accentProvider), 10);
+    expect(prefs.getInt('buzz_accent_color'), 10);
   });
 
   test('preserves existing user-selected accent indexes', () async {

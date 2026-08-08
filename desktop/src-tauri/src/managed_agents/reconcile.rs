@@ -50,6 +50,14 @@ pub(crate) fn reconcile_agents_to_events(app: &tauri::AppHandle, keys: &nostr::K
     }
 }
 
+pub(crate) fn reconcile_agents_in_dir_at(
+    base_dir: &Path,
+    keys: &nostr::Keys,
+    db_path: &Path,
+) -> Result<u32, String> {
+    reconcile_agents_in_dir_with_db(base_dir, keys, db_path)
+}
+
 /// Core reconcile logic, decoupled from the Tauri `AppHandle` for testing.
 ///
 /// Reads `managed-agents.json` raw — no keyring hydration: the published
@@ -62,6 +70,14 @@ pub(crate) fn reconcile_agents_to_events(app: &tauri::AppHandle, keys: &nostr::K
 ///
 /// Returns the number of agents (re)written to the retention store.
 pub(crate) fn reconcile_agents_in_dir(base_dir: &Path, keys: &nostr::Keys) -> Result<u32, String> {
+    reconcile_agents_in_dir_with_db(base_dir, keys, &base_dir.join("retention.db"))
+}
+
+fn reconcile_agents_in_dir_with_db(
+    base_dir: &Path,
+    keys: &nostr::Keys,
+    db_path: &Path,
+) -> Result<u32, String> {
     let store_path = base_dir.join("managed-agents.json");
     if !store_path.exists() {
         return Ok(0);
@@ -79,9 +95,8 @@ pub(crate) fn reconcile_agents_in_dir(base_dir: &Path, keys: &nostr::Keys) -> Re
         return Ok(0);
     }
 
-    let db_path = base_dir.join("retention.db");
     let conn =
-        open_retention_db(&db_path).map_err(|e| format!("failed to open retention db: {e}"))?;
+        open_retention_db(db_path).map_err(|e| format!("failed to open retention db: {e}"))?;
 
     let mut reconciled = 0u32;
 

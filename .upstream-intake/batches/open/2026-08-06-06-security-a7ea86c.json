@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-06-security-a7ea86c",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "06b60e682d5dd78e6cdcb8e93fe96c7ec4391e2a",
+  "pinned_upstream_sha": "a7ea86cdcf2aa3cbb1486baabc4c9d6aea8c576c",
+  "topics": [
+    {
+      "topic_id": "pr-4614",
+      "title": "fix(desktop): enable the content security policy",
+      "upstream_pr": 4614,
+      "entry_shas": [
+        "a7ea86cdcf2aa3cbb1486baabc4c9d6aea8c576c"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "a7ea86cdcf2aa3cbb1486baabc4c9d6aea8c576c",
+      "topic_id": "pr-4614",
+      "title": "fix(desktop): enable the content security policy",
+      "areas": [
+        "desktop",
+        "security"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "CSP policy and script/media source allowlisting"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4614",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

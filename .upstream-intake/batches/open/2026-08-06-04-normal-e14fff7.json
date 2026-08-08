@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-04-normal-e14fff7",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "005fe54d026a9844d22a26f0d482de6de5580b29",
+  "pinned_upstream_sha": "e14fff74d00623acd30945eec5be366e25b0cf09",
+  "topics": [
+    {
+      "topic_id": "pr-4542",
+      "title": "relay: fuzz WebSocket 1012 restart-close timing on graceful drain",
+      "upstream_pr": 4542,
+      "entry_shas": [
+        "e14fff74d00623acd30945eec5be366e25b0cf09"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "e14fff74d00623acd30945eec5be366e25b0cf09",
+      "topic_id": "pr-4542",
+      "title": "relay: fuzz WebSocket 1012 restart-close timing on graceful drain",
+      "areas": [
+        "relay",
+        "deployment"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4542",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

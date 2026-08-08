@@ -4,6 +4,7 @@ import { AnimatePresence } from "motion/react";
 import { useAppNavigation } from "@/app/navigation/useAppNavigation";
 import { useMediaUpload } from "@/features/messages/lib/useMediaUpload";
 import { ComposerDockBackdrop } from "@/features/messages/ui/ComposerDockBackdrop";
+import { ComposerUploadProgressOverlay } from "@/features/messages/ui/ComposerUploadProgressOverlay";
 import { MessageComposer } from "@/features/messages/ui/MessageComposer";
 import { ComposerTimeoutBanner } from "@/features/moderation/ui/ComposerTimeoutBanner";
 import { useTimeoutState } from "@/features/moderation/lib/timeoutStore";
@@ -173,7 +174,9 @@ export const ChannelPane = React.memo(function ChannelPane({
     activeChannel,
     currentPubkey,
   );
-  const mainComposerMedia = useMediaUpload();
+  const mainComposerMedia = useMediaUpload({ deferUploadsUntilSend: true });
+  const [isMainDeferredEditPending, setMainDeferredEditPending] =
+    React.useState(false);
   const isNonMemberView =
     activeChannel !== null &&
     !activeChannel.isMember &&
@@ -398,7 +401,10 @@ export const ChannelPane = React.memo(function ChannelPane({
     ],
   );
   const canDropInMainColumn =
-    hasMainComposerOverlay && !isComposerDisabled && !isSinglePanelView;
+    hasMainComposerOverlay &&
+    !isComposerDisabled &&
+    !isMainDeferredEditPending &&
+    !isSinglePanelView;
   const hasTypingActivity = typingPubkeys.length > 0;
   // Unified working set for the composer bar: observer-derived turns primary,
   // bot typing fallback (both folded together by agentWorkingSignal). This is
@@ -727,6 +733,7 @@ export const ChannelPane = React.memo(function ChannelPane({
               data-testid="channel-composer-overlay"
               ref={composerWrapperRef}
             >
+              <ComposerUploadProgressOverlay />
               <div
                 className={cn(
                   "composer-dock composer-overlay-corner-masks relative pointer-events-auto",
@@ -759,6 +766,7 @@ export const ChannelPane = React.memo(function ChannelPane({
                   onAutoSubmitComplete={handleAutoSubmitComplete}
                   isSending={isSending}
                   mediaController={mainComposerMedia}
+                  onDeferredEditPendingChange={setMainDeferredEditPending}
                   onCancelEdit={onCancelEdit}
                   onEditLastOwnMessage={handleEditLastOwnMainMessage}
                   onEditSave={onEditSave}
@@ -769,6 +777,7 @@ export const ChannelPane = React.memo(function ChannelPane({
                   }
                   onSend={handleSendMessage}
                   profiles={profiles}
+                  showBackgroundUploadProgress={false}
                   placeholder={
                     timeoutState.active
                       ? "You're timed out by community moderators."

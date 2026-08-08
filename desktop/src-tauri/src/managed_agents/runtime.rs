@@ -16,14 +16,14 @@ use crate::{
 
 mod path;
 pub(in crate::managed_agents) use path::build_augmented_path;
-pub(crate) use path::compose_path_entries;
-pub(crate) use path::should_skip_claude_executable;
-pub(crate) use path::should_use_inherited;
+pub(crate) use path::{compose_path_entries, should_skip_claude_executable, should_use_inherited};
+
+pub(crate) use super::access_policy::{build_respond_to_env_with_policy, RespondToEnv};
 
 mod metadata;
 pub(crate) use metadata::{
     resolve_effective_prompt_model_provider, resolve_session_title, runtime_metadata_env_vars,
-    SESSION_TITLE_ENV_VAR,
+    DISPLAY_NAME_ENV_VAR, SESSION_TITLE_ENV_VAR,
 };
 
 mod stop;
@@ -32,8 +32,6 @@ pub use stop::{stop_managed_agent_process, stop_managed_agent_workspace_pair};
 
 mod sweep;
 pub(crate) use sweep::sweep_untracked_bundle_harnesses;
-
-type RespondToEnv = (Vec<(&'static str, String)>, Vec<&'static str>);
 
 mod process;
 #[cfg(test)]
@@ -249,14 +247,15 @@ pub fn build_managed_agent_summary(
         .and_then(|key| runtimes.get(key).map(|runtime| (key, runtime)))
         .is_some_and(|(key, runtime)| {
             let teams_for_hash = crate::managed_agents::load_teams(app).unwrap_or_default();
-            let hash_drift = runtime.spawn_config_hash
-                != crate::managed_agents::spawn_hash::spawn_config_hash(
+            let hash_drift = runtime.spawn_config.canonical()
+                != crate::managed_agents::spawn_snapshot::prospective_spawn_config_snapshot(
                     record,
                     personas,
                     &teams_for_hash,
                     &key.relay_url,
                     global_config,
-                );
+                )
+                .canonical();
             let availability_drift = super::availability_drift(
                 runtime.adapter_availability.as_ref(),
                 super::adapter_availability_cached(),
@@ -381,44 +380,7 @@ pub(crate) fn build_respond_to_env(
     record: &ManagedAgentRecord,
     owner_hex: Option<&str>,
 ) -> Result<RespondToEnv, String> {
-    // Defensive re-validation: an on-disk record could have been hand-edited.
-    let normalized = super::types::validate_respond_to_allowlist(&record.respond_to_allowlist)?;
-    if record.respond_to == super::types::RespondTo::Allowlist && normalized.is_empty() {
-        return Err(
-            "respond-to mode 'allowlist' requires at least one pubkey in the allowlist".to_string(),
-        );
-    }
-
-    let mut set: Vec<(&'static str, String)> = Vec::new();
-    let mut remove: Vec<&'static str> = Vec::new();
-
-    set.push((
-        "BUZZ_ACP_RESPOND_TO",
-        record.respond_to.as_str().to_string(),
-    ));
-
-    if record.respond_to == super::types::RespondTo::Allowlist {
-        set.push(("BUZZ_ACP_RESPOND_TO_ALLOWLIST", normalized.join(",")));
-    } else {
-        remove.push("BUZZ_ACP_RESPOND_TO_ALLOWLIST");
-    }
-
-    // Legacy fallback: agents created before NIP-OA lack `auth_tag`. Without
-    // it the harness can't resolve the owner, and owner-dependent gate modes
-    // would drop every event. Forwarding the workspace owner pubkey via
-    // BUZZ_ACP_AGENT_OWNER keeps those records functional. Modern records
-    // (`auth_tag = Some(...)`) use `BUZZ_AUTH_TAG` as before.
-    if record.auth_tag.is_none() {
-        if let Some(owner) = owner_hex {
-            set.push(("BUZZ_ACP_AGENT_OWNER", owner.to_string()));
-        } else {
-            remove.push("BUZZ_ACP_AGENT_OWNER");
-        }
-    } else {
-        remove.push("BUZZ_ACP_AGENT_OWNER");
-    }
-
-    Ok((set, remove))
+    build_respond_to_env_with_policy(record, owner_hex, super::owner_only())
 }
 
 pub(crate) fn configure_runtime_cli(
@@ -713,12 +675,9 @@ pub fn spawn_agent_child(
             );
         }
     }
-    // Only emit BUZZ_ACP_IDLE_TIMEOUT when the user has explicitly set an
-    // override. When unset, the buzz-acp harness applies its own default
-    // (see `DEFAULT_IDLE_TIMEOUT_SECS` in crates/buzz-acp/src/config.rs),
-    // which is the single source of truth. The previously-emitted
-    // `BUZZ_ACP_TURN_TIMEOUT` is deprecated upstream and was pinning every
-    // agent to the desktop's stale default (320s), bypassing harness bumps.
+    // Emit BUZZ_ACP_IDLE_TIMEOUT only when explicitly set; the harness
+    // DEFAULT_IDLE_TIMEOUT_SECS is the single source of truth. The deprecated
+    // BUZZ_ACP_TURN_TIMEOUT pinned agents to a stale default (320s).
     if let Some(idle) = record.idle_timeout_seconds {
         command.env("BUZZ_ACP_IDLE_TIMEOUT", idle.to_string());
     }
@@ -726,7 +685,8 @@ pub fn spawn_agent_child(
     if let Some(max_dur) = record.max_turn_duration_seconds {
         command.env("BUZZ_ACP_MAX_TURN_DURATION", max_dur.to_string());
     }
-    command.env("BUZZ_ACP_AGENTS", record.parallelism.to_string());
+    let acp_n = super::acp_agents_value(effective_command, record.parallelism);
+    command.env("BUZZ_ACP_AGENTS", acp_n);
     command.env("BUZZ_ACP_MULTIPLE_EVENT_HANDLING", "steer");
     command.env("BUZZ_ACP_DEDUP", "queue");
     if let Some(meta) = runtime_meta {
@@ -736,7 +696,7 @@ pub fn spawn_agent_child(
             }
         }
     }
-    let team_instructions = super::spawn_hash::effective_team_instructions(record, &teams);
+    let team_instructions = super::spawn_snapshot::effective_team_instructions(record, &teams);
     if let Some(instructions) = &team_instructions {
         command.env("BUZZ_ACP_TEAM_INSTRUCTIONS", instructions);
     } else {
@@ -774,9 +734,13 @@ pub fn spawn_agent_child(
     // is display metadata only. `spawn_config_hash` hashes the same resolve, so
     // a rename raises the restart badge instead of leaving the process stale.
     if let Some(title) = resolve_session_title(record.display_name.as_deref(), &record.name) {
-        command.env(SESSION_TITLE_ENV_VAR, title);
+        command
+            .env(SESSION_TITLE_ENV_VAR, &title)
+            .env(DISPLAY_NAME_ENV_VAR, title);
     } else {
-        command.env_remove(SESSION_TITLE_ENV_VAR);
+        command
+            .env_remove(SESSION_TITLE_ENV_VAR)
+            .env_remove(DISPLAY_NAME_ENV_VAR);
     }
     build_buzz_agent_provider_defaults(&mut command);
     if let Some(meta) = runtime_meta {
@@ -916,7 +880,7 @@ pub fn spawn_agent_child(
     // needs_restart when disk state drifts from what this process runs.
     // `effective_relay_url` is already resolved, and resolution is idempotent,
     // so it serves as the workspace-relay input here.
-    let spawn_config_hash = super::spawn_hash::spawn_config_hash(
+    let spawn_config = super::spawn_snapshot::prospective_spawn_config_snapshot(
         record,
         &personas,
         &teams,
@@ -946,7 +910,7 @@ pub fn spawn_agent_child(
     return Ok(super::process_lifecycle::finish_spawn(
         child,
         log_path,
-        spawn_config_hash,
+        spawn_config,
         spawned_setup_mode,
         spawned_adapter_availability,
         start_nonce,
@@ -956,7 +920,7 @@ pub fn spawn_agent_child(
     Ok(crate::managed_agents::ManagedAgentProcess {
         child,
         log_path,
-        spawn_config_hash,
+        spawn_config,
         setup_mode: spawned_setup_mode,
         adapter_availability: spawned_adapter_availability,
         start_nonce,
@@ -1027,6 +991,9 @@ pub fn start_managed_agent_process(
     runtimes.insert(key, ManagedAgentPairRuntime::starting(process));
     Ok(())
 }
+
+#[cfg(test)]
+mod test_fixtures;
 
 #[cfg(test)]
 mod tests;

@@ -5,10 +5,90 @@
 //! keyed on `(kind, pubkey, d_tag)`, replacing only on a newer-or-equal
 //! `created_at` for NIP-33 latest-wins semantics.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use rusqlite::{params, Connection, OptionalExtension};
+use sha2::{Digest, Sha256};
+use tauri::AppHandle;
+
+use crate::app_state::AppState;
+
+mod legacy_migration;
+pub use legacy_migration::migrate_legacy_retention_db;
+
+/// Durable event-retention scope for one relay and owner identity.
+#[allow(dead_code)]
+pub struct RetentionScope {
+    pub db_path: PathBuf,
+    pub relay_url: String,
+    pub owner_keys: nostr::Keys,
+}
+
+/// Return the active scope only when an arriving event belongs to it.
+#[allow(dead_code)]
+pub fn scope_for_arrival(
+    scope: RetentionScope,
+    arrival_relay_url: &str,
+    arrival_owner_pubkey: &str,
+) -> Option<RetentionScope> {
+    let same_relay =
+        normalized_relay_scope(&scope.relay_url) == normalized_relay_scope(arrival_relay_url);
+    let same_owner = scope
+        .owner_keys
+        .public_key()
+        .to_hex()
+        .eq_ignore_ascii_case(arrival_owner_pubkey.trim());
+    (same_relay && same_owner).then_some(scope)
+}
+
+fn normalized_relay_scope(relay_url: &str) -> &str {
+    relay_url.trim().trim_end_matches('/')
+}
+
+/// Resolve the durable retention path for a relay and owner pair.
+pub fn scoped_retention_db_path(base_dir: &Path, relay_url: &str, owner_pubkey: &str) -> PathBuf {
+    let mut hasher = Sha256::new();
+    hasher.update(owner_pubkey.trim().to_ascii_lowercase().as_bytes());
+    hasher.update(b"\0");
+    hasher.update(normalized_relay_scope(relay_url).as_bytes());
+    let scope_id = hex::encode(hasher.finalize());
+    base_dir.join("retention").join(format!("{scope_id}.db"))
+}
+
+/// Snapshot the active relay, owner, and retention database together.
+pub fn active_retention_scope(app: &AppHandle, state: &AppState) -> Result<RetentionScope, String> {
+    let relay_url = crate::relay::relay_ws_url_with_override(state);
+    let owner_keys = state.signing_keys()?;
+    let base_dir = super::managed_agents_base_dir(app)?;
+    let db_path =
+        scoped_retention_db_path(&base_dir, &relay_url, &owner_keys.public_key().to_hex());
+    let parent = db_path
+        .parent()
+        .ok_or_else(|| "retention scope path has no parent".to_string())?;
+    std::fs::create_dir_all(parent)
+        .map_err(|error| format!("failed to create retention scope directory: {error}"))?;
+    Ok(RetentionScope {
+        db_path,
+        relay_url,
+        owner_keys,
+    })
+}
+
+/// Resolve the active scope only when it still owns an arriving event.
+#[allow(dead_code)]
+pub fn arrival_retention_scope(
+    app: &AppHandle,
+    state: &AppState,
+    arrival_relay_url: &str,
+    arrival_owner_pubkey: &str,
+) -> Result<Option<RetentionScope>, String> {
+    Ok(scope_for_arrival(
+        active_retention_scope(app, state)?,
+        arrival_relay_url,
+        arrival_owner_pubkey,
+    ))
+}
 
 /// A retained persona event row.
 #[derive(Debug, Clone)]

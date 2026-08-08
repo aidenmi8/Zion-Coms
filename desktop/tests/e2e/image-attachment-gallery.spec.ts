@@ -123,7 +123,7 @@ test("image bundle lightbox navigates as a gallery", async ({ page }) => {
   await expect(page.getByTestId("chat-title")).toHaveText("general");
 
   await page.getByTestId("message-input").fill("gallery bundle");
-  await page.getByRole("button", { name: "Attach image" }).click();
+  await page.getByRole("button", { name: "Attach file" }).click();
   await page.getByTestId("send-message").click();
   await expect(page.getByText("Sending")).toHaveCount(0);
 
@@ -671,7 +671,7 @@ test("mosaic image context menu is portaled outside the clipped gallery", async 
   await expect(page.getByTestId("chat-title")).toHaveText("general");
 
   await page.getByTestId("message-input").fill("mosaic context menu");
-  await page.getByRole("button", { name: "Attach image" }).click();
+  await page.getByRole("button", { name: "Attach file" }).click();
   await page.getByTestId("send-message").click();
   await expect(page.getByText("Sending")).toHaveCount(0);
 
@@ -713,7 +713,7 @@ test("lightbox image context menu stays inside the dialog focus scope", async ({
   await expect(page.getByTestId("chat-title")).toHaveText("general");
 
   await page.getByTestId("message-input").fill("lightbox context menu");
-  await page.getByRole("button", { name: "Attach image" }).click();
+  await page.getByRole("button", { name: "Attach file" }).click();
   await page.getByTestId("send-message").click();
   await expect(page.getByText("Sending")).toHaveCount(0);
 
@@ -755,7 +755,7 @@ test("right-click image shows Copy image and invokes copy command", async ({
   await expect(page.getByTestId("chat-title")).toHaveText("general");
 
   await page.getByTestId("message-input").fill("copy me");
-  await page.getByRole("button", { name: "Attach image" }).click();
+  await page.getByRole("button", { name: "Attach file" }).click();
   await page.getByTestId("send-message").click();
   await expect(page.getByText("Sending")).toHaveCount(0);
 

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-10-normal-38bf642",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "e2796d4a8907586b457a65675c2c88c818973173",
+  "pinned_upstream_sha": "38bf642fcfa7a9fc1e06d6cf87d66ae94da29341",
+  "topics": [
+    {
+      "topic_id": "pr-3862",
+      "title": "ci: prove the relay-driven mesh lifecycle — discover, join, infer, deny — with real nodes",
+      "upstream_pr": 3862,
+      "entry_shas": [
+        "38bf642fcfa7a9fc1e06d6cf87d66ae94da29341"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "38bf642fcfa7a9fc1e06d6cf87d66ae94da29341",
+      "topic_id": "pr-3862",
+      "title": "ci: prove the relay-driven mesh lifecycle — discover, join, infer, deny — with real nodes",
+      "areas": [
+        "ci",
+        "relay",
+        "mesh"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3862",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

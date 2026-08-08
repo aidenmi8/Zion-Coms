@@ -15,6 +15,7 @@ fn main() {
     println!("cargo:rerun-if-env-changed=BUZZ_BUILD_RELAY_RECONNECT_CMD");
     println!("cargo:rerun-if-env-changed=BUZZ_BUILD_OBSERVER_ARCHIVE_DEFAULT");
     println!("cargo:rerun-if-env-changed=BUZZ_BUILD_AGENT_METRIC_ARCHIVE_DEFAULT");
+    println!("cargo:rerun-if-env-changed=BUZZ_BUILD_AGENT_ACCESS_OWNER_ONLY");
     println!("cargo:rerun-if-env-changed=BUZZ_BUILD_AUTO_CONNECT_DEFAULT_RELAY");
     println!("cargo:rustc-check-cfg=cfg(buzz_updater_enabled)");
 
@@ -88,6 +89,12 @@ fn main() {
     // leave this unset → default OFF.
     if std::env::var("BUZZ_BUILD_AGENT_METRIC_ARCHIVE_DEFAULT").is_ok() {
         println!("cargo:rustc-env=BUZZ_DESKTOP_BUILD_AGENT_METRIC_ARCHIVE_DEFAULT=1");
+    }
+
+    // Presence-only release capability: internal desktop builds enforce
+    // owner-only managed-agent access. OSS builds leave this unset.
+    if std::env::var("BUZZ_BUILD_AGENT_ACCESS_OWNER_ONLY").is_ok() {
+        println!("cargo:rustc-env=BUZZ_DESKTOP_BUILD_AGENT_ACCESS_OWNER_ONLY=1");
     }
 
     // Presence-only release capability: internal desktop builds opt into

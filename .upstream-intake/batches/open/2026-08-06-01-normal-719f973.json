@@ -1,0 +1,283 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-06-01-normal-719f973",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "6df7eba24d49b6a2c7f0188b19e24f3df999678c",
+  "pinned_upstream_sha": "719f9730d46541f816946bba8d693e11ff49b439",
+  "topics": [
+    {
+      "topic_id": "pr-4019",
+      "title": "feat(desktop): cap OpenClaw agent parallelism at 5",
+      "upstream_pr": 4019,
+      "entry_shas": [
+        "6c40ce394f860d832b74323bd9b5ca70c46c1285"
+      ]
+    },
+    {
+      "topic_id": "pr-3653",
+      "title": "feat(desktop): sync themes per community",
+      "upstream_pr": 3653,
+      "entry_shas": [
+        "43cced308df0f163e09d1e0d4b422338fe1502de"
+      ]
+    },
+    {
+      "topic_id": "pr-3767",
+      "title": "feat(mobile): sync themes per community",
+      "upstream_pr": 3767,
+      "entry_shas": [
+        "05150c11883b9064cb5187c39568d41a35d4a780"
+      ]
+    },
+    {
+      "topic_id": "pr-4799",
+      "title": "fix(desktop): route macOS notification clicks",
+      "upstream_pr": 4799,
+      "entry_shas": [
+        "7334ad1e164a050902dadfc659c82b5ef777531f"
+      ]
+    },
+    {
+      "topic_id": "pr-4500",
+      "title": "docs(persona-pack): fix stale desktop import instructions",
+      "upstream_pr": 4500,
+      "entry_shas": [
+        "ccdaa161613ba362369340ebdad9aaacd624eab8"
+      ]
+    },
+    {
+      "topic_id": "pr-4946",
+      "title": "fix(buzz-agent): recover from context-window 400s instead of sticking",
+      "upstream_pr": 4946,
+      "entry_shas": [
+        "ed4b3e7afafb5f5a688c210f39b90d747e6f0f00"
+      ]
+    },
+    {
+      "topic_id": "pr-3621",
+      "title": "feat(desktop): allow leaving your final community",
+      "upstream_pr": 3621,
+      "entry_shas": [
+        "719f9730d46541f816946bba8d693e11ff49b439"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "6c40ce394f860d832b74323bd9b5ca70c46c1285",
+      "topic_id": "pr-4019",
+      "title": "feat(desktop): cap OpenClaw agent parallelism at 5",
+      "areas": [
+        "desktop",
+        "managed-agents"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4019",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "43cced308df0f163e09d1e0d4b422338fe1502de",
+      "topic_id": "pr-3653",
+      "title": "feat(desktop): sync themes per community",
+      "areas": [
+        "desktop",
+        "theme"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3653",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "05150c11883b9064cb5187c39568d41a35d4a780",
+      "topic_id": "pr-3767",
+      "title": "feat(mobile): sync themes per community",
+      "areas": [
+        "mobile",
+        "theme"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [
+        "43cced308df0f163e09d1e0d4b422338fe1502de"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3767",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "7334ad1e164a050902dadfc659c82b5ef777531f",
+      "topic_id": "pr-4799",
+      "title": "fix(desktop): route macOS notification clicks",
+      "areas": [
+        "desktop",
+        "macos"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4799",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "ccdaa161613ba362369340ebdad9aaacd624eab8",
+      "topic_id": "pr-4500",
+      "title": "docs(persona-pack): fix stale desktop import instructions",
+      "areas": [
+        "docs",
+        "persona-pack"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4500",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "ed4b3e7afafb5f5a688c210f39b90d747e6f0f00",
+      "topic_id": "pr-4946",
+      "title": "fix(buzz-agent): recover from context-window 400s instead of sticking",
+      "areas": [
+        "agent",
+        "context-recovery"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "included",
+      "rationale": "Adapted the reactive context-window recovery into Zion's existing agent/handoff runtime, including the required per-turn handoff-cap prerequisite from 6df7eba24; preserved Zion provider/model behavior and compatibility identifiers.",
+      "dependencies": ["6df7eba24d49b6a2c7f0188b19e24f3df999678c"],
+      "blocked_by_rejected": [],
+      "dependency_resolution": "adapt_without_dependency",
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4946",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "completed in the local Zion upstream-intake worktree with focused Rust tests and branding checks",
+        "fork_commits": ["c24cee7cc6c162324be67aef4a04caa65496b657"]
+      },
+      "verification": [
+        "Adapted locally; cargo fmt --package buzz-agent -- --check passed; cargo test -p buzz-agent --lib passed 295/295; cargo test -p buzz-agent --test regressions passed 22/22; Zion visible-brand scan passed with 0 forbidden hits; platform-brand contract passed."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "719f9730d46541f816946bba8d693e11ff49b439",
+      "topic_id": "pr-3621",
+      "title": "feat(desktop): allow leaving your final community",
+      "areas": [
+        "desktop",
+        "communities"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed upstream implementation and tests; queue for Zion-preserving integration with no source changes in this pass.",
+      "dependencies": [
+        "43cced308df0f163e09d1e0d4b422338fe1502de"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3621",
+        "local_backlog": "zion-upstream-intake-20260806",
+        "implementation_plan": "Implement only after explicit approval with focused tests, compatibility checks, and Zion visible-brand validation.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA commit, diff, tests, dependencies, and compatibility surface reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

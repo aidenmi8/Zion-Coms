@@ -1019,6 +1019,7 @@ dependencies = [
  "audioadapter-buffers",
  "axum",
  "base64 0.22.1",
+ "block2",
  "buzz-agent",
  "buzz-core",
  "buzz-media",
@@ -1048,7 +1049,10 @@ dependencies = [
  "neteq",
  "nostr",
  "notify-rust",
+ "objc2",
  "objc2-app-kit",
+ "objc2-foundation",
+ "objc2-user-notifications",
  "opus",
  "plist",
  "png 0.18.1",
@@ -1077,6 +1081,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
  "tauri-plugin-window-state",
+ "tauri-utils",
  "tempfile",
  "tokio",
  "tokio-tungstenite 0.29.0",
@@ -6447,6 +6452,8 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9df9128cbbfef73cda168416ccf7f837b62737d748333bfe9ab71c245d76613e"
 dependencies = [
+ "bitflags 2.13.0",
+ "block2",
  "objc2",
  "objc2-foundation",
 ]

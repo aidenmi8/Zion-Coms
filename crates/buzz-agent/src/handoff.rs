@@ -1,6 +1,7 @@
 use crate::agent::RunCtx;
 use crate::config::{
-    HANDOFF_MAX_OUTPUT_TOKENS, HANDOFF_MAX_TOOL_NAMES, HANDOFF_ORIGINAL_TASK_MAX_BYTES,
+    HANDOFF_MAX_OUTPUT_TOKENS, HANDOFF_MAX_TOOL_NAMES, HANDOFF_MIN_PROMPT_BUDGET_BYTES,
+    HANDOFF_ORIGINAL_TASK_MAX_BYTES, MAX_CONTEXT_RECOVERIES_PER_RUN,
 };
 use crate::types::HistoryItem;
 
@@ -22,24 +23,80 @@ pub(crate) enum HandoffOutcome {
     Cancelled,
 }
 
+pub(crate) enum ContextRecovery {
+    Recovered,
+    Cancelled,
+    Exhausted,
+}
+
 const HANDOFF_SYSTEM_PROMPT: &str = "You are generating a context handoff summary for the next \
 turn of an autonomous agent. Be concise but thorough. Cover: what the original task was, what \
 you accomplished, key decisions made, what remains, and one concrete next step. Output plain \
 text only — no tool calls, no JSON. Stay under 8192 tokens.";
 
 impl RunCtx<'_> {
-    pub(crate) async fn maybe_handoff(&mut self) -> HandoffOutcome {
+    pub(crate) async fn maybe_handoff(&mut self, handoff_attempts: &mut usize) -> HandoffOutcome {
         if !self.should_handoff() {
             return HandoffOutcome::Skipped;
         }
-        if *self.handoff_count >= self.cfg.max_handoffs {
-            tracing::info!(
-                "handoff cap reached ({}); using truncation",
-                self.cfg.max_handoffs
+        if *handoff_attempts >= self.cfg.max_handoffs {
+            tracing::warn!(
+                session_id = self.session_id,
+                handoff_attempts = *handoff_attempts,
+                max_handoffs = self.cfg.max_handoffs,
+                "handoff cap reached; using truncation",
             );
             return HandoffOutcome::Skipped;
         }
-        let prompt = self.build_handoff_prompt();
+        *handoff_attempts += 1;
+        self.handoff(None).await
+    }
+
+    pub(crate) async fn forced_handoff(&mut self, history_budget_bytes: usize) -> HandoffOutcome {
+        tracing::warn!(
+            "provider reported context overflow; forcing handoff (history budget {history_budget_bytes} bytes)"
+        );
+        self.handoff(Some(history_budget_bytes)).await
+    }
+
+    pub(crate) async fn recover_from_context_overflow(
+        &mut self,
+        attempts: &mut u32,
+    ) -> ContextRecovery {
+        let rejected_bytes: usize = self
+            .history
+            .iter()
+            .map(HistoryItem::context_pressure_bytes)
+            .sum();
+        loop {
+            if *attempts >= MAX_CONTEXT_RECOVERIES_PER_RUN {
+                tracing::error!(
+                    "context recovery budget spent ({MAX_CONTEXT_RECOVERIES_PER_RUN} attempts this turn); surfacing provider error"
+                );
+                return ContextRecovery::Exhausted;
+            }
+            let budget = reactive_handoff_budget(rejected_bytes, *attempts);
+            *attempts += 1;
+            if budget < HANDOFF_MIN_PROMPT_BUDGET_BYTES {
+                tracing::error!(
+                    "context recovery would shrink the handoff prompt to {budget} bytes, below the {HANDOFF_MIN_PROMPT_BUDGET_BYTES}-byte floor; surfacing provider error"
+                );
+                return ContextRecovery::Exhausted;
+            }
+            match self.forced_handoff(budget).await {
+                HandoffOutcome::Performed => return ContextRecovery::Recovered,
+                HandoffOutcome::Cancelled => return ContextRecovery::Cancelled,
+                HandoffOutcome::Skipped => {
+                    tracing::warn!(
+                        "forced handoff at {budget} bytes did not run; shrinking further"
+                    );
+                }
+            }
+        }
+    }
+
+    async fn handoff(&mut self, history_budget_bytes: Option<usize>) -> HandoffOutcome {
+        let prompt = self.build_handoff_prompt(history_budget_bytes);
         let tokens_before = self.projected_handoff_input_tokens();
         let summary = tokio::select! {
             biased;
@@ -164,7 +221,7 @@ impl RunCtx<'_> {
         }
     }
 
-    fn build_handoff_prompt(&self) -> String {
+    fn build_handoff_prompt(&self, history_budget_bytes: Option<usize>) -> String {
         let mut head = String::new();
         head.push_str(&format!(
             "[Internal handoff #{} — context reset]\n\n",
@@ -192,11 +249,15 @@ impl RunCtx<'_> {
              (2) what was accomplished, (3) key decisions, (4) what remains, \
              (5) one concrete next step. Be concise but thorough. Plain text.\n";
         let history_header = "\n# Session History (oldest first)\n";
-        let prompt_budget = handoff_prompt_budget_bytes(
-            self.cfg.max_context_tokens,
-            HANDOFF_MAX_OUTPUT_TOKENS,
-            head.len() + history_header.len() + tail.len(),
-        );
+        let fixed_bytes = head.len() + history_header.len() + tail.len();
+        let prompt_budget = match history_budget_bytes {
+            Some(explicit) => explicit.saturating_sub(fixed_bytes),
+            None => handoff_prompt_budget_bytes(
+                self.cfg.max_context_tokens,
+                HANDOFF_MAX_OUTPUT_TOKENS,
+                fixed_bytes,
+            ),
+        };
 
         let mut snippets: Vec<String> = Vec::new();
         let mut snippets_bytes = 0usize;
@@ -367,11 +428,16 @@ fn byte_fallback_threshold(
     usize::try_from(derived).unwrap_or(usize::MAX).min(byte_cap)
 }
 
+fn reactive_handoff_budget(rejected_bytes: usize, attempt: u32) -> usize {
+    let shift = (attempt + 1).min(usize::BITS - 1);
+    rejected_bytes >> shift
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         byte_fallback_threshold, estimate_tokens_from_bytes, handoff_prompt_budget_bytes,
-        token_threshold,
+        reactive_handoff_budget, token_threshold,
     };
 
     #[test]
@@ -426,5 +492,12 @@ mod tests {
         assert_eq!(estimate_tokens_from_bytes(1), 1);
         assert_eq!(estimate_tokens_from_bytes(4), 4);
         assert_eq!(estimate_tokens_from_bytes(5), 5);
+    }
+
+    #[test]
+    fn reactive_recovery_budget_shrinks_each_rung() {
+        assert_eq!(reactive_handoff_budget(64 * 1024, 0), 32 * 1024);
+        assert_eq!(reactive_handoff_budget(64 * 1024, 1), 16 * 1024);
+        assert_eq!(reactive_handoff_budget(64 * 1024, 2), 8 * 1024);
     }
 }

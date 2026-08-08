@@ -49,6 +49,44 @@ async function restartMockWebsockets(page: import("@playwright/test").Page) {
   expect(restarted).toBeGreaterThan(0);
 }
 
+async function setMockWebsocketUnavailable(
+  page: import("@playwright/test").Page,
+  unavailable: boolean,
+) {
+  await page.evaluate((value) => {
+    const setUnavailable = window.__BUZZ_E2E_SET_MOCK_WEBSOCKET_UNAVAILABLE__;
+    if (!setUnavailable) {
+      throw new Error("E2E websocket availability seam is not installed.");
+    }
+    setUnavailable(value);
+  }, unavailable);
+}
+
+async function activateRelayRateLimit(
+  page: import("@playwright/test").Page,
+  seconds: number,
+) {
+  await page.evaluate((duration) => {
+    const activate = window.__BUZZ_E2E_ACTIVATE_RELAY_RATE_LIMIT__;
+    if (!activate) {
+      throw new Error("E2E relay rate-limit seam is not installed.");
+    }
+    activate(duration);
+  }, seconds);
+}
+
+async function getMockWebsocketConnectAttempts(
+  page: import("@playwright/test").Page,
+) {
+  return page.evaluate(() => {
+    const getAttempts = window.__BUZZ_E2E_GET_WEBSOCKET_CONNECT_ATTEMPTS__;
+    if (!getAttempts) {
+      throw new Error("E2E websocket attempt seam is not installed.");
+    }
+    return getAttempts();
+  });
+}
+
 async function emitMockMessages(
   page: import("@playwright/test").Page,
   messages: Array<{ content: string; createdAt: number }>,

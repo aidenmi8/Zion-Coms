@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-30-normal-be48ce9",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "f8f2ef0440e7a074223ec04dc3b32d817b8b9d9b",
+  "pinned_upstream_sha": "be48ce98bd163899197b79a82ad5b2bcf0bc9b54",
+  "topics": [
+    {
+      "topic_id": "pr-5521",
+      "title": "chore(release): release Buzz Desktop version 0.5.9",
+      "upstream_pr": 5521,
+      "entry_shas": [
+        "538e5e113fc33571f939c87b925567fd4e277109"
+      ]
+    },
+    {
+      "topic_id": "pr-5494",
+      "title": "fix(link-preview): restore Buzz entity link cards",
+      "upstream_pr": 5494,
+      "entry_shas": [
+        "7e6e9c547fa97abff6929cf2702b956586eec9bc"
+      ]
+    },
+    {
+      "topic_id": "pr-5245",
+      "title": "fix(link-preview): reliably render previews sent right after they resolve",
+      "upstream_pr": 5245,
+      "entry_shas": [
+        "be48ce98bd163899197b79a82ad5b2bcf0bc9b54"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "538e5e113fc33571f939c87b925567fd4e277109",
+      "topic_id": "pr-5521",
+      "title": "chore(release): release Buzz Desktop version 0.5.9",
+      "areas": [
+        "release",
+        "desktop"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Reject from product intake: release/version delivery is a separate authorization and must not be imported as product behavior.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5521",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Not applicable; release review recorded.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "7e6e9c547fa97abff6929cf2702b956586eec9bc",
+      "topic_id": "pr-5494",
+      "title": "fix(link-preview): restore Buzz entity link cards",
+      "areas": [
+        "desktop",
+        "link-previews",
+        "messaging"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Queue for Zion-preserving adaptation with the existing egress, HTTPS, DNS-pinning, redirect, size, and metadata-sanitization contracts retained.",
+      "dependencies": [
+        "1922d49cb200a3382a91ec253f530b44dfda5f55"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5494",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "be48ce98bd163899197b79a82ad5b2bcf0bc9b54",
+      "topic_id": "pr-5245",
+      "title": "fix(link-preview): reliably render previews sent right after they resolve",
+      "areas": [
+        "desktop",
+        "link-previews",
+        "messaging"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Queue for Zion-preserving adaptation with the existing egress, HTTPS, DNS-pinning, redirect, size, and metadata-sanitization contracts retained.",
+      "dependencies": [
+        "7e6e9c547fa97abff6929cf2702b956586eec9bc"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5245",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

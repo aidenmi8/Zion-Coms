@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-01-normal-19b41e9",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "96ae141763e5459beb68a847e0082e931af72f4c",
+  "pinned_upstream_sha": "bd2fdf4a2f8e00ec25ddc2372b39958b8df77176",
+  "topics": [
+    {
+      "topic_id": "pr-4990",
+      "title": "fix(desktop): stop rate-limited reconnect backfill from tearing down the authenticated socket",
+      "upstream_pr": 4990,
+      "entry_shas": [
+        "19b41e9c8edafb02159e597935a8c41f1b6493a2"
+      ]
+    },
+    {
+      "topic_id": "pr-5000",
+      "title": "feat(desktop): show selected community in rail",
+      "upstream_pr": 5000,
+      "entry_shas": [
+        "5babb97ca3b9c9d640f7dcdfdef456178e868ff7"
+      ]
+    },
+    {
+      "topic_id": "pr-5024",
+      "title": "Improve desktop mobile pairing flow",
+      "upstream_pr": 5024,
+      "entry_shas": [
+        "480c41ebf1173dfe923bf59774dc283b046211fc"
+      ]
+    },
+    {
+      "topic_id": "pr-3174",
+      "title": "test(desktop): await thread scroll anchor",
+      "upstream_pr": 3174,
+      "entry_shas": [
+        "9213090f6076bf3b7667b9b984752b3e47ef8f2f"
+      ]
+    },
+    {
+      "topic_id": "pr-5026",
+      "title": "Refine agent runtime controls",
+      "upstream_pr": 5026,
+      "entry_shas": [
+        "6ca9641a9555e48f99b3ebccc123ca8c25648a45"
+      ]
+    },
+    {
+      "topic_id": "pr-4959",
+      "title": "fix(buzz-agent): classify read timeouts distinctly in LLM error messages",
+      "upstream_pr": 4959,
+      "entry_shas": [
+        "bd2fdf4a2f8e00ec25ddc2372b39958b8df77176"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "19b41e9c8edafb02159e597935a8c41f1b6493a2",
+      "topic_id": "pr-4990",
+      "title": "fix(desktop): stop rate-limited reconnect backfill from tearing down the authenticated socket",
+      "areas": [
+        "desktop",
+        "relay"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4990",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "5babb97ca3b9c9d640f7dcdfdef456178e868ff7",
+      "topic_id": "pr-5000",
+      "title": "feat(desktop): show selected community in rail",
+      "areas": [
+        "desktop",
+        "communities"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5000",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "480c41ebf1173dfe923bf59774dc283b046211fc",
+      "topic_id": "pr-5024",
+      "title": "Improve desktop mobile pairing flow",
+      "areas": [
+        "desktop",
+        "pairing",
+        "accessibility"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5024",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "9213090f6076bf3b7667b9b984752b3e47ef8f2f",
+      "topic_id": "pr-3174",
+      "title": "test(desktop): await thread scroll anchor",
+      "areas": [
+        "desktop",
+        "tests"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3174",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "6ca9641a9555e48f99b3ebccc123ca8c25648a45",
+      "topic_id": "pr-5026",
+      "title": "Refine agent runtime controls",
+      "areas": [
+        "desktop",
+        "managed-agents"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5026",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "bd2fdf4a2f8e00ec25ddc2372b39958b8df77176",
+      "topic_id": "pr-4959",
+      "title": "fix(buzz-agent): classify read timeouts distinctly in LLM error messages",
+      "areas": [
+        "agent",
+        "errors"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4959",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

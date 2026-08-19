@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-26-security-2777189",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "5a3b3d23226474f835a1cf41d2ecc5f53cacb070",
+  "pinned_upstream_sha": "2777189d960fa5b1d863166f36d6e37ff8ce0819",
+  "topics": [
+    {
+      "topic_id": "pr-5493",
+      "title": "fix(channels): restore member invitations to private channels",
+      "upstream_pr": 5493,
+      "entry_shas": [
+        "2777189d960fa5b1d863166f36d6e37ff8ce0819"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "2777189d960fa5b1d863166f36d6e37ff8ce0819",
+      "topic_id": "pr-5493",
+      "title": "fix(channels): restore member invitations to private channels",
+      "areas": [
+        "relay",
+        "desktop",
+        "mobile",
+        "authorization"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security-sensitive cross-layer change reviewed as a dedicated candidate; queue for Zion-preserving adaptation after focused security, privacy, migration, and authorization tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "private-channel membership authorization",
+        "role-grant boundaries for ordinary versus elevated roles"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5493",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with dedicated security review, focused regression tests, migration/compatibility checks, Zion branding checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-29-security-f8f2ef0",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "3f2f32641f4093d087fd9506bfac1fa0329e8b2e",
+  "pinned_upstream_sha": "f8f2ef0440e7a074223ec04dc3b32d817b8b9d9b",
+  "topics": [
+    {
+      "topic_id": "pr-5119",
+      "title": "feat(cli): add --visibility flag to channels update",
+      "upstream_pr": 5119,
+      "entry_shas": [
+        "f8f2ef0440e7a074223ec04dc3b32d817b8b9d9b"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "f8f2ef0440e7a074223ec04dc3b32d817b8b9d9b",
+      "topic_id": "pr-5119",
+      "title": "feat(cli): add --visibility flag to channels update",
+      "areas": [
+        "cli",
+        "channels",
+        "visibility",
+        "authorization"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security-sensitive change reviewed as a dedicated candidate; queue for Zion-preserving adaptation after focused security, authorization, dependency, and compatibility tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "channel visibility mutation surface",
+        "existing relay/SDK authorization path must remain authoritative"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5119",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with dedicated security review, focused regression tests, dependency/migration checks, Zion compatibility checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-10-normal-b2ac66c",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "60ae74b656a8e612d726575521c75cba4433e688",
+  "pinned_upstream_sha": "b2ac66cde81df7ce1afc50016e1571cb6e8b7779",
+  "topics": [
+    {
+      "topic_id": "pr-4980",
+      "title": "fix(desktop): make terminal output selectable",
+      "upstream_pr": 4980,
+      "entry_shas": [
+        "cc9a2f783375e51a6e8d1f2f9d01d5f7e22813d1"
+      ]
+    },
+    {
+      "topic_id": "pr-5142",
+      "title": "fix(desktop): fence localStorage SecurityError from killing the React tree",
+      "upstream_pr": 5142,
+      "entry_shas": [
+        "8630e58eb03480c262111c2544194b30b10af772"
+      ]
+    },
+    {
+      "topic_id": "pr-5143",
+      "title": "fix(desktop): drop unhandled rejection from throwing window.Notification",
+      "upstream_pr": 5143,
+      "entry_shas": [
+        "e47894a133c2a685efd7aca5dd210daad8cd13b8"
+      ]
+    },
+    {
+      "topic_id": "pr-5191",
+      "title": "refactor(cli): replace probe/decider/detail split with single typed extractor",
+      "upstream_pr": 5191,
+      "entry_shas": [
+        "b2ac66cde81df7ce1afc50016e1571cb6e8b7779"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "cc9a2f783375e51a6e8d1f2f9d01d5f7e22813d1",
+      "topic_id": "pr-4980",
+      "title": "fix(desktop): make terminal output selectable",
+      "areas": [
+        "desktop",
+        "terminal",
+        "accessibility"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4980",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "8630e58eb03480c262111c2544194b30b10af772",
+      "topic_id": "pr-5142",
+      "title": "fix(desktop): fence localStorage SecurityError from killing the React tree",
+      "areas": [
+        "desktop",
+        "storage",
+        "resilience"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5142",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "e47894a133c2a685efd7aca5dd210daad8cd13b8",
+      "topic_id": "pr-5143",
+      "title": "fix(desktop): drop unhandled rejection from throwing window.Notification",
+      "areas": [
+        "desktop",
+        "notifications",
+        "resilience"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5143",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "b2ac66cde81df7ce1afc50016e1571cb6e8b7779",
+      "topic_id": "pr-5191",
+      "title": "refactor(cli): replace probe/decider/detail split with single typed extractor",
+      "areas": [
+        "cli",
+        "authorization",
+        "errors"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5191",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

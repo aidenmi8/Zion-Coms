@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-28-normal-3f2f326",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "07a3c768d619db31fee3f0590f9433cdd1213e8f",
+  "pinned_upstream_sha": "3f2f32641f4093d087fd9506bfac1fa0329e8b2e",
+  "topics": [
+    {
+      "topic_id": "pr-5310",
+      "title": "Polish desktop onboarding flow",
+      "upstream_pr": 5310,
+      "entry_shas": [
+        "3f2f32641f4093d087fd9506bfac1fa0329e8b2e"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "3f2f32641f4093d087fd9506bfac1fa0329e8b2e",
+      "topic_id": "pr-5310",
+      "title": "Polish desktop onboarding flow",
+      "areas": [
+        "desktop",
+        "onboarding",
+        "profile"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5310",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

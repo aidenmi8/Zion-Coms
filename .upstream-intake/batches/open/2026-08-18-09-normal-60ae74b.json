@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-09-normal-60ae74b",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "c293b3cd4027775d7580cafd5108a0b22ca7381b",
+  "pinned_upstream_sha": "60ae74b656a8e612d726575521c75cba4433e688",
+  "topics": [
+    {
+      "topic_id": "pr-5130",
+      "title": "fix(buzz-agent): escalate LLM timeouts per retry and log per-call latency",
+      "upstream_pr": 5130,
+      "entry_shas": [
+        "346ae8cadca3c872242e2858bb87ce31a0eb5bf6"
+      ]
+    },
+    {
+      "topic_id": "pr-5063",
+      "title": "Remove agent creation success modal",
+      "upstream_pr": 5063,
+      "entry_shas": [
+        "c8743b2f204519df8001e1b5bbd270159eeb4aed"
+      ]
+    },
+    {
+      "topic_id": "pr-5059",
+      "title": "feat(mobile): add bee pull-to-refresh",
+      "upstream_pr": 5059,
+      "entry_shas": [
+        "626e2c34a34027d24512b2397bd99757c1a82ef3"
+      ]
+    },
+    {
+      "topic_id": "pr-5025",
+      "title": "Mobile: add anchored reaction popover",
+      "upstream_pr": 5025,
+      "entry_shas": [
+        "8476ea05e7d27ea9e4bab0b6c31a42c6552c772a"
+      ]
+    },
+    {
+      "topic_id": "pr-5192",
+      "title": "Make public starter channels best effort",
+      "upstream_pr": 5192,
+      "entry_shas": [
+        "daa887758101e11f07650e897341e653ff8b2398"
+      ]
+    },
+    {
+      "topic_id": "pr-4505",
+      "title": "fix(desktop): use WEBKIT_DMABUF_RENDERER_FORCE_SHM for NVIDIA/AppImage",
+      "upstream_pr": 4505,
+      "entry_shas": [
+        "60ae74b656a8e612d726575521c75cba4433e688"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "346ae8cadca3c872242e2858bb87ce31a0eb5bf6",
+      "topic_id": "pr-5130",
+      "title": "fix(buzz-agent): escalate LLM timeouts per retry and log per-call latency",
+      "areas": [
+        "agent",
+        "llm",
+        "observability"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5130",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "c8743b2f204519df8001e1b5bbd270159eeb4aed",
+      "topic_id": "pr-5063",
+      "title": "Remove agent creation success modal",
+      "areas": [
+        "desktop",
+        "agents",
+        "onboarding"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5063",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "626e2c34a34027d24512b2397bd99757c1a82ef3",
+      "topic_id": "pr-5059",
+      "title": "feat(mobile): add bee pull-to-refresh",
+      "areas": [
+        "mobile",
+        "ui",
+        "branding"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Accept the pull-to-refresh behavior only with a Zion-native visual adaptation; upstream bee artwork is not permitted as visible product branding.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5059",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "8476ea05e7d27ea9e4bab0b6c31a42c6552c772a",
+      "topic_id": "pr-5025",
+      "title": "Mobile: add anchored reaction popover",
+      "areas": [
+        "mobile",
+        "messaging",
+        "ui"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5025",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "daa887758101e11f07650e897341e653ff8b2398",
+      "topic_id": "pr-5192",
+      "title": "Make public starter channels best effort",
+      "areas": [
+        "desktop",
+        "onboarding",
+        "channels"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5192",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "60ae74b656a8e612d726575521c75cba4433e688",
+      "topic_id": "pr-4505",
+      "title": "fix(desktop): use WEBKIT_DMABUF_RENDERER_FORCE_SHM for NVIDIA/AppImage",
+      "areas": [
+        "desktop",
+        "linux"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Reject for this iOS/macOS target profile: the change is Linux/AppImage-specific and has no applicable Zion platform surface.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4505",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Not applicable; target-platform review recorded.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

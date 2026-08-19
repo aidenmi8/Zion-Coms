@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-32-normal-83ca595",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "5e4d0fe92508fc5e0c812ff3edbe8877d86b8ec6",
+  "pinned_upstream_sha": "83ca595adadae32238197d9c34a5895a34950968",
+  "topics": [
+    {
+      "topic_id": "pr-5520",
+      "title": "fix(link-preview): resolve YouTube videos through oEmbed",
+      "upstream_pr": 5520,
+      "entry_shas": [
+        "7eb8cc5a5f03c454a84f2b5c4369819ba6d4d11b"
+      ]
+    },
+    {
+      "topic_id": "pr-5266",
+      "title": "fix(desktop): preserve theme when opening communities",
+      "upstream_pr": 5266,
+      "entry_shas": [
+        "83ca595adadae32238197d9c34a5895a34950968"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "7eb8cc5a5f03c454a84f2b5c4369819ba6d4d11b",
+      "topic_id": "pr-5520",
+      "title": "fix(link-preview): resolve YouTube videos through oEmbed",
+      "areas": [
+        "desktop",
+        "link-previews",
+        "network"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Queue for Zion-preserving adaptation with the existing egress, HTTPS, DNS-pinning, redirect, size, and metadata-sanitization contracts retained.",
+      "dependencies": [
+        "1922d49cb200a3382a91ec253f530b44dfda5f55"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5520",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "83ca595adadae32238197d9c34a5895a34950968",
+      "topic_id": "pr-5266",
+      "title": "fix(desktop): preserve theme when opening communities",
+      "areas": [
+        "desktop",
+        "themes",
+        "communities"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5266",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

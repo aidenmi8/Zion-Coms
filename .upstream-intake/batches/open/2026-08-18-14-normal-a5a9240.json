@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-14-normal-a5a9240",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "1922d49cb200a3382a91ec253f530b44dfda5f55",
+  "pinned_upstream_sha": "a5a9240241ad584c839f79af546df9bf0216ca1f",
+  "topics": [
+    {
+      "topic_id": "pr-4858",
+      "title": "bump @tauri-apps/cli to ~2.11.4 to fix linux app icon issue",
+      "upstream_pr": 4858,
+      "entry_shas": [
+        "c3c39cc263daefceb21aa73b1196699445829fe4"
+      ]
+    },
+    {
+      "topic_id": "pr-4975",
+      "title": "fix(sdk): preserve self-mention p tags in message and forum event builders",
+      "upstream_pr": 4975,
+      "entry_shas": [
+        "78c87ae20e182fffdd99744d6c9ff99df82b159c"
+      ]
+    },
+    {
+      "topic_id": "pr-4981",
+      "title": "fix(mobile): keep latest messages above composer",
+      "upstream_pr": 4981,
+      "entry_shas": [
+        "07999425dca4a94ca0dea4f47d674661ea52fac3"
+      ]
+    },
+    {
+      "topic_id": "pr-5214",
+      "title": "chore(release): release Buzz Desktop version 0.5.6",
+      "upstream_pr": 5214,
+      "entry_shas": [
+        "3855687e7699f1b169f179122b8bc92f433abd6d"
+      ]
+    },
+    {
+      "topic_id": "pr-5223",
+      "title": "Recover from max-token response truncation",
+      "upstream_pr": 5223,
+      "entry_shas": [
+        "2b873cf208bf2143bfdb77dbe34b04edcdb723a1"
+      ]
+    },
+    {
+      "topic_id": "pr-5228",
+      "title": "fix(desktop): let imported and recovered identities finish onboarding",
+      "upstream_pr": 5228,
+      "entry_shas": [
+        "a5a9240241ad584c839f79af546df9bf0216ca1f"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "c3c39cc263daefceb21aa73b1196699445829fe4",
+      "topic_id": "pr-4858",
+      "title": "bump @tauri-apps/cli to ~2.11.4 to fix linux app icon issue",
+      "areas": [
+        "desktop",
+        "linux",
+        "dependencies"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Reject for the current iOS/macOS intake profile: this is a Linux/AppImage-specific toolchain change with no applicable Zion platform surface.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4858",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Not applicable; delivery or target-platform review recorded.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "78c87ae20e182fffdd99744d6c9ff99df82b159c",
+      "topic_id": "pr-4975",
+      "title": "fix(sdk): preserve self-mention p tags in message and forum event builders",
+      "areas": [
+        "sdk",
+        "protocol",
+        "mentions"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4975",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "07999425dca4a94ca0dea4f47d674661ea52fac3",
+      "topic_id": "pr-4981",
+      "title": "fix(mobile): keep latest messages above composer",
+      "areas": [
+        "mobile",
+        "messaging",
+        "ui"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4981",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "3855687e7699f1b169f179122b8bc92f433abd6d",
+      "topic_id": "pr-5214",
+      "title": "chore(release): release Buzz Desktop version 0.5.6",
+      "areas": [
+        "release",
+        "desktop"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Reject from source intake: release/version/changelog delivery is a separate authorization and must not be imported as product behavior.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5214",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Not applicable; delivery or target-platform review recorded.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "2b873cf208bf2143bfdb77dbe34b04edcdb723a1",
+      "topic_id": "pr-5223",
+      "title": "Recover from max-token response truncation",
+      "areas": [
+        "agent",
+        "llm",
+        "resilience"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5223",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "a5a9240241ad584c839f79af546df9bf0216ca1f",
+      "topic_id": "pr-5228",
+      "title": "fix(desktop): let imported and recovered identities finish onboarding",
+      "areas": [
+        "desktop",
+        "identity",
+        "onboarding"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5228",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

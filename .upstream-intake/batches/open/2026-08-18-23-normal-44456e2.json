@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-23-normal-44456e2",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "d2ebaa95a7d2565fb217fdfae56bafb9509be444",
+  "pinned_upstream_sha": "44456e200e3ca6a5d2882b58b447b80474041347",
+  "topics": [
+    {
+      "topic_id": "pr-4441",
+      "title": "chore(deps): update react monorepo",
+      "upstream_pr": 4441,
+      "entry_shas": [
+        "119a84897f225c1e3213a09cd149abb37dcb3abc"
+      ]
+    },
+    {
+      "topic_id": "pr-5225",
+      "title": "fix(desktop): resolve overlapping member mentions",
+      "upstream_pr": 5225,
+      "entry_shas": [
+        "44456e200e3ca6a5d2882b58b447b80474041347"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "119a84897f225c1e3213a09cd149abb37dcb3abc",
+      "topic_id": "pr-4441",
+      "title": "chore(deps): update react monorepo",
+      "areas": [
+        "dependencies",
+        "javascript",
+        "desktop"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Dependency update reviewed with lockfile and release-note context; queue for compatibility, license, cargo-deny, and package test screening before implementation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4441",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "44456e200e3ca6a5d2882b58b447b80474041347",
+      "topic_id": "pr-5225",
+      "title": "fix(desktop): resolve overlapping member mentions",
+      "areas": [
+        "desktop",
+        "messaging",
+        "mentions"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5225",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

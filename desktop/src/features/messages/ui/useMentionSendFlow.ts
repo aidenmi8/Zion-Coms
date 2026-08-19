@@ -67,7 +67,7 @@ type UseMentionSendFlowOptions = {
   >;
   richText: Pick<
     UseRichTextEditorResult,
-    "clearContent" | "setContent" | "setContentAndFocusEnd"
+    "clearContent" | "setContent" | "restorePlainTextAndFocusEnd"
   >;
   setContent: (content: string) => void;
   setIsEmojiPickerOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -335,7 +335,7 @@ export function useMentionSendFlow({
       setContent(postSendContent);
       contentRef.current = postSendContent;
       if (postSendContent) {
-        richText.setContentAndFocusEnd(postSendContent);
+        richText.restorePlainTextAndFocusEnd(postSendContent);
         mentions.cancelMentionAutocomplete();
       } else richText.clearContent();
       setPendingImeta([]);
@@ -353,7 +353,7 @@ export function useMentionSendFlow({
       mentions.cancelMentionAutocomplete,
       mentions.clearMentions,
       richText.clearContent,
-      richText.setContentAndFocusEnd,
+      richText.restorePlainTextAndFocusEnd,
       setContent,
       setIsEmojiPickerOpen,
       setPendingImeta,

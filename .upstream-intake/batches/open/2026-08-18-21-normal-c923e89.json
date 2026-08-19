@@ -1,0 +1,474 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-21-normal-c923e89",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "6e5c462ac524de60d7edb46c66130fd779cc9006",
+  "pinned_upstream_sha": "c923e89a4b6d43ae0c507dbb5e58f2bdd9ab7888",
+  "topics": [
+    {
+      "topic_id": "pr-5324",
+      "title": "fix(desktop): prevent horizontal clipping in Prompt Context modal",
+      "upstream_pr": 5324,
+      "entry_shas": [
+        "fbf89e3bed9adebc033a26b7c43362c004e816a2"
+      ]
+    },
+    {
+      "topic_id": "pr-5330",
+      "title": "fix(desktop): welcome banner overlap and missing dismiss control",
+      "upstream_pr": 5330,
+      "entry_shas": [
+        "f029deafae6ad3b63e13c29104f3be76122cb1df"
+      ]
+    },
+    {
+      "topic_id": "pr-5351",
+      "title": "fix(agent): retry LLM completion on malformed 2xx JSON body",
+      "upstream_pr": 5351,
+      "entry_shas": [
+        "5bf78671f45178f8de02ba18d3d321cbbf19cd1f"
+      ]
+    },
+    {
+      "topic_id": "pr-5406",
+      "title": "fix(desktop): preserve Welcome banner dismissal",
+      "upstream_pr": 5406,
+      "entry_shas": [
+        "97aa9e31856edb9d8abcdcb33c472027f5588890"
+      ]
+    },
+    {
+      "topic_id": "pr-4465",
+      "title": "chore(deps): update rust crate clap to v4.6.6",
+      "upstream_pr": 4465,
+      "entry_shas": [
+        "e668c6bb4913e36e58d7f947dbaf982e704e9132"
+      ]
+    },
+    {
+      "topic_id": "pr-4456",
+      "title": "chore(deps): update rust crate async-compression to v0.4.43",
+      "upstream_pr": 4456,
+      "entry_shas": [
+        "7dd8791d0765e9f15fed3299b6948e2babbfd763"
+      ]
+    },
+    {
+      "topic_id": "pr-4466",
+      "title": "chore(deps): update rust crate diffy to v0.5.1",
+      "upstream_pr": 4466,
+      "entry_shas": [
+        "d7cc724fa5391b23e7fac99fc65dc28b79e4c5c4"
+      ]
+    },
+    {
+      "topic_id": "pr-4458",
+      "title": "chore(deps): update rust crate async-trait to v0.1.91",
+      "upstream_pr": 4458,
+      "entry_shas": [
+        "12b1f566480d4feddc171739097f9359d3f255c1"
+      ]
+    },
+    {
+      "topic_id": "pr-4448",
+      "title": "chore(deps): update rust crate arc-swap to v1.9.2",
+      "upstream_pr": 4448,
+      "entry_shas": [
+        "08de85c592106ea2ffe22ba16e3a0fc10687db54"
+      ]
+    },
+    {
+      "topic_id": "pr-4447",
+      "title": "chore(deps): update rust crate anyhow to v1.0.104",
+      "upstream_pr": 4447,
+      "entry_shas": [
+        "e1ff91ecc1269682a50c17da2c0708d1448b336f"
+      ]
+    },
+    {
+      "topic_id": "pr-3049",
+      "title": "chore(deps): update all non-major dependencies",
+      "upstream_pr": 3049,
+      "entry_shas": [
+        "856cdb848b0a849e33620887b145b7e598dfd95c"
+      ]
+    },
+    {
+      "topic_id": "pr-4439",
+      "title": "chore(deps): update dependency @tanstack/react-virtual to v3.14.9",
+      "upstream_pr": 4439,
+      "entry_shas": [
+        "c923e89a4b6d43ae0c507dbb5e58f2bdd9ab7888"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "fbf89e3bed9adebc033a26b7c43362c004e816a2",
+      "topic_id": "pr-5324",
+      "title": "fix(desktop): prevent horizontal clipping in Prompt Context modal",
+      "areas": [
+        "desktop",
+        "agents",
+        "ui"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5324",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "f029deafae6ad3b63e13c29104f3be76122cb1df",
+      "topic_id": "pr-5330",
+      "title": "fix(desktop): welcome banner overlap and missing dismiss control",
+      "areas": [
+        "desktop",
+        "onboarding",
+        "ui"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5330",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "5bf78671f45178f8de02ba18d3d321cbbf19cd1f",
+      "topic_id": "pr-5351",
+      "title": "fix(agent): retry LLM completion on malformed 2xx JSON body",
+      "areas": [
+        "agent",
+        "llm",
+        "resilience"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5351",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "97aa9e31856edb9d8abcdcb33c472027f5588890",
+      "topic_id": "pr-5406",
+      "title": "fix(desktop): preserve Welcome banner dismissal",
+      "areas": [
+        "desktop",
+        "onboarding",
+        "storage"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5406",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "e668c6bb4913e36e58d7f947dbaf982e704e9132",
+      "topic_id": "pr-4465",
+      "title": "chore(deps): update rust crate clap to v4.6.6",
+      "areas": [
+        "dependencies",
+        "rust"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Dependency update reviewed with lockfile and release-note context; queue for compatibility, license, cargo-deny, and package test screening before implementation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4465",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "7dd8791d0765e9f15fed3299b6948e2babbfd763",
+      "topic_id": "pr-4456",
+      "title": "chore(deps): update rust crate async-compression to v0.4.43",
+      "areas": [
+        "dependencies",
+        "rust"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Dependency update reviewed with lockfile and release-note context; queue for compatibility, license, cargo-deny, and package test screening before implementation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4456",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "d7cc724fa5391b23e7fac99fc65dc28b79e4c5c4",
+      "topic_id": "pr-4466",
+      "title": "chore(deps): update rust crate diffy to v0.5.1",
+      "areas": [
+        "dependencies",
+        "rust"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Dependency update reviewed with lockfile and release-note context; queue for compatibility, license, cargo-deny, and package test screening before implementation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4466",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "12b1f566480d4feddc171739097f9359d3f255c1",
+      "topic_id": "pr-4458",
+      "title": "chore(deps): update rust crate async-trait to v0.1.91",
+      "areas": [
+        "dependencies",
+        "rust"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Dependency update reviewed with lockfile and release-note context; queue for compatibility, license, cargo-deny, and package test screening before implementation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4458",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "08de85c592106ea2ffe22ba16e3a0fc10687db54",
+      "topic_id": "pr-4448",
+      "title": "chore(deps): update rust crate arc-swap to v1.9.2",
+      "areas": [
+        "dependencies",
+        "rust"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Dependency update reviewed with lockfile and release-note context; queue for compatibility, license, cargo-deny, and package test screening before implementation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4448",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "e1ff91ecc1269682a50c17da2c0708d1448b336f",
+      "topic_id": "pr-4447",
+      "title": "chore(deps): update rust crate anyhow to v1.0.104",
+      "areas": [
+        "dependencies",
+        "rust"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Dependency update reviewed with lockfile and release-note context; queue for compatibility, license, cargo-deny, and package test screening before implementation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4447",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "856cdb848b0a849e33620887b145b7e598dfd95c",
+      "topic_id": "pr-3049",
+      "title": "chore(deps): update all non-major dependencies",
+      "areas": [
+        "dependencies",
+        "javascript",
+        "ci"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Dependency update reviewed with lockfile and release-note context; queue for compatibility, license, cargo-deny, and package test screening before implementation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3049",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "c923e89a4b6d43ae0c507dbb5e58f2bdd9ab7888",
+      "topic_id": "pr-4439",
+      "title": "chore(deps): update dependency @tanstack/react-virtual to v3.14.9",
+      "areas": [
+        "dependencies",
+        "desktop"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Dependency update reviewed with lockfile and release-note context; queue for compatibility, license, cargo-deny, and package test screening before implementation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4439",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

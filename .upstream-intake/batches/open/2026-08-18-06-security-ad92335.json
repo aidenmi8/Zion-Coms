@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-06-security-ad92335",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "f03de210cd0e384870aaa00cb1fa6985a75640ff",
+  "pinned_upstream_sha": "ad923353a24b784df13a7c88757d6b24ebe36299",
+  "topics": [
+    {
+      "topic_id": "pr-4610",
+      "title": "fix(media): require authenticated reads",
+      "upstream_pr": 4610,
+      "entry_shas": [
+        "769ac70b741e3ad6809bff14eba29d3dd2cbd318"
+      ]
+    },
+    {
+      "topic_id": "pr-5133",
+      "title": "feat(relay): accept kind:30179 private managed-agent events at ingest",
+      "upstream_pr": 5133,
+      "entry_shas": [
+        "ad923353a24b784df13a7c88757d6b24ebe36299"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "769ac70b741e3ad6809bff14eba29d3dd2cbd318",
+      "topic_id": "pr-4610",
+      "title": "fix(media): require authenticated reads",
+      "areas": [
+        "relay",
+        "media",
+        "desktop",
+        "authorization"
+      ],
+      "risk": "critical",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security-sensitive upstream change reviewed as a dedicated candidate; queue for Zion-preserving adaptation after focused security review and tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "authenticated media authorization and membership enforcement"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4610",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "ad923353a24b784df13a7c88757d6b24ebe36299",
+      "topic_id": "pr-5133",
+      "title": "feat(relay): accept kind:30179 private managed-agent events at ingest",
+      "areas": [
+        "relay",
+        "managed-agents",
+        "authorization"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security-sensitive upstream change reviewed as a dedicated candidate; queue for Zion-preserving adaptation after focused security review and tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "private managed-agent event ingest authorization"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5133",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

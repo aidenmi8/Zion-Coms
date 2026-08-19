@@ -52,6 +52,7 @@ import {
 } from "@/shared/api/relayReconnectPolicy";
 import { RelayStallWatchdog } from "@/shared/api/relayStallWatchdog";
 import { closeWebSocket } from "@/shared/api/relayWebSocketClose";
+import { createRelayInboundBuffer } from "@/shared/api/relayInboundBuffer";
 import { buildThreadReferenceTags } from "@/features/messages/lib/threading";
 const RECONNECT_BASE_DELAY_MS = 1_000,
   RECONNECT_MAX_DELAY_MS = 30_000,
@@ -536,19 +537,18 @@ export class RelayClient {
     );
 
     const generation = ++this.connectionGeneration;
-    this.onMessageChannel = new Channel<unknown>((message) => {
-      void this.handleWsMessage(message, generation).catch((error) => {
+    const inbound = createRelayInboundBuffer(
+      (message) => this.handleWsMessage(message, generation),
+      (error) => {
         if (generation !== this.connectionGeneration) return;
-        this.resetConnection(
-          this.normalizeRelayError(error, "Relay connection errored."),
-        );
-      });
-    });
-
+        this.recoverFromSocketFailure(error, "Relay connection errored.");
+      },
+    );
+    this.onMessageChannel = new Channel<unknown>((message) =>
+      inbound.receive(message),
+    );
     try {
-      if (!this.relayUrl) {
-        this.relayUrl = await getRelayWsUrl();
-      }
+      this.relayUrl ||= await getRelayWsUrl();
       const wsId = await invoke<number>("plugin:websocket|connect", {
         url: this.relayUrl,
         onMessage: this.onMessageChannel,
@@ -560,7 +560,7 @@ export class RelayClient {
       }
       this.wsId = wsId;
 
-      await new Promise<void>((resolve, reject) => {
+      const authentication = new Promise<void>((resolve, reject) => {
         const timeout = window.setTimeout(() => {
           const error = new Error("Relay authentication timed out.");
           this.authRequest = null;
@@ -575,6 +575,10 @@ export class RelayClient {
           timeout,
         };
       });
+      const drain = inbound.drain();
+      await Promise.race([drain, authentication, inbound.overflow]);
+      await drain;
+      await authentication;
 
       this.stabilityTimer = window.setTimeout(() => {
         this.stabilityTimer = null;

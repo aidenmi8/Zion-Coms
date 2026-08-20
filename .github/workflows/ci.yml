@@ -45,6 +45,8 @@ jobs:
               - 'rust-toolchain.toml'
               - 'deny.toml'
               - '.github/workflows/ci.yml'
+              - 'scripts/check_dependency_policy.py'
+              - 'scripts/test_dependency_policy.py'
               - 'scripts/run-tests.sh'
               - 'justfile'
             desktop:
@@ -844,8 +846,10 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       - uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
+      - name: Dependency policy exception tests
+        run: python3 -B -m unittest scripts/test_dependency_policy.py
       - name: Dependency policy
-        run: cargo-deny check
+        run: python3 -B scripts/check_dependency_policy.py
 
   dead-token-guard:
     name: Dead Token Reference Guard

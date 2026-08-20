@@ -281,7 +281,12 @@ desktop-e2e-pre-push: _ensure-migrations
     cd {{desktop_dir}} && pnpm build:e2e && pnpm exec playwright test --only-changed=origin/main
 
 # Run all checks suitable for CI / pre-push (no infra needed)
-ci: check test-unit desktop-test desktop-build desktop-tauri-check desktop-tauri-test web-build mobile-test
+ci: check test-unit desktop-test desktop-build desktop-tauri-check desktop-tauri-test web-build mobile-test dependency-policy
+
+# Enforce the exact temporary cargo-deny exception used by remote CI.
+dependency-policy:
+    python3 -B -m unittest scripts/test_dependency_policy.py
+    python3 -B scripts/check_dependency_policy.py
 
 # ─── Test ─────────────────────────────────────────────────────────────────────
 

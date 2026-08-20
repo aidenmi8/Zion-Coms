@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-03-normal-b08c8b1",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "6eb65919f1eabd46b3850c15eefab31092dd500b",
+  "pinned_upstream_sha": "b08c8b126cee8de424eb0c03af22a45ff9a1e8a7",
+  "topics": [
+    {
+      "topic_id": "pr-5110",
+      "title": "chore(hooks): run desktop typecheck in pre-push",
+      "upstream_pr": 5110,
+      "entry_shas": [
+        "c777d4fb9af4c3f66009ee3216650d9ea30310d7"
+      ]
+    },
+    {
+      "topic_id": "pr-5086",
+      "title": "fix(desktop): prevent sidebar prefs from reverting on stale-localStorage boot",
+      "upstream_pr": 5086,
+      "entry_shas": [
+        "b08c8b126cee8de424eb0c03af22a45ff9a1e8a7"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "c777d4fb9af4c3f66009ee3216650d9ea30310d7",
+      "topic_id": "pr-5110",
+      "title": "chore(hooks): run desktop typecheck in pre-push",
+      "areas": [
+        "tooling",
+        "hooks"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5110",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "b08c8b126cee8de424eb0c03af22a45ff9a1e8a7",
+      "topic_id": "pr-5086",
+      "title": "fix(desktop): prevent sidebar prefs from reverting on stale-localStorage boot",
+      "areas": [
+        "desktop",
+        "storage",
+        "sidebar"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5086",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

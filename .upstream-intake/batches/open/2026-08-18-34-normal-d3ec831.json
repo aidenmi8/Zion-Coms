@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-34-normal-d3ec831",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "240cdd3ea17a8f4d521c8398a929294210bd1e1a",
+  "pinned_upstream_sha": "d3ec831e0cecbff347d55a236e34b27d79961503",
+  "topics": [
+    {
+      "topic_id": "pr-5535",
+      "title": "fix(desktop): suppress fresh focus-return refetches for channels and home-feed",
+      "upstream_pr": 5535,
+      "entry_shas": [
+        "49357244945c2f4b8432eb8b5cebbba5b1c30a08"
+      ]
+    },
+    {
+      "topic_id": "pr-5577",
+      "title": "fix(desktop): preserve fresh channel timelines",
+      "upstream_pr": 5577,
+      "entry_shas": [
+        "d3ec831e0cecbff347d55a236e34b27d79961503"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "49357244945c2f4b8432eb8b5cebbba5b1c30a08",
+      "topic_id": "pr-5535",
+      "title": "fix(desktop): suppress fresh focus-return refetches for channels and home-feed",
+      "areas": [
+        "desktop",
+        "performance",
+        "channels"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5535",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "d3ec831e0cecbff347d55a236e34b27d79961503",
+      "topic_id": "pr-5577",
+      "title": "fix(desktop): preserve fresh channel timelines",
+      "areas": [
+        "desktop",
+        "messaging",
+        "timelines"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5577",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-16-normal-13c9e90",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "dcc1231d6d6935819597bc42f7bc59fa0a47c8e5",
+  "pinned_upstream_sha": "13c9e900c84cac1e2c8eeb7551bd1510ecb544d3",
+  "topics": [
+    {
+      "topic_id": "pr-5221",
+      "title": "fix(desktop): isolate relay admission tests",
+      "upstream_pr": 5221,
+      "entry_shas": [
+        "74b913cff8512c015dc6f1a7473b253fa803f954"
+      ]
+    },
+    {
+      "topic_id": "pr-5252",
+      "title": "chore(release): release Buzz Desktop version 0.5.7",
+      "upstream_pr": 5252,
+      "entry_shas": [
+        "13c9e900c84cac1e2c8eeb7551bd1510ecb544d3"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "74b913cff8512c015dc6f1a7473b253fa803f954",
+      "topic_id": "pr-5221",
+      "title": "fix(desktop): isolate relay admission tests",
+      "areas": [
+        "desktop",
+        "relay",
+        "tests"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5221",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "13c9e900c84cac1e2c8eeb7551bd1510ecb544d3",
+      "topic_id": "pr-5252",
+      "title": "chore(release): release Buzz Desktop version 0.5.7",
+      "areas": [
+        "release",
+        "desktop"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Reject from source intake: release/version/changelog delivery is a separate authorization and must not be imported as product behavior.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5252",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Not applicable; delivery or target-platform review recorded.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

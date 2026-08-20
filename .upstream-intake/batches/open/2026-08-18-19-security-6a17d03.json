@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-19-security-6a17d03",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "02f640bc4559c48ac0c2ec595ef34dd2c294b0db",
+  "pinned_upstream_sha": "6a17d035f79ad582ca3f4f3cdc38d376f2c4087f",
+  "topics": [
+    {
+      "topic_id": "pr-5323",
+      "title": "Revert \"fix(acp): reject unattended permission requests\"",
+      "upstream_pr": 5323,
+      "entry_shas": [
+        "6a17d035f79ad582ca3f4f3cdc38d376f2c4087f"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "6a17d035f79ad582ca3f4f3cdc38d376f2c4087f",
+      "topic_id": "pr-5323",
+      "title": "Revert \"fix(acp): reject unattended permission requests\"",
+      "areas": [
+        "acp",
+        "permissions",
+        "authorization"
+      ],
+      "risk": "critical",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security-sensitive upstream change reviewed as a dedicated candidate; queue for Zion-preserving adaptation after focused security review and tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "reversal of unattended ACP permission denial",
+        "implicit tool authorization policy"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5323",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

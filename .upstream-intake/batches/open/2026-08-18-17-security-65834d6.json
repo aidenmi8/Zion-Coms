@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-17-security-65834d6",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "13c9e900c84cac1e2c8eeb7551bd1510ecb544d3",
+  "pinned_upstream_sha": "65834d68d0d3441c4e628540d6d5c8b0a2e757c9",
+  "topics": [
+    {
+      "topic_id": "pr-4871",
+      "title": "infra: bind development services to loopback",
+      "upstream_pr": 4871,
+      "entry_shas": [
+        "65834d68d0d3441c4e628540d6d5c8b0a2e757c9"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "65834d68d0d3441c4e628540d6d5c8b0a2e757c9",
+      "topic_id": "pr-4871",
+      "title": "infra: bind development services to loopback",
+      "areas": [
+        "infrastructure",
+        "network",
+        "development"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security-sensitive upstream change reviewed as a dedicated candidate; queue for Zion-preserving adaptation after focused security review and tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "development service network exposure and loopback binding"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4871",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

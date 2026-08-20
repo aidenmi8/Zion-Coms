@@ -94,6 +94,30 @@ test.beforeEach(async ({ page }) => {
   await installMockBridge(page);
 });
 
+test("authenticates when the relay challenge arrives before connect resolves", async ({
+  page,
+}) => {
+  await installMockBridge(page, {
+    websocketAuthBeforeConnectResolves: true,
+  });
+  await page.goto("/");
+
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const getState = (
+            window as Window & {
+              __BUZZ_E2E_GET_RELAY_CONNECTION_STATE__?: () => string;
+            }
+          ).__BUZZ_E2E_GET_RELAY_CONNECTION_STATE__;
+          return getState?.() ?? "installing";
+        }),
+      { timeout: 5_000 },
+    )
+    .toBe("connected");
+});
+
 test("failed initial relay dial retries automatically", async ({ page }) => {
   await installMockBridge(page, {
     websocketConnectErrors: ["mock relay pod unavailable"],

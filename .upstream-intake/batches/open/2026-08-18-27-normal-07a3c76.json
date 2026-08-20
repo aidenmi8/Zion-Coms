@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-27-normal-07a3c76",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "2777189d960fa5b1d863166f36d6e37ff8ce0819",
+  "pinned_upstream_sha": "07a3c768d619db31fee3f0590f9433cdd1213e8f",
+  "topics": [
+    {
+      "topic_id": "pr-5490",
+      "title": "fix(desktop): quiesce renderer polling while hidden",
+      "upstream_pr": 5490,
+      "entry_shas": [
+        "07a3c768d619db31fee3f0590f9433cdd1213e8f"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "07a3c768d619db31fee3f0590f9433cdd1213e8f",
+      "topic_id": "pr-5490",
+      "title": "fix(desktop): quiesce renderer polling while hidden",
+      "areas": [
+        "desktop",
+        "performance",
+        "huddle"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5490",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

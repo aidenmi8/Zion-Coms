@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-13-security-1922d49",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "742e8d11974498a6ed71c70dd87dc6c25fcbf2b7",
+  "pinned_upstream_sha": "1922d49cb200a3382a91ec253f530b44dfda5f55",
+  "topics": [
+    {
+      "topic_id": "pr-3818",
+      "title": "feat(desktop): adding rich link previews to messages",
+      "upstream_pr": 3818,
+      "entry_shas": [
+        "1922d49cb200a3382a91ec253f530b44dfda5f55"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "1922d49cb200a3382a91ec253f530b44dfda5f55",
+      "topic_id": "pr-3818",
+      "title": "feat(desktop): adding rich link previews to messages",
+      "areas": [
+        "desktop",
+        "relay",
+        "link-previews",
+        "egress"
+      ],
+      "risk": "critical",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security-sensitive upstream change reviewed as a dedicated candidate; queue for Zion-preserving adaptation after focused security review and tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "link-preview egress and network-fetch boundary",
+        "relay ingest handling for external media metadata"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3818",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

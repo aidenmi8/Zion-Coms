@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-20-normal-6e5c462",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "6a17d035f79ad582ca3f4f3cdc38d376f2c4087f",
+  "pinned_upstream_sha": "6e5c462ac524de60d7edb46c66130fd779cc9006",
+  "topics": [
+    {
+      "topic_id": "pr-5318",
+      "title": "fix(buzz-agent): recover from 400-shaped image rejections; unbound benchmark agent rounds",
+      "upstream_pr": 5318,
+      "entry_shas": [
+        "261c46076166c6de5bb9a71fb4a0fd0b70aa1efa"
+      ]
+    },
+    {
+      "topic_id": "pr-5326",
+      "title": "chore(release): release Buzz Desktop version 0.5.8",
+      "upstream_pr": 5326,
+      "entry_shas": [
+        "c815a9c6e1a1d1818a0547f60f894e4a5388761a"
+      ]
+    },
+    {
+      "topic_id": "pr-2856",
+      "title": "chore(release): release Buzz Relay version 0.2.1",
+      "upstream_pr": 2856,
+      "entry_shas": [
+        "6e5c462ac524de60d7edb46c66130fd779cc9006"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "261c46076166c6de5bb9a71fb4a0fd0b70aa1efa",
+      "topic_id": "pr-5318",
+      "title": "fix(buzz-agent): recover from 400-shaped image rejections; unbound benchmark agent rounds",
+      "areas": [
+        "agent",
+        "benchmarks",
+        "resilience"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5318",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "c815a9c6e1a1d1818a0547f60f894e4a5388761a",
+      "topic_id": "pr-5326",
+      "title": "chore(release): release Buzz Desktop version 0.5.8",
+      "areas": [
+        "release",
+        "desktop"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Reject from source intake: release/version/changelog delivery is a separate authorization and must not be imported as product behavior.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5326",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Not applicable; delivery or target-platform review recorded.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "6e5c462ac524de60d7edb46c66130fd779cc9006",
+      "topic_id": "pr-2856",
+      "title": "chore(release): release Buzz Relay version 0.2.1",
+      "areas": [
+        "release",
+        "relay"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Reject from source intake: release/version/changelog delivery is a separate authorization and must not be imported as product behavior.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/2856",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Not applicable; delivery or target-platform review recorded.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-96-security-6ea7a2b",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "78267b0c3a75840d035ff0cc9ad1984def773886",
+  "pinned_upstream_sha": "6ea7a2b2211438359b227a9991cf8ccad2927fe2",
+  "topics": [
+    {
+      "topic_id": "pr-3320",
+      "title": "Preserve early relay auth challenges",
+      "upstream_pr": 3320,
+      "entry_shas": [
+        "6ea7a2b2211438359b227a9991cf8ccad2927fe2"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "6ea7a2b2211438359b227a9991cf8ccad2927fe2",
+      "topic_id": "pr-3320",
+      "title": "Preserve early relay auth challenges",
+      "areas": [
+        "desktop",
+        "relay",
+        "websocket",
+        "nip-42",
+        "authentication"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "included",
+      "rationale": "Accept as security-gated relay authentication reliability hardening. Preserve ordered buffering before socket/auth waiter readiness, bounded frame memory, overflow failure, auth timeout/reset behavior, and reconnect isolation; verify no challenge or frame is processed under the wrong connection generation.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "NIP-42 AUTH challenges can arrive before the client is ready to authenticate",
+        "frame ordering and connection-generation isolation protect the authentication boundary",
+        "bounded buffering prevents untrusted relay input from growing without limit",
+        "overflow and timeout must fail closed and reset the connection"
+      ],
+      "tracking": {
+        "issue": "MI8-22",
+        "pull_request": "https://github.com/block/buzz/pull/3320",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Adapted locally in c5c6f835124357472533dbe554fae90e3108aa37; MI8-22 tracks the later generic upstream contribution after the Zion adaptation is accepted.",
+        "fork_commits": [
+          "c5c6f835124357472533dbe554fae90e3108aa37",
+          "5754062650b38c7d84af5f8d1ed2c6b62522198a"
+        ]
+      },
+      "verification": [
+        "Tracked upstream SHA 6ea7a2b from PR #3320; MI8-22 tracks the later generic upstream contribution.",
+        "Implementation c5c6f835124357472533dbe554fae90e3108aa37 preserves ordered early AUTH handling and reconnect isolation while retaining the 256-frame limit, adding a 1 MiB aggregate limit for raw strings, native text frames, and native binary arrays, and failing closed on unsizeable frames.",
+        "Focused checks passed: relayInboundBuffer.test.mjs (5 tests); pnpm test:e2e:smoke -- relay-reconnect.spec.ts (7 tests); RUST_TEST_THREADS=1 just test (9 groups, all passed).",
+        "just ci completed its intake, Zion branding/compatibility, format, lint, unit, build, and platform gates; its parallel desktop Tauri test phase was manually stopped after a shared test-lock scheduler hang with no assertion failure, then passed serially (1,850 tests passed, 0 failed).",
+        "Codex Security diff scan 2733f5ac-8775-4beb-ad2c-839ca52632b4 completed with zero findings and complete recorded coverage.",
+        "Security follow-up 5754062650b38c7d84af5f8d1ed2c6b62522198a is a signed Cargo.lock-only cherry-pick that updates h2 to 0.4.16 and webbrowser to 1.2.2, remediating RUSTSEC-2026-0258 and RUSTSEC-2026-0257 without visible Zion branding or required BUZZ_*/buzz:// compatibility changes.",
+        "Validation for 5754062650b38c7d84af5f8d1ed2c6b62522198a: just ci passed; just test passed (migrations, local seed, and all 9 test groups); cargo-deny check has no RUSTSEC-2026-0258 or RUSTSEC-2026-0257 and its only advisory error is RUSTSEC-2026-0243 for nostr-relay-pool 0.44.3, with no new advisory failure.",
+        "MI8-23 (https://linear.app/mi8/issue/MI8-23/security-retire-unmaintained-nostr-relay-pool-from-mesh-dependencies) tracks migration off nostr-relay-pool. The single-alert source-merge exception expires 2026-09-03; it does not suppress cargo-deny or authorize deployment, release, or installation."
+      ]
+    }
+  ],
+  "reclassifications": []
+}

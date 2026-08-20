@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-25-normal-3c76f68",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "5e4c05f90b062898e1827ba45cb826c6ff913741",
+  "pinned_upstream_sha": "5a3b3d23226474f835a1cf41d2ecc5f53cacb070",
+  "topics": [
+    {
+      "topic_id": "pr-5423",
+      "title": "Reduce repeated ACP session context",
+      "upstream_pr": 5423,
+      "entry_shas": [
+        "563e4346da37d0fb2e9ec1c95e7f1eba79f83040"
+      ]
+    },
+    {
+      "topic_id": "pr-5480",
+      "title": "fix(search): surface exact short profile names",
+      "upstream_pr": 5480,
+      "entry_shas": [
+        "3c76f682c3c2dfe2cd296c277c5e63799d3424f9"
+      ]
+    },
+    {
+      "topic_id": "pr-5212",
+      "title": "fix(release): pin desktop PR operations to block/buzz",
+      "upstream_pr": 5212,
+      "entry_shas": [
+        "c1e20a814bf694db2af959adacb375ced27af023"
+      ]
+    },
+    {
+      "topic_id": "pr-5398",
+      "title": "ci(release): gate OSS desktop auto-update promotion",
+      "upstream_pr": 5398,
+      "entry_shas": [
+        "43573d114b5bfaf7cefa75eee7e219dc05cf1cd1"
+      ]
+    },
+    {
+      "topic_id": "pr-5453",
+      "title": "feat(desktop): time-based sweep for stale localStorage caches",
+      "upstream_pr": 5453,
+      "entry_shas": [
+        "bb9aae1065d4a77ae3dcb36b7b4a4e7ac8e68ead"
+      ]
+    },
+    {
+      "topic_id": "pr-5454",
+      "title": "fix(desktop): bound nine unbounded localStorage stores",
+      "upstream_pr": 5454,
+      "entry_shas": [
+        "9c074bb89b290721f839bbc84fdf4701269e43a0"
+      ]
+    },
+    {
+      "topic_id": "pr-5224",
+      "title": "perf(ci): experiment with sccache for relay builds",
+      "upstream_pr": 5224,
+      "entry_shas": [
+        "5a3b3d23226474f835a1cf41d2ecc5f53cacb070"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "563e4346da37d0fb2e9ec1c95e7f1eba79f83040",
+      "topic_id": "pr-5423",
+      "title": "Reduce repeated ACP session context",
+      "areas": [
+        "agent",
+        "acp",
+        "performance"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5423",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "3c76f682c3c2dfe2cd296c277c5e63799d3424f9",
+      "topic_id": "pr-5480",
+      "title": "fix(search): surface exact short profile names",
+      "areas": [
+        "relay",
+        "search"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5480",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "c1e20a814bf694db2af959adacb375ced27af023",
+      "topic_id": "pr-5212",
+      "title": "fix(release): pin desktop PR operations to block/buzz",
+      "areas": [
+        "release",
+        "tooling"
+      ],
+      "risk": "low",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Reject from product intake: this is release automation tied to the upstream block/buzz repository and requires separate Zion release-policy review.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5212",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Not applicable; release/delivery review recorded.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "43573d114b5bfaf7cefa75eee7e219dc05cf1cd1",
+      "topic_id": "pr-5398",
+      "title": "ci(release): gate OSS desktop auto-update promotion",
+      "areas": [
+        "release",
+        "ci",
+        "deployment"
+      ],
+      "risk": "high",
+      "decision": "reject",
+      "integration_method": null,
+      "delivery": "not_applicable",
+      "rationale": "Reject from this intake: release/promotion/deployment behavior is a separate authorization and must not be imported as product behavior.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5398",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Not applicable; release/delivery review recorded.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "bb9aae1065d4a77ae3dcb36b7b4a4e7ac8e68ead",
+      "topic_id": "pr-5453",
+      "title": "feat(desktop): time-based sweep for stale localStorage caches",
+      "areas": [
+        "desktop",
+        "storage",
+        "performance"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5453",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "9c074bb89b290721f839bbc84fdf4701269e43a0",
+      "topic_id": "pr-5454",
+      "title": "fix(desktop): bound nine unbounded localStorage stores",
+      "areas": [
+        "desktop",
+        "storage",
+        "resilience"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5454",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "5a3b3d23226474f835a1cf41d2ecc5f53cacb070",
+      "topic_id": "pr-5224",
+      "title": "perf(ci): experiment with sccache for relay builds",
+      "areas": [
+        "ci",
+        "rust",
+        "performance"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5224",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, dependency/license/security screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

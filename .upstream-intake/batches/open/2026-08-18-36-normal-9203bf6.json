@@ -1,0 +1,285 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-36-normal-9203bf6",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "b0795a10ea0f63f2382f4028a1adc2bc3e039d79",
+  "pinned_upstream_sha": "9203bf60eea44875cafb36410252f8705ce54e2d",
+  "topics": [
+    {
+      "topic_id": "pr-5478",
+      "title": "Add glass appearance and cohesive settings",
+      "upstream_pr": 5478,
+      "entry_shas": [
+        "cd2aa5c12d1c802ea9d93c30809f3625c49e9bd4"
+      ]
+    },
+    {
+      "topic_id": "pr-5306",
+      "title": "Improve desktop search scoping",
+      "upstream_pr": 5306,
+      "entry_shas": [
+        "cf03bd7c37cb3918afd4fe2a561360d01e11b68e"
+      ]
+    },
+    {
+      "topic_id": "pr-3678",
+      "title": "feat(tracing): add PostgreSQL tracing spans",
+      "upstream_pr": 3678,
+      "entry_shas": [
+        "397796c5f343db4251198f44505b1afebe88223f"
+      ]
+    },
+    {
+      "topic_id": "pr-5291",
+      "title": "fix(relay): log event kind on the HTTP bridge /events line",
+      "upstream_pr": 5291,
+      "entry_shas": [
+        "e8153f8f27f5a35f56b2a578ab749190787d9e91"
+      ]
+    },
+    {
+      "topic_id": "pr-5603",
+      "title": "fix(desktop): bound initial timeline retention",
+      "upstream_pr": 5603,
+      "entry_shas": [
+        "d9dc76c0aa7ab8a96b2ecf89325eef6b1536039d"
+      ]
+    },
+    {
+      "topic_id": "pr-5294",
+      "title": "fix(relay): stop panicking the ingest worker on reactions to project events",
+      "upstream_pr": 5294,
+      "entry_shas": [
+        "16b7ae7ce623a57be1461adee3b8fce4115b3c3a"
+      ]
+    },
+    {
+      "topic_id": "pr-5591",
+      "title": "perf(desktop): coalesce read state localStorage persistence",
+      "upstream_pr": 5591,
+      "entry_shas": [
+        "9203bf60eea44875cafb36410252f8705ce54e2d"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "cd2aa5c12d1c802ea9d93c30809f3625c49e9bd4",
+      "topic_id": "pr-5478",
+      "title": "Add glass appearance and cohesive settings",
+      "areas": [
+        "desktop",
+        "settings",
+        "appearance",
+        "branding"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Queue only as a Zion-native visual adaptation; upstream Buzz-specific appearance rules cannot be copied into visible Zion product output.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5478",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "cf03bd7c37cb3918afd4fe2a561360d01e11b68e",
+      "topic_id": "pr-5306",
+      "title": "Improve desktop search scoping",
+      "areas": [
+        "desktop",
+        "search"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5306",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "397796c5f343db4251198f44505b1afebe88223f",
+      "topic_id": "pr-3678",
+      "title": "feat(tracing): add PostgreSQL tracing spans",
+      "areas": [
+        "relay",
+        "database",
+        "observability"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/3678",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "e8153f8f27f5a35f56b2a578ab749190787d9e91",
+      "topic_id": "pr-5291",
+      "title": "fix(relay): log event kind on the HTTP bridge /events line",
+      "areas": [
+        "relay",
+        "observability"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5291",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "d9dc76c0aa7ab8a96b2ecf89325eef6b1536039d",
+      "topic_id": "pr-5603",
+      "title": "fix(desktop): bound initial timeline retention",
+      "areas": [
+        "desktop",
+        "messaging",
+        "memory"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5603",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "16b7ae7ce623a57be1461adee3b8fce4115b3c3a",
+      "topic_id": "pr-5294",
+      "title": "fix(relay): stop panicking the ingest worker on reactions to project events",
+      "areas": [
+        "relay",
+        "ingest",
+        "resilience"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5294",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "9203bf60eea44875cafb36410252f8705ce54e2d",
+      "topic_id": "pr-5591",
+      "title": "perf(desktop): coalesce read state localStorage persistence",
+      "areas": [
+        "desktop",
+        "storage",
+        "performance"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5591",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, egress/dependency screening, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-35-security-bba3e06",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "d3ec831e0cecbff347d55a236e34b27d79961503",
+  "pinned_upstream_sha": "b0795a10ea0f63f2382f4028a1adc2bc3e039d79",
+  "topics": [
+    {
+      "topic_id": "pr-5569",
+      "title": "Fix macOS attachment picker lifecycle and allow inert HTML downloads",
+      "upstream_pr": 5569,
+      "entry_shas": [
+        "bba3e06386b8a0ca22e9867dc81aac1ca2b1b737"
+      ]
+    },
+    {
+      "topic_id": "pr-5305",
+      "title": "Add Send to channel for thread messages",
+      "upstream_pr": 5305,
+      "entry_shas": [
+        "b0795a10ea0f63f2382f4028a1adc2bc3e039d79"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "bba3e06386b8a0ca22e9867dc81aac1ca2b1b737",
+      "topic_id": "pr-5569",
+      "title": "Fix macOS attachment picker lifecycle and allow inert HTML downloads",
+      "areas": [
+        "desktop",
+        "macos",
+        "media",
+        "content-safety"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security-sensitive change reviewed as a dedicated candidate; queue for Zion-preserving adaptation after focused security, authorization, dependency, and compatibility tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "HTML attachment MIME policy and inert-download safety boundary"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5569",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with dedicated security review, focused regression tests, dependency/migration checks, Zion compatibility checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "b0795a10ea0f63f2382f4028a1adc2bc3e039d79",
+      "topic_id": "pr-5305",
+      "title": "Add Send to channel for thread messages",
+      "areas": [
+        "desktop",
+        "messaging",
+        "authorization",
+        "egress"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security-sensitive change reviewed as a dedicated candidate; queue for Zion-preserving adaptation after focused security, authorization, dependency, and compatibility tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "cross-channel message forwarding authorization",
+        "egress and ownership checks for thread content"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5305",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with dedicated security review, focused regression tests, dependency/migration checks, Zion compatibility checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

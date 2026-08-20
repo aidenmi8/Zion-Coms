@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-33-security-240cdd3",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "83ca595adadae32238197d9c34a5895a34950968",
+  "pinned_upstream_sha": "240cdd3ea17a8f4d521c8398a929294210bd1e1a",
+  "topics": [
+    {
+      "topic_id": "pr-5289",
+      "title": "chore: mesh upgrade, clean up legacy special case code, simplify model selection for mesh",
+      "upstream_pr": 5289,
+      "entry_shas": [
+        "240cdd3ea17a8f4d521c8398a929294210bd1e1a"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "240cdd3ea17a8f4d521c8398a929294210bd1e1a",
+      "topic_id": "pr-5289",
+      "title": "chore: mesh upgrade, clean up legacy special case code, simplify model selection for mesh",
+      "areas": [
+        "dependencies",
+        "mesh",
+        "security"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security/dependency migration reviewed as a dedicated candidate; it removes the temporary advisory exception only because MeshLLM 0.75.1 moves to nostr-sdk 0.45-compatible dependencies.",
+      "dependencies": [
+        "d2ebaa95a7d2565fb217fdfae56bafb9509be444"
+      ],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "MeshLLM dependency migration removes RUSTSEC-2026-0243 exception",
+        "model-selection and signed runtime boundary changes"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5289",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with dedicated security review, focused regression tests, dependency/migration checks, Zion compatibility checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

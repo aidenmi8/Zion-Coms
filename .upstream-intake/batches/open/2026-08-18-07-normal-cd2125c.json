@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-07-normal-cd2125c",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "ad923353a24b784df13a7c88757d6b24ebe36299",
+  "pinned_upstream_sha": "cd2125c34b1ac182698acb29bb3334c5d4884e96",
+  "topics": [
+    {
+      "topic_id": "pr-5136",
+      "title": "fix(bench): mention the orchestrator by pubkey when posting the task",
+      "upstream_pr": 5136,
+      "entry_shas": [
+        "f53bbd1152464ecbb1de495e2d1d959e156138f0"
+      ]
+    },
+    {
+      "topic_id": "pr-4824",
+      "title": "fix(cli): emit structured JSON warning when archive/unarchive owner-auth extraction fails",
+      "upstream_pr": 4824,
+      "entry_shas": [
+        "ee9690a93c315d7049e9f7a4def05191c398303c"
+      ]
+    },
+    {
+      "topic_id": "pr-4926",
+      "title": "Polish advanced agent setup and Welcome composer",
+      "upstream_pr": 4926,
+      "entry_shas": [
+        "c71f6585391421843b552150cef2d927966ee3ba"
+      ]
+    },
+    {
+      "topic_id": "pr-5161",
+      "title": "Improve video review readiness and controls",
+      "upstream_pr": 5161,
+      "entry_shas": [
+        "cd2125c34b1ac182698acb29bb3334c5d4884e96"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "f53bbd1152464ecbb1de495e2d1d959e156138f0",
+      "topic_id": "pr-5136",
+      "title": "fix(bench): mention the orchestrator by pubkey when posting the task",
+      "areas": [
+        "benchmarks"
+      ],
+      "risk": "low",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5136",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "ee9690a93c315d7049e9f7a4def05191c398303c",
+      "topic_id": "pr-4824",
+      "title": "fix(cli): emit structured JSON warning when archive/unarchive owner-auth extraction fails",
+      "areas": [
+        "cli",
+        "errors"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4824",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "c71f6585391421843b552150cef2d927966ee3ba",
+      "topic_id": "pr-4926",
+      "title": "Polish advanced agent setup and Welcome composer",
+      "areas": [
+        "desktop",
+        "agents",
+        "onboarding"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/4926",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "cd2125c34b1ac182698acb29bb3334c5d4884e96",
+      "topic_id": "pr-5161",
+      "title": "Improve video review readiness and controls",
+      "areas": [
+        "desktop",
+        "media",
+        "video"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5161",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

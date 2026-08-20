@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-12-normal-742e8d1",
+  "kind": "normal",
+  "status": "reviewed",
+  "previous_reviewed_sha": "fb73561e64e8adc2cfbbd8f17e52d787e046b801",
+  "pinned_upstream_sha": "742e8d11974498a6ed71c70dd87dc6c25fcbf2b7",
+  "topics": [
+    {
+      "topic_id": "pr-5203",
+      "title": "fix(desktop): defer channel visibility change to Save",
+      "upstream_pr": 5203,
+      "entry_shas": [
+        "ef2ecaf8730b4f04bc370cfaa2370cf074507154"
+      ]
+    },
+    {
+      "topic_id": "pr-5202",
+      "title": "fix(desktop): retain distinct agent instances in autocomplete",
+      "upstream_pr": 5202,
+      "entry_shas": [
+        "e9925db54e04db2f72c9ba6af5ecb6e2976d6269"
+      ]
+    },
+    {
+      "topic_id": "pr-5195",
+      "title": "fix(buzz-agent): Responses reasoning summary, Anthropic display:summarized, ACP v2 messageId",
+      "upstream_pr": 5195,
+      "entry_shas": [
+        "742e8d11974498a6ed71c70dd87dc6c25fcbf2b7"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "ef2ecaf8730b4f04bc370cfaa2370cf074507154",
+      "topic_id": "pr-5203",
+      "title": "fix(desktop): defer channel visibility change to Save",
+      "areas": [
+        "desktop",
+        "channels",
+        "visibility"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5203",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "e9925db54e04db2f72c9ba6af5ecb6e2976d6269",
+      "topic_id": "pr-5202",
+      "title": "fix(desktop): retain distinct agent instances in autocomplete",
+      "areas": [
+        "desktop",
+        "agents",
+        "members"
+      ],
+      "risk": "medium",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5202",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    },
+    {
+      "upstream_sha": "742e8d11974498a6ed71c70dd87dc6c25fcbf2b7",
+      "topic_id": "pr-5195",
+      "title": "fix(buzz-agent): Responses reasoning summary, Anthropic display:summarized, ACP v2 messageId",
+      "areas": [
+        "agent",
+        "acp",
+        "llm"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Reviewed the complete upstream commit, changed files, tests, dependencies, and compatibility impact; queue for Zion-preserving adaptation with no source implementation in this review pass.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": false,
+      "security_reasons": [],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5195",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, changed tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

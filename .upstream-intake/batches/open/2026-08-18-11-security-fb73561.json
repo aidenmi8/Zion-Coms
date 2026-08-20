@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "batch_id": "2026-08-18-11-security-fb73561",
+  "kind": "security",
+  "status": "reviewed",
+  "previous_reviewed_sha": "b2ac66cde81df7ce1afc50016e1571cb6e8b7779",
+  "pinned_upstream_sha": "fb73561e64e8adc2cfbbd8f17e52d787e046b801",
+  "topics": [
+    {
+      "topic_id": "pr-5073",
+      "title": "feat(desktop): Projects follow-ups — access restrictions, fast loading, activity feed polish",
+      "upstream_pr": 5073,
+      "entry_shas": [
+        "fb73561e64e8adc2cfbbd8f17e52d787e046b801"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "upstream_sha": "fb73561e64e8adc2cfbbd8f17e52d787e046b801",
+      "topic_id": "pr-5073",
+      "title": "feat(desktop): Projects follow-ups — access restrictions, fast loading, activity feed polish",
+      "areas": [
+        "desktop",
+        "projects",
+        "authorization"
+      ],
+      "risk": "high",
+      "decision": "accept",
+      "integration_method": "adapt",
+      "delivery": "queued",
+      "rationale": "Security-sensitive upstream change reviewed as a dedicated candidate; queue for Zion-preserving adaptation after focused security review and tests.",
+      "dependencies": [],
+      "blocked_by_rejected": [],
+      "dependency_resolution": null,
+      "security_candidate": true,
+      "security_reasons": [
+        "project repository access restrictions and membership authorization"
+      ],
+      "tracking": {
+        "issue": null,
+        "pull_request": "https://github.com/block/buzz/pull/5073",
+        "local_backlog": "zion-upstream-intake-20260818",
+        "implementation_plan": "Implement only after explicit approval with focused tests, Zion visible-brand checks, compatibility-contract checks, and required local gates.",
+        "fork_commits": []
+      },
+      "verification": [
+        "Full-SHA diff, security context, tests, dependency impact, and compatibility surfaces reviewed; no source implementation made."
+      ],
+      "revisit": null
+    }
+  ],
+  "reclassifications": []
+}

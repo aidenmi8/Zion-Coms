@@ -586,8 +586,8 @@ git commit -m "feat: migrate admin and auth brand surfaces"
 **Interfaces:**
 
 - Consumes: approved intake derivatives and the DMG mockup.
-- Produces: Zion/Sentra packaging artwork with `Zion.app` display name and the
-  exact bundle identifier `xyz.block.buzz.app` intact.
+- Produces: Zion packaging artwork with `Zion.app` display name and the exact
+  bundle identifier `xyz.block.buzz.app` intact.
 
 - [ ] **Step 1: Validate the packaging source and dimensions**
 
@@ -605,15 +605,13 @@ size is absent.
 Use the intake-approved dark rounded-square Zion icon derivative with the
 checked-in RGBA Swift renderer at each required dimension. Tauri rejects
 RGB-only PNGs, so this preserves the artwork while satisfying the native
-icon contract. Keep the wide Sentra lockup only for DMG/release artwork.
-Render the DMG background from the staged transparent wordmark with the
-checked-in Swift compositor; this keeps the deep-purple gradient, upright
-lockup, and lavender install direction reproducible:
+icon contract. Render the DMG background with the checked-in Swift
+compositor; this keeps the deep-purple gradient, Zion lockup, and lavender
+install direction reproducible without relying on stale Sentra artwork:
 
 ```bash
 cd /Users/Aiden-Mi8/Documents/buzz-
 swift scripts/render-zion-dmg-background.swift \
-  "/private/tmp/zion-brand-source/transparent -logos/logo-TW2-wordmark.png" \
   desktop/src-tauri/icons/dmg-background.png
 ```
 

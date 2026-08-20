@@ -95,15 +95,21 @@ drawPolygon(
   color: NSColor(calibratedWhite: 0.68, alpha: 1).cgColor
 )
 
+// The Finder item centers are x=191 and x=469 in the 660px DMG window. Keep
+// the compact drag cue at their midpoint and on their center row.
+let installArrowCenterX: CGFloat = 330
+let installArrowY: CGFloat = 330
+let installArrowHalfLength: CGFloat = 55
+let installArrowHeadLength: CGFloat = 20
 context.setStrokeColor(NSColor(calibratedRed: 0.82, green: 0.75, blue: 1, alpha: 0.9).cgColor)
-context.setLineWidth(8)
+context.setLineWidth(5)
 context.setLineCap(.round)
-context.move(to: pointFromTopLeft(870, 154))
-context.addLine(to: pointFromTopLeft(1090, 154))
-context.move(to: pointFromTopLeft(1090, 154))
-context.addLine(to: pointFromTopLeft(1050, 114))
-context.move(to: pointFromTopLeft(1090, 154))
-context.addLine(to: pointFromTopLeft(1050, 194))
+context.move(to: pointFromTopLeft(installArrowCenterX - installArrowHalfLength, installArrowY))
+context.addLine(to: pointFromTopLeft(installArrowCenterX + installArrowHalfLength, installArrowY))
+context.move(to: pointFromTopLeft(installArrowCenterX + installArrowHalfLength, installArrowY))
+context.addLine(to: pointFromTopLeft(installArrowCenterX + installArrowHalfLength - installArrowHeadLength, installArrowY - installArrowHeadLength))
+context.move(to: pointFromTopLeft(installArrowCenterX + installArrowHalfLength, installArrowY))
+context.addLine(to: pointFromTopLeft(installArrowCenterX + installArrowHalfLength - installArrowHeadLength, installArrowY + installArrowHeadLength))
 context.strokePath()
 
 let graphicsContext = NSGraphicsContext(cgContext: context, flipped: true)
@@ -119,7 +125,7 @@ let instructionAttributes: [NSAttributedString.Key: Any] = [
   .font: NSFont.systemFont(ofSize: 26, weight: .medium),
   .foregroundColor: NSColor(calibratedRed: 0.92, green: 0.89, blue: 1, alpha: 0.9),
 ]
-("Drag to install" as NSString).draw(at: NSPoint(x: 900, y: 206), withAttributes: instructionAttributes)
+("Drag to install" as NSString).draw(at: NSPoint(x: 238, y: 270), withAttributes: instructionAttributes)
 NSGraphicsContext.current = previousContext
 
 guard let image = context.makeImage(),

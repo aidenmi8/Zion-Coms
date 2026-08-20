@@ -49,7 +49,9 @@ import {
   isWebSocketClose,
   shouldRefuseConnect,
   shouldScheduleReconnect,
+  shouldWaitForScheduledReconnect,
 } from "@/shared/api/relayReconnectPolicy";
+import { RelayReconnectWaiters } from "@/shared/api/relayReconnectWaiters";
 import { RelayStallWatchdog } from "@/shared/api/relayStallWatchdog";
 import { closeWebSocket } from "@/shared/api/relayWebSocketClose";
 import { createRelayInboundBuffer } from "@/shared/api/relayInboundBuffer";
@@ -58,26 +60,12 @@ const RECONNECT_BASE_DELAY_MS = 1_000,
   RECONNECT_MAX_DELAY_MS = 30_000,
   EVENT_BATCH_MS = 16;
 
-/**
- * Op-level timeout constants. Raised from 8 s to 25 s to survive degraded
- * networks where TLS handshakes and DNS resolution can take 3–10 s.
- */
 export const AUTH_TIMEOUT_MS = 25_000;
 export const HISTORY_TIMEOUT_MS = 25_000;
 export const PUBLISH_TIMEOUT_MS = 25_000;
 
-/**
- * The connection must remain stable for this long after a successful AUTH
- * before the reconnect backoff delay resets to its base value. Stability-
- * gated reset prevents repeated fast reconnects (flapping) from erasing the
- * backoff that throttles them.
- */
 export const BACKOFF_RESET_STABLE_MS = 60_000;
 
-/**
- * Passive liveness check. The relay sends heartbeat pings every 30s; if no
- * inbound frame arrives for two heartbeat windows, treat the socket as stalled.
- */
 const STALL_CHECK_INTERVAL_MS = 10_000;
 const STALL_IDLE_TIMEOUT_MS = 60_000;
 
@@ -86,6 +74,7 @@ export class RelayClient {
   private relayUrl: string | null = null;
   private connectPromise: Promise<void> | null = null;
   private reconnectTimeout: number | null = null;
+  private reconnectWaiters = new RelayReconnectWaiters();
   private reconnectDelayMs = RECONNECT_BASE_DELAY_MS;
   private keepAliveRequested = false;
   private authRequest: {
@@ -106,16 +95,6 @@ export class RelayClient {
   private stabilityTimer: number | null = null;
   private visibleChannelId: string | null = null;
 
-  /**
-   * Sticky terminal flag. Set when `resetConnection` is called with
-   * `reconnect: false` (today: auth rejection). Acts as a hard guard against
-   * the reconnect-timer / retry-wrapper paths racing back to "reconnecting"
-   * after we've already declared the session dead.
-   *
-   * Cleared only on explicit user re-engagement: `disconnect()` (community
-   * switch — the singleton is being reused for a different community) and
-   * `preconnect()` (caller is asking us to come back up).
-   */
   private terminal = false;
 
   private connectionStateEmitter = new RelayConnectionStateEmitter("idle");
@@ -128,21 +107,10 @@ export class RelayClient {
     },
   });
 
-  /**
-   * Track which channel the user is currently viewing so its subscriptions
-   * are sent first during reconnect replay — reducing visible latency on
-   * degraded networks where the relay REQ storm would otherwise delay all
-   * channels equally.
-   */
   setVisibleChannelId(id: string | null) {
     this.visibleChannelId = id;
   }
 
-  /**
-   * Cleanly tear down the connection without scheduling a reconnect.
-   * Used during community switches to reset the singleton before the
-   * new community applies.
-   */
   disconnect() {
     const error = new Error("Relay disconnected for community switch.");
 
@@ -170,6 +138,7 @@ export class RelayClient {
     }
 
     this.connectPromise = null;
+    this.reconnectWaiters.settle(error);
 
     if (this.authRequest) {
       window.clearTimeout(this.authRequest.timeout);
@@ -248,10 +217,6 @@ export class RelayClient {
     return this.fetchHistory(filter);
   }
 
-  /**
-   * Return the first event matching `filter` as soon as it arrives, without
-   * waiting for EOSE. Resolves to `null` when EOSE arrives before any event.
-   */
   async fetchFirstEvent(
     filter: RelaySubscriptionFilter,
   ): Promise<RelayEvent | null> {
@@ -466,7 +431,19 @@ export class RelayClient {
     // the caller is asking us to try again, so clear the latch.
     this.terminal = false;
     this.keepAliveRequested = true;
-    await this.ensureConnected();
+    if (this.reconnectTimeout !== null) {
+      window.clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    try {
+      await this.ensureConnected();
+      this.reconnectWaiters.settle();
+    } catch (error) {
+      this.reconnectWaiters.settle(
+        this.normalizeRelayError(error, "Relay reconnect failed."),
+      );
+      throw error;
+    }
   }
 
   subscribeToReconnects(listener: () => void) {
@@ -509,9 +486,15 @@ export class RelayClient {
       return;
     }
 
-    if (this.reconnectTimeout) {
-      window.clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
+    if (
+      shouldWaitForScheduledReconnect({
+        hasPendingReconnect: this.reconnectTimeout !== null,
+      })
+    ) {
+      // The reconnect coordinator owns outage pacing. Query, publish, and
+      // subscription callers must wait for its scheduled attempt instead of
+      // clearing the timer and creating an immediate reconnect storm.
+      return this.reconnectWaiters.wait();
     }
 
     const connectPromise = this.connect();
@@ -585,8 +568,8 @@ export class RelayClient {
         this.reconnectDelayMs = RECONNECT_BASE_DELAY_MS;
       }, BACKOFF_RESET_STABLE_MS);
 
-      await this.replayLiveSubscriptions();
       this.connectionStateEmitter.set("connected");
+      await this.replayLiveSubscriptions();
       this.stallWatchdog.start();
       this.emitReconnectIfNeeded();
     } catch (error) {
@@ -993,9 +976,14 @@ export class RelayClient {
 
     this.reconnectTimeout = window.setTimeout(() => {
       this.reconnectTimeout = null;
-      void this.ensureConnected().catch(() => {
-        this.scheduleReconnect();
-      });
+      void this.ensureConnected()
+        .then(() => this.reconnectWaiters.settle())
+        .catch((error) => {
+          this.reconnectWaiters.settle(
+            this.normalizeRelayError(error, "Relay reconnect failed."),
+          );
+          this.scheduleReconnect();
+        });
     }, delay);
   }
 
@@ -1052,6 +1040,9 @@ export class RelayClient {
     if (options?.reconnect === false && this.reconnectTimeout) {
       window.clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
+    }
+    if (options?.reconnect === false) {
+      this.reconnectWaiters.settle(error);
     }
 
     if (this.wsId !== null) {

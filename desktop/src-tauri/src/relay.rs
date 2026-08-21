@@ -96,6 +96,40 @@ pub fn relay_api_base_url() -> String {
     relay_http_base_url(&relay_ws_url())
 }
 
+/// Convert a physical `/c/<name>` relay URL into the logical host URL used by
+/// NIP-98. Tailscale provides one resolvable machine hostname, while the relay
+/// still keeps its host-derived tenant boundary in the database.
+pub(crate) fn nip98_signing_url(url: &str) -> String {
+    let Ok(mut parsed) = url::Url::parse(url) else {
+        return url.to_owned();
+    };
+    let Some(rest) = parsed.path().strip_prefix("/c/") else {
+        return url.to_owned();
+    };
+    let Some((name, suffix)) = rest.split_once('/') else {
+        return url.to_owned();
+    };
+    let name = name.to_owned();
+    let suffix = suffix.to_owned();
+    if name.is_empty() || name.contains('/') || name.contains('.') {
+        return url.to_owned();
+    }
+    let Some(host) = parsed.host_str().map(str::to_owned) else {
+        return url.to_owned();
+    };
+    let Ok(_) = parsed.set_host(Some(&format!("{name}.{host}"))) else {
+        return url.to_owned();
+    };
+    parsed.set_path(&format!("/{suffix}"));
+    parsed.to_string()
+}
+
+/// Return the logical relay origin for a path-scoped community's NIP-42 tag.
+pub(crate) fn relay_auth_url(url: &str) -> String {
+    let logical = nip98_signing_url(&format!("{url}/__auth"));
+    logical.trim_end_matches("/__auth").to_owned()
+}
+
 // ── NIP-98 HTTP auth ────────────────────────────────────────────────────────
 
 pub fn build_nip98_auth_header(
@@ -115,6 +149,7 @@ pub fn build_nip98_auth_header_for_keys(
     body: &[u8],
 ) -> Result<String, String> {
     let payload_hash = hex::encode(Sha256::digest(body));
+    let signing_url = nip98_signing_url(url);
 
     // Nonce ensures unique event IDs even for identical requests in the same second.
     // Without this, rapid-fire calls (e.g. query → submit → re-query) with the same
@@ -122,7 +157,8 @@ pub fn build_nip98_auth_header_for_keys(
     let nonce_hex = uuid::Uuid::new_v4().to_string();
 
     let tags = vec![
-        Tag::parse(vec!["u", url]).map_err(|error| format!("url tag failed: {error}"))?,
+        Tag::parse(vec!["u", &signing_url])
+            .map_err(|error| format!("url tag failed: {error}"))?,
         Tag::parse(vec!["method", method.as_str()])
             .map_err(|error| format!("method tag failed: {error}"))?,
         Tag::parse(vec!["payload", &payload_hash])
@@ -642,7 +678,8 @@ pub async fn submit_signed_event_with_keys(
 mod tests {
     use super::{
         build_profile_event, classify_intercepted_response, effective_agent_relay_url,
-        extract_retry_in_hint, parse_command_response, relay_http_base_url,
+        extract_retry_in_hint, nip98_signing_url, parse_command_response, relay_auth_url,
+        relay_http_base_url,
         MALFORMED_RESPONSE_MESSAGE,
     };
     use serde::Deserialize;
@@ -823,6 +860,22 @@ mod tests {
         assert_eq!(
             relay_http_base_url("wss://localhost:3000"),
             "https://localhost:3000"
+        );
+    }
+
+    #[test]
+    fn path_scoped_community_http_auth_uses_logical_host() {
+        assert_eq!(
+            nip98_signing_url("https://zion-coms.tail1bd36d.ts.net/c/north-star/events"),
+            "https://north-star.zion-coms.tail1bd36d.ts.net/events"
+        );
+    }
+
+    #[test]
+    fn path_scoped_community_auth_keeps_the_physical_relay_url() {
+        assert_eq!(
+            relay_auth_url("wss://zion-coms.tail1bd36d.ts.net/c/north-star"),
+            "wss://north-star.zion-coms.tail1bd36d.ts.net"
         );
     }
 

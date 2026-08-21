@@ -53,6 +53,89 @@ struct TransferCommunityResponse {
 }
 
 const OPERATOR_REPLAY_SCOPE: &str = "operator-management";
+const LOCAL_REPLAY_SCOPE: &str = "local-community-management";
+
+fn is_loopback_relay_url(relay_url: &str) -> bool {
+    let Ok(url) = url::Url::parse(relay_url) else {
+        return false;
+    };
+    matches!(
+        url.host_str(),
+        Some("localhost" | "127.0.0.1" | "::1" | "[::1]")
+    )
+}
+
+fn local_community_creation_enabled(config: &crate::config::Config) -> bool {
+    std::env::var("BUZZ_LOCAL_COMMUNITY_PROVISIONING")
+        .map(|value| value == "true" || value == "1")
+        .unwrap_or_else(|_| is_loopback_relay_url(&config.relay_url))
+}
+
+fn local_api_origin(relay_url: &str) -> String {
+    let authority = buzz_core::tenant::relay_url_authority(relay_url);
+    let scheme = if relay_url.trim_start().starts_with("wss://") {
+        "https"
+    } else {
+        "http"
+    };
+    format!("{scheme}://{authority}")
+}
+
+async fn authorize_local_request(
+    state: &Arc<AppState>,
+    headers: &HeaderMap,
+    method: &str,
+    path: &str,
+    raw_query: Option<&str>,
+    body: Option<&[u8]>,
+) -> Result<nostr::PublicKey, (StatusCode, Json<Value>)> {
+    if !local_community_creation_enabled(&state.config) {
+        return Err(api_error(
+            StatusCode::NOT_FOUND,
+            "local community creation is disabled",
+        ));
+    }
+    let deployment = crate::tenant::bind_deployment_community(&state.db, &state.config.relay_url)
+        .await
+        .map_err(|_| {
+            api_error(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "local community service unavailable",
+            )
+        })?;
+    let path_with_query = match raw_query {
+        Some(query) if !query.is_empty() => format!("{path}?{query}"),
+        _ => path.to_string(),
+    };
+    let url = format!(
+        "{}{path_with_query}",
+        local_api_origin(&state.config.relay_url)
+    );
+    let (pubkey, event_id_bytes) =
+        bridge::verify_bridge_auth_with_options(headers, method, &url, body, true, body.is_some())?;
+    match state
+        .nip98_replay
+        .try_mark_in_scope(
+            LOCAL_REPLAY_SCOPE,
+            &nostr::EventId::from_byte_array(event_id_bytes),
+            buzz_auth::DEFAULT_REPLAY_TTL_SECS,
+        )
+        .await
+    {
+        Ok(true) => Ok(pubkey),
+        Ok(false) => Err(api_error(
+            StatusCode::UNAUTHORIZED,
+            "NIP-98: replay detected",
+        )),
+        Err(error) => {
+            tracing::warn!(error = %error, community = %deployment.community(), "local NIP-98 replay guard failed");
+            Err(api_error(
+                StatusCode::UNAUTHORIZED,
+                "NIP-98: replay check unavailable",
+            ))
+        }
+    }
+}
 
 /// Shared deployment-global operator auth prelude. The canonical management
 /// origin and replay namespace are configuration, never tenant registry state
@@ -190,6 +273,77 @@ pub async fn provision_community(
         }
         Err(msg) => Err(api_error(StatusCode::BAD_REQUEST, &msg)),
     }
+}
+
+/// Create a community on the configured Zion relay for the NIP-98 signer.
+pub async fn provision_local_community(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    body: axum::body::Bytes,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let owner = authorize_local_request(
+        &state,
+        &headers,
+        "POST",
+        "/local/communities",
+        None,
+        Some(&body),
+    )
+    .await?;
+    let mut request: ProvisionCommunityRequest = serde_json::from_slice(&body).map_err(|e| {
+        api_error(
+            StatusCode::BAD_REQUEST,
+            &format!("invalid local community JSON: {e}"),
+        )
+    })?;
+    request.create_only = true;
+    request.initial_owner_pubkey = Some(owner.to_hex());
+    crate::handlers::community_provisioning::provision_local_community(&state, &owner, request)
+        .await
+        .and_then(|response| {
+            serde_json::to_value(response)
+                .map(Json)
+                .map_err(|error| format!("local community response serialization failed: {error}"))
+        })
+        .map_err(|message| {
+            let status =
+                if message == "community already exists" || message.starts_with("limit_reached:") {
+                    StatusCode::CONFLICT
+                } else {
+                    StatusCode::BAD_REQUEST
+                };
+            api_error(status, &message)
+        })
+}
+
+/// Check local community-host availability without creating it.
+pub async fn local_community_availability(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    RawQuery(raw_query): RawQuery,
+    Query(query): Query<CommunityAvailabilityQuery>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    authorize_local_request(
+        &state,
+        &headers,
+        "GET",
+        "/local/communities/availability",
+        raw_query.as_deref(),
+        None,
+    )
+    .await?;
+    let normalized_host = normalize_candidate_host(&query.host)
+        .map_err(|message| api_error(StatusCode::BAD_REQUEST, &message))?;
+    let existing = state
+        .db
+        .lookup_community_by_host_for_management(&normalized_host)
+        .await
+        .map_err(|_| internal_error("check local community availability"))?;
+    Ok(Json(serde_json::json!({
+        "host": query.host,
+        "normalized_host": normalized_host,
+        "available": existing.is_none(),
+    })))
 }
 
 /// Owner assertion supplied by the trusted operator client.
@@ -535,6 +689,13 @@ mod tests {
 
     const TEST_DB_URL: &str = "postgres://buzz:buzz_dev@localhost:5432/buzz"; // sadscan:disable np.postgres.1
     const INGRESS_HOST: &str = "operator-ingress.example";
+
+    #[test]
+    fn local_creation_only_accepts_loopback_relay_urls() {
+        assert!(super::is_loopback_relay_url("ws://localhost:3000"));
+        assert!(super::is_loopback_relay_url("wss://[::1]:3000"));
+        assert!(!super::is_loopback_relay_url("wss://relay.example.com"));
+    }
 
     fn nip98_auth_header(keys: &Keys, url: &str, method: &str, body: Option<&[u8]>) -> String {
         let mut tags = vec![

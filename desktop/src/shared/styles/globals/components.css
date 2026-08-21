@@ -331,6 +331,49 @@
     --buzz-onboarding-avatar-dialog-shadow: 0 0 0;
   }
 
+  /* Community creation is part of Zion's in-app experience, so it uses the
+     same indigo/navy surface as the app instead of the legacy chartreuse
+     welcome palette used by the first-launch landing page. This override is
+     intentionally below the system-color rules so it wins in either mode. */
+  .buzz-zion-community-onboarding.buzz-startup-shell {
+    --buzz-welcome-chartreuse: #8f83ff;
+    --buzz-onboarding-shell-bottom: #111322;
+    --buzz-onboarding-cta-label: #f3f0ff;
+    --buzz-onboarding-backup-ink: #c8c0ff;
+    --background: 232 23.4% 18.43%;
+    --foreground: 227 68.25% 87.65%;
+    --primary: 267 82.69% 79.61%;
+    --primary-foreground: 232 23.4% 18.43%;
+    --secondary: 230 18.8% 26.08%;
+    --secondary-foreground: 227 68.25% 87.65%;
+    --muted: 230 18.8% 26.08%;
+    --muted-foreground: 228 39.22% 80%;
+    --accent: 230 18.8% 26.08%;
+    --accent-foreground: 227 68.25% 87.65%;
+    --border: 231 15.61% 33.92%;
+    --input: 231 15.61% 33.92%;
+    --ring: 227 68.25% 87.65%;
+    --buzz-onboarding-avatar-dialog-bg: 36 34 60;
+    --buzz-onboarding-avatar-accent-bg: 75 67 135;
+    --buzz-onboarding-avatar-accent-fg: 245 242 255;
+    --buzz-onboarding-avatar-action-bg: 99 102 241;
+    --buzz-onboarding-avatar-action-fg: 255 255 255;
+    --buzz-onboarding-avatar-control-fg: 205 197 255;
+    background-color: #17182a;
+    background-image:
+      radial-gradient(
+        circle at 50% 0%,
+        rgb(99 102 241 / 0.22),
+        transparent 42%
+      ),
+      radial-gradient(circle, rgb(201 193 255 / 0.1) 1px, transparent 1px),
+      linear-gradient(180deg, #1d1b31 0%, #111322 100%);
+    background-size:
+      auto,
+      24px 24px,
+      auto;
+  }
+
   /* The key-import card is viewport-centered on ordinary windows, independent
      of the top heading and bottom-docked actions. Short windows return it to
      document flow so the shell can grow and scroll instead of overlapping. */

@@ -8,7 +8,7 @@ type SettingsSection =
   | "compute"
   | "appearance"
   | "shortcuts"
-  | "hosted-communities"
+  | "local-communities"
   | "tokens"
   | "community-members"
   | "mobile"

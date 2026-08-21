@@ -350,6 +350,54 @@ pub async fn provision_community(
     })
 }
 
+/// Create a community for the authenticated local Zion identity.
+///
+/// This is intentionally separate from deployment-operator provisioning. It is
+/// only called by the Zion community-creation API, which has already
+/// authenticated the caller with NIP-98 and is explicitly enabled by the
+/// relay deployment.
+pub async fn provision_local_community(
+    state: &Arc<AppState>,
+    owner_pubkey: &nostr::PublicKey,
+    request: ProvisionCommunityRequest,
+) -> Result<ProvisionCommunityResponse, String> {
+    if !request.create_only {
+        return Err("local community creation requires create_only".to_string());
+    }
+    let owner_hex = owner_pubkey.to_hex();
+    validate_host(&request.host)?;
+    let record = match state
+        .db
+        .create_community_with_owner(&request.host, &owner_hex)
+        .await
+        .map_err(|e| format!("failed to create community: {e}"))?
+    {
+        buzz_db::CreateCommunityWithOwnerResult::Created(record) => record,
+        buzz_db::CreateCommunityWithOwnerResult::HostExists => {
+            return Err("community already exists".to_string());
+        }
+        buzz_db::CreateCommunityWithOwnerResult::LimitReached => {
+            return Err(
+                "limit_reached: owner already owns the maximum number of communities".to_string(),
+            );
+        }
+    };
+
+    info!(
+        owner = %owner_hex,
+        community = %record.id,
+        host = %record.host,
+        "community created via local Zion API"
+    );
+    publish_membership_snapshot_if_required(state, record.id, &record.host).await;
+    Ok(ProvisionCommunityResponse {
+        community_id: record.id.to_string(),
+        host: record.host,
+        status: "created",
+        owner_pubkey: Some(owner_hex),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

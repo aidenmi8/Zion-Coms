@@ -5,9 +5,9 @@ use std::sync::Arc;
 
 use axum::{
     body::Body,
-    extract::{ConnectInfo, FromRequest, State, WebSocketUpgrade},
-    http::{HeaderMap, Request, StatusCode},
-    middleware,
+    extract::{ConnectInfo, FromRequest, OriginalUri, State, WebSocketUpgrade},
+    http::{header::HOST, HeaderMap, HeaderValue, Request, StatusCode},
+    middleware::{self, Next},
     response::{IntoResponse, Json},
     routing::{get, post, put},
     Router,
@@ -89,6 +89,14 @@ pub fn build_router(state: Arc<AppState>) -> Router {
             get(api::operator::community_availability),
         )
         .route(
+            "/local/communities",
+            post(api::operator::provision_local_community),
+        )
+        .route(
+            "/local/communities/availability",
+            get(api::operator::local_community_availability),
+        )
+        .route(
             "/operator/communities/transfer",
             post(api::operator::transfer_community),
         )
@@ -141,6 +149,17 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         merged = merged.merge(admin_router);
     }
 
+    // Tailscale provides one stable, resolvable machine hostname rather than
+    // wildcard DNS. Keep the relay's existing host-derived tenant boundary by
+    // mapping /c/<name>/... to the logical host <name>.<relay-host> before the
+    // normal handlers perform row-zero binding.
+    let scoped_routes = merged.clone();
+    merged = merged.merge(
+        Router::new()
+            .nest("/c/{community}", scoped_routes)
+            .layer(middleware::from_fn(bind_scoped_community_host)),
+    );
+
     // Serve both bundles from one fallback. The admin host is checked first so
     // it can never fall through to the public web bundle.
     let web_dir = state.config.web_dir.clone();
@@ -190,6 +209,56 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .layer(middleware::from_fn(track_metrics))
         .layer(http_trace_layer())
         .layer(build_cors_layer(&state.config.cors_origins))
+}
+
+fn scoped_community_host(raw_host: &str, community: &str) -> Option<String> {
+    if community.is_empty()
+        || !community.chars().all(|character| {
+            character.is_ascii_lowercase() || character.is_ascii_digit() || character == '-'
+        })
+        || community.starts_with('-')
+        || community.ends_with('-')
+        || community.contains("--")
+    {
+        return None;
+    }
+    let parsed = url::Url::parse(&format!("ws://{raw_host}")).ok()?;
+    let host = parsed.host_str()?;
+    let port = parsed
+        .port()
+        .filter(|port| !matches!(port, 80 | 443))
+        .map(|port| format!(":{port}"))
+        .unwrap_or_default();
+    Some(format!("{community}.{host}{port}"))
+}
+
+async fn bind_scoped_community_host(mut request: Request<Body>, next: Next) -> impl IntoResponse {
+    let path = request
+        .extensions()
+        .get::<OriginalUri>()
+        .map(|uri| uri.0.path())
+        .unwrap_or_else(|| request.uri().path());
+    let Some(community) = path
+        .strip_prefix("/c/")
+        .and_then(|rest| rest.split('/').next())
+    else {
+        return next.run(request).await;
+    };
+    let Some(raw_host) = request
+        .headers()
+        .get(HOST)
+        .and_then(|value| value.to_str().ok())
+    else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let Some(logical_host) = scoped_community_host(raw_host, community) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let Ok(host_header) = HeaderValue::from_str(&logical_host) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    request.headers_mut().insert(HOST, host_header);
+    next.run(request).await
 }
 
 fn http_trace_layer() -> TraceLayer<HttpMakeClassifier, fn(&Request<Body>) -> tracing::Span> {
@@ -483,6 +552,18 @@ mod tests {
         assert!(!is_invite_landing_path("/invite/code/extra"));
         assert!(!is_invite_landing_path("/repos"));
         assert!(!is_invite_landing_path("/"));
+    }
+
+    #[test]
+    fn community_path_derives_the_same_logical_host_as_subdomain_routing() {
+        assert_eq!(
+            scoped_community_host("zion-coms.tail1bd36d.ts.net", "north-star"),
+            Some("north-star.zion-coms.tail1bd36d.ts.net".to_owned())
+        );
+        assert_eq!(
+            scoped_community_host("zion-coms.tail1bd36d.ts.net:443", "north-star"),
+            Some("north-star.zion-coms.tail1bd36d.ts.net".to_owned())
+        );
     }
 
     #[test]

@@ -144,12 +144,6 @@ type E2eConfig = {
   mock?: {
     /** Advertised HEAD for the first mock project without adding that branch. */
     projectHeadBranch?: string;
-    /** Builderlab account returned by hosted-community onboarding. Null/omitted = signed out. */
-    builderlabAuth?: {
-      email?: string;
-      name?: string;
-      expiresAt: string;
-    } | null;
     /** Optional policy returned by the native join-policy discovery command. */
     joinPolicy?: {
       terms_markdown?: string;
@@ -157,28 +151,6 @@ type E2eConfig = {
       age_attestation_required: boolean;
       version: string;
     } | null;
-    /** Delay Builderlab login completion so cancellation/retry UI can be tested. */
-    builderlabLoginDelayMs?: number;
-    /** Bound Builderlab Nostr identity. Null/omitted = not linked yet. */
-    builderlabIdentity?: { npub?: string; pubkey_hex?: string } | null;
-    /** Structured error returned when onboarding tries to bind the local identity. */
-    builderlabBindError?: { code?: string; message?: string };
-    /** Communities owned by the mocked Builderlab account. */
-    builderlabCommunities?: Array<{
-      id?: string;
-      name?: string;
-      slug?: string;
-      normalized_host?: string;
-      archived_at?: string | null;
-    }>;
-    /** Override the community returned after hosted creation. */
-    builderlabCreatedCommunity?: {
-      id?: string;
-      name?: string;
-      slug?: string;
-      normalized_host?: string;
-      archived_at?: string | null;
-    };
     acpRuntimesCatalog?: RawAcpRuntimeCatalogEntry[];
     /** Catalog returned after a successful mocked install. */
     acpRuntimesCatalogAfterInstall?: RawAcpRuntimeCatalogEntry[];
@@ -9603,60 +9575,21 @@ export function maybeInstallE2eTauriMocks() {
     window.__BUZZ_E2E_COMMAND_LOG__?.push({ command, payload });
 
     switch (command) {
-      case "get_builderlab_auth":
-        return activeConfig?.mock?.builderlabAuth ?? null;
-      case "start_builderlab_login": {
-        const delayMs = activeConfig?.mock?.builderlabLoginDelayMs ?? 0;
-        if (delayMs > 0)
-          await new Promise((resolve) => window.setTimeout(resolve, delayMs));
-        const nextAuth = activeConfig?.mock?.builderlabAuth ?? {
-          email: "owner@example.com",
-          expiresAt: "2099-01-01T00:00:00Z",
-        };
-        if (activeConfig?.mock) activeConfig.mock.builderlabAuth = nextAuth;
-        return nextAuth;
-      }
-      case "cancel_builderlab_login":
-        return null;
-      case "clear_builderlab_auth":
-        if (activeConfig?.mock) activeConfig.mock.builderlabAuth = null;
-        return null;
-      case "get_builderlab_nostr_identity":
-        return activeConfig?.mock?.builderlabIdentity
-          ? { identity: activeConfig.mock.builderlabIdentity }
-          : { error: { code: "missing_mapping", setup_needed: true } };
-      case "bind_builderlab_nostr_identity": {
-        if (activeConfig?.mock?.builderlabBindError)
-          return { error: activeConfig.mock.builderlabBindError };
-        const activeIdentity = identity ?? DEFAULT_MOCK_IDENTITY;
-        const nextIdentity = {
-          pubkey_hex: activeIdentity.pubkey,
-          npub: `npub1${activeIdentity.pubkey}`,
-        };
-        if (activeConfig?.mock)
-          activeConfig.mock.builderlabIdentity = nextIdentity;
-        return { identity: nextIdentity };
-      }
-      case "delete_builderlab_nostr_identity":
-        if (activeConfig?.mock) activeConfig.mock.builderlabIdentity = null;
-        return {};
-      case "list_builderlab_communities":
-        return {
-          communities: activeConfig?.mock?.builderlabCommunities ?? [],
-        };
-      case "check_builderlab_community_name":
-        return {
-          available: true,
-          normalized_host: `${(payload as { name?: string })?.name ?? "community"}.communities.buzz.xyz`,
-        };
-      case "create_builderlab_community": {
+      case "check_local_community_name": {
         const name = (payload as { name?: string })?.name ?? "community";
         return {
-          community: activeConfig?.mock?.builderlabCreatedCommunity ?? {
-            id: `hosted-${name}`,
-            name,
-            normalized_host: `${name}.communities.buzz.xyz`,
-          },
+          available: true,
+          normalized_host: `${name}.localhost:3000`,
+        };
+      }
+      case "create_local_community": {
+        const name = (payload as { name?: string })?.name ?? "community";
+        return {
+          community_id: `local-${name}`,
+          host: `${name}.localhost:3000`,
+          relay_url: `ws://localhost:3000/c/${name}`,
+          status: "created",
+          owner_pubkey: identity?.pubkey ?? DEFAULT_MOCK_IDENTITY.pubkey,
         };
       }
       case "mesh_installed_models":

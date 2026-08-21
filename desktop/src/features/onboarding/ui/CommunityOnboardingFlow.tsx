@@ -425,7 +425,7 @@ export function CommunityOnboardingFlow({
   return (
     <div
       className={cn(
-        "buzz-onboarding-neutral-theme buzz-startup-shell flex h-dvh justify-center overflow-y-auto px-4 text-foreground",
+        "buzz-onboarding-neutral-theme buzz-zion-community-onboarding buzz-startup-shell flex h-dvh justify-center overflow-y-auto px-4 text-foreground",
         isProfileStage || isTeamStage
           ? "items-start pb-36 pt-[106px]"
           : "items-stretch",

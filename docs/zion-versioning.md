@@ -15,11 +15,12 @@ older build with the same source-era label:
 The installed local build on 2026-08-21 is:
 
 - Version: `0.0.11`
-- Build: `202608212122`
-- Source commit: `84c3e6df781b`
-- Worktree: `dirty` (the version bump was applied after the feature commit)
+- Build: `202608211832`
+- Source commit: `47db5cd7143b`
+- Provisioning fix commit: `03523c64e`
+- Worktree: `dirty` (the signed bundle was built before the fix commit was recorded)
 - Bundle: `/Applications/Zion.app`
-- Main executable SHA-256: `1e7f07b49fb118fc04780d824bb1be982ffdd23fd44fa9e4ab268f22e9313f2a`
+- Main executable SHA-256: `8afe4f60b2c2f2239737b433fc03f35afc55adf16edfa616575ba5d6cb0fed5c`
 - Signing identity: `Developer ID Application: aiden solis (79Z9DG2TCP)`
 - Team ID: `79Z9DG2TCP`
 - Notarization: `not submitted` (local build; Gatekeeper reports `Unnotarized Developer ID`)
@@ -32,8 +33,8 @@ The previous installed app was preserved at
 For a local, traceable build, set the three build variables explicitly:
 
 ```bash
-VITE_ZION_BUILD_ID=202608212122 \
-VITE_ZION_COMMIT=84c3e6df781b \
+VITE_ZION_BUILD_ID=202608211832 \
+VITE_ZION_COMMIT=47db5cd7143b \
 VITE_ZION_WORKTREE=dirty
 ```
 

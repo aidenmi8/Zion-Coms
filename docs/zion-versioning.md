@@ -14,14 +14,15 @@ older build with the same source-era label:
 
 The installed local build on 2026-08-21 is:
 
-- Version: `0.0.10`
-- Build: `20260821.1`
-- Source commit: `5a1bb5349`
-- Worktree: `dirty` (the local community provisioning changes were not yet committed)
+- Version: `0.0.11`
+- Build: `202608212122`
+- Source commit: `84c3e6df781b`
+- Worktree: `dirty` (the version bump was applied after the feature commit)
 - Bundle: `/Applications/Zion.app`
-- Main executable SHA-256: `2ce754cd006aba9299e05abb1ebcf2ca5fc5e8d36a28ee1b97e36ff72dfd26e4`
+- Main executable SHA-256: `1e7f07b49fb118fc04780d824bb1be982ffdd23fd44fa9e4ab268f22e9313f2a`
 - Signing identity: `Developer ID Application: aiden solis (79Z9DG2TCP)`
 - Team ID: `79Z9DG2TCP`
+- Notarization: `not submitted` (local build; Gatekeeper reports `Unnotarized Developer ID`)
 
 The previous installed app was preserved at
 `artifacts/Zion-0.0.9-installed-20260821-live.app` for rollback.
@@ -31,8 +32,8 @@ The previous installed app was preserved at
 For a local, traceable build, set the three build variables explicitly:
 
 ```bash
-VITE_ZION_BUILD_ID=20260821.1 \
-VITE_ZION_COMMIT=5a1bb5349 \
+VITE_ZION_BUILD_ID=202608212122 \
+VITE_ZION_COMMIT=84c3e6df781b \
 VITE_ZION_WORKTREE=dirty
 ```
 

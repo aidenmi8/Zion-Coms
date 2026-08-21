@@ -25,15 +25,16 @@ export function localCommunityRelayUrl(
   return relayUrl || null;
 }
 
-export function checkLocalCommunityName(name: string) {
+export function checkLocalCommunityName(name: string, relayUrl?: string) {
   return invoke<LocalCommunityAvailabilityResponse>(
     "check_local_community_name",
-    { name },
+    { name, relayUrl: relayUrl ?? null },
   );
 }
 
-export function createLocalCommunity(name: string) {
+export function createLocalCommunity(name: string, relayUrl?: string) {
   return invoke<LocalCommunityMutationResponse>("create_local_community", {
     name,
+    relayUrl: relayUrl ?? null,
   });
 }

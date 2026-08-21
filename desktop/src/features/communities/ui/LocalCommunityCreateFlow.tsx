@@ -8,6 +8,8 @@ import {
   VALID_LOCAL_COMMUNITY_NAME,
 } from "@/features/communities/localCommunityApi";
 import { useCommunityOnboarding } from "@/features/onboarding/communityOnboarding";
+import { useCommunities } from "@/features/communities/useCommunities";
+import { resolveLocalCommunityProvisioningRelay } from "@/features/communities/localCommunityProvisioning";
 import {
   CHANNEL_FORM_FIELD_CONTROL_CLASS,
   CHANNEL_FORM_FIELD_SHELL_CLASS,
@@ -24,6 +26,7 @@ export function LocalCommunityCreateFlow({
   onComplete,
 }: LocalCommunityCreateFlowProps) {
   const onboarding = useCommunityOnboarding();
+  const { communities, activeCommunity } = useCommunities();
   const [name, setName] = React.useState("");
   const [availability, setAvailability] = React.useState<boolean | null>(null);
   const [checkingName, setCheckingName] = React.useState(false);
@@ -34,6 +37,10 @@ export function LocalCommunityCreateFlow({
   const validName =
     normalizedName.length <= 63 &&
     VALID_LOCAL_COMMUNITY_NAME.test(normalizedName);
+  const provisioningRelay = resolveLocalCommunityProvisioningRelay(
+    communities,
+    activeCommunity,
+  );
 
   React.useEffect(() => {
     if (!normalizedName || !validName) {
@@ -43,7 +50,7 @@ export function LocalCommunityCreateFlow({
     let cancelled = false;
     setCheckingName(true);
     const handle = window.setTimeout(() => {
-      void checkLocalCommunityName(normalizedName)
+      void checkLocalCommunityName(normalizedName, provisioningRelay?.relayUrl)
         .then((response) => {
           if (!cancelled)
             setAvailability(
@@ -61,7 +68,7 @@ export function LocalCommunityCreateFlow({
       cancelled = true;
       window.clearTimeout(handle);
     };
-  }, [normalizedName, validName]);
+  }, [normalizedName, validName, provisioningRelay?.relayUrl]);
 
   const create = (event: React.FormEvent) => {
     event.preventDefault();
@@ -70,14 +77,20 @@ export function LocalCommunityCreateFlow({
     setError(null);
     void (async () => {
       try {
-        const available = await checkLocalCommunityName(normalizedName);
+        const available = await checkLocalCommunityName(
+          normalizedName,
+          provisioningRelay?.relayUrl,
+        );
         if (available.error || !available.available) {
           setAvailability(false);
           throw new Error(
             available.error ?? "That Zion address is already taken.",
           );
         }
-        const response = await createLocalCommunity(normalizedName);
+        const response = await createLocalCommunity(
+          normalizedName,
+          provisioningRelay?.relayUrl,
+        );
         if (response.error || !response.host) {
           throw new Error(
             response.error ?? "Could not create the local community.",
@@ -115,7 +128,9 @@ export function LocalCommunityCreateFlow({
           ? "That Zion address is already taken."
           : availability === true
             ? "That Zion address is available."
-            : "This community will stay on the active Zion relay.";
+            : provisioningRelay
+              ? `This community will be created on ${provisioningRelay.name}.`
+              : "No Zion relay is configured yet.";
 
   return (
     <form className="space-y-5" onSubmit={create}>
@@ -155,7 +170,7 @@ export function LocalCommunityCreateFlow({
             value={name}
           />
           <span className="shrink-0 text-sm text-muted-foreground/70">
-            on the active relay
+            on {provisioningRelay?.name ?? "the active relay"}
           </span>
         </div>
         <p

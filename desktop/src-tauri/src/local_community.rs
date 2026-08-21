@@ -93,12 +93,21 @@ fn local_http_url(active_relay_url: &str, path: &str) -> Result<String, String> 
     Ok(format!("{scheme}://{authority}{path}"))
 }
 
+fn provisioning_relay_url(state: &AppState, relay_url: Option<&str>) -> String {
+    relay_url
+        .map(str::trim)
+        .filter(|url| !url.is_empty())
+        .map(ToOwned::to_owned)
+        .unwrap_or_else(|| relay::relay_ws_url_with_override(state))
+}
+
 #[tauri::command]
 pub(crate) async fn check_local_community_name(
     name: String,
+    relay_url: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<Value, String> {
-    let active_relay_url = relay::relay_ws_url_with_override(&state);
+    let active_relay_url = provisioning_relay_url(&state, relay_url.as_deref());
     let host = community_host(&active_relay_url, &name)?;
     let encoded_host: String = url::form_urlencoded::byte_serialize(host.as_bytes()).collect();
     let url = local_http_url(
@@ -122,9 +131,10 @@ pub(crate) async fn check_local_community_name(
 #[tauri::command]
 pub(crate) async fn create_local_community(
     name: String,
+    relay_url: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<Value, String> {
-    let active_relay_url = relay::relay_ws_url_with_override(&state);
+    let active_relay_url = provisioning_relay_url(&state, relay_url.as_deref());
     let host = community_host(&active_relay_url, &name)?;
     let url = local_http_url(&active_relay_url, "/local/communities")?;
     let body = serde_json::to_vec(&json!({ "host": host }))

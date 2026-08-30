@@ -361,11 +361,19 @@
     --buzz-onboarding-avatar-control-fg: 205 197 255;
     background-color: #17182a;
     background-image:
-      radial-gradient(
-        circle at 50% 0%,
-        rgb(99 102 241 / 0.22),
-        transparent 42%
-      ),
+      radial-gradient(circle at 50% 0%, rgb(99 102 241 / 0.22), transparent 42%),
+      radial-gradient(circle, rgb(201 193 255 / 0.1) 1px, transparent 1px),
+      linear-gradient(180deg, #1d1b31 0%, #111322 100%);
+    background-size:
+      auto,
+      24px 24px,
+      auto;
+  }
+
+  .buzz-zion-community-onboarding.buzz-startup-shell.buzz-onboarding-welcome {
+    background-color: #17182a;
+    background-image:
+      radial-gradient(circle at 50% 0%, rgb(99 102 241 / 0.22), transparent 42%),
       radial-gradient(circle, rgb(201 193 255 / 0.1) 1px, transparent 1px),
       linear-gradient(180deg, #1d1b31 0%, #111322 100%);
     background-size:

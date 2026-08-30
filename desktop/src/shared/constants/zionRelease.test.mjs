@@ -18,17 +18,17 @@ test("unconfigured builds default to the developer channel", () => {
   );
 });
 
-test("developer builds expose the shared Zion 0.0.10 DV label", () => {
+test("developer builds expose the shared Zion 0.0.9 DV label", () => {
   assert.equal(
-    formatZionReleaseLabel("0.0.10", ZionReleaseChannel.Developer),
-    "Zion - V0.0.10 DV",
+    formatZionReleaseLabel("0.0.9", ZionReleaseChannel.Developer),
+    "Zion - V0.0.9 DV",
   );
 });
 
 test("release builds remove only the DV channel label", () => {
   assert.equal(
-    formatZionReleaseLabel("0.0.10", ZionReleaseChannel.Release),
-    "Zion - V0.0.10",
+    formatZionReleaseLabel("0.0.9", ZionReleaseChannel.Release),
+    "Zion - V0.0.9",
   );
 });
 

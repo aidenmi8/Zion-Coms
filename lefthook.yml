@@ -67,6 +67,8 @@ pre-push:
       # buzz-sdk, buzz-agent (desktop/src-tauri/Cargo.toml:88-91).
       glob: ["desktop/src-tauri/**", "crates/**", "migrations/**", "schema/**", "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "deny.toml", "scripts/run-tests.sh", "justfile"]
       run: just desktop-tauri-test
-    mobile-test:
+    mobile-checks:
+      # Run analysis and tests serially so parallel pre-push hooks do not
+      # contend for shared Flutter state (.dart_tool, shader bundle).
       glob: ["mobile/**"]
-      run: just mobile-test
+      run: just mobile-check && just mobile-test

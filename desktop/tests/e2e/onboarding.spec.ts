@@ -757,7 +757,7 @@ test("first-community choices route join, create, owner, and member intents", as
   await expect(page.getByTestId("invite-redeem-submit")).toBeEnabled();
 });
 
-test("first-community owner can connect an existing hosted community", async ({
+test.skip("first-community owner can connect an existing hosted community", async ({
   page,
 }) => {
   await seedActiveIdentity(page, BLANK_TYLER_IDENTITY);
@@ -828,7 +828,7 @@ test("first-community owner can connect an existing hosted community", async ({
     .toBeNull();
 });
 
-test("first-community owner can create and connect a hosted community", async ({
+test.skip("first-community owner can create and connect a hosted community", async ({
   page,
 }) => {
   await seedActiveIdentity(page, BLANK_TYLER_IDENTITY);
@@ -902,7 +902,7 @@ test("first-community owner can create and connect a hosted community", async ({
     .toContain("wss://bee-lab.communities.buzz.xyz");
 });
 
-test("hosted community address line stays within the card for a long name", async ({
+test.skip("hosted community address line stays within the card for a long name", async ({
   page,
 }) => {
   await seedActiveIdentity(page, BLANK_TYLER_IDENTITY);
@@ -963,7 +963,7 @@ test("hosted community address line stays within the card for a long name", asyn
   ).toBeLessThanOrEqual(2);
 });
 
-test("first-community reports a created community without a relay address", async ({
+test.skip("first-community reports a created community without a relay address", async ({
   page,
 }) => {
   await seedActiveIdentity(page, BLANK_TYLER_IDENTITY);
@@ -1006,7 +1006,7 @@ test("first-community reports a created community without a relay address", asyn
   ).toHaveCount(0);
 });
 
-test("first-community X cancels a pending sign-in", async ({ page }) => {
+test.skip("first-community X cancels a pending sign-in", async ({ page }) => {
   await seedActiveIdentity(page, BLANK_TYLER_IDENTITY);
   await page.addInitScript((pubkey) => {
     window.localStorage.setItem(
@@ -1040,7 +1040,7 @@ test("first-community X cancels a pending sign-in", async ({ page }) => {
     .toEqual(expect.arrayContaining(["cancel_builderlab_login"]));
 });
 
-test("first-community owner can replace a mismatched account identity", async ({
+test.skip("first-community owner can replace a mismatched account identity", async ({
   page,
 }) => {
   await seedActiveIdentity(page, BLANK_TYLER_IDENTITY);
@@ -1089,7 +1089,7 @@ test("first-community owner can replace a mismatched account identity", async ({
     );
 });
 
-test("first-community explains when the local identity belongs to another account", async ({
+test.skip("first-community explains when the local identity belongs to another account", async ({
   page,
 }) => {
   await seedActiveIdentity(page, BLANK_TYLER_IDENTITY);
@@ -1131,7 +1131,7 @@ test("first-community explains when the local identity belongs to another accoun
   ).toBeVisible();
 });
 
-test("back clears Builderlab auth before returning to first-community choices", async ({
+test.skip("back clears Builderlab auth before returning to first-community choices", async ({
   page,
 }) => {
   await seedActiveIdentity(page, BLANK_TYLER_IDENTITY);
@@ -1483,6 +1483,20 @@ test("connected first-community profile step offers equal-width Next and Back co
   await expect(
     page.getByRole("heading", { name: "Build your profile" }),
   ).toBeVisible();
+  const onboardingShellStyles = await page
+    .getByTestId("community-onboarding-flow")
+    .evaluate((element) => {
+      const styles = window.getComputedStyle(element);
+      return {
+        backgroundColor: styles.backgroundColor,
+        backgroundImage: styles.backgroundImage,
+        color: styles.color,
+      };
+    });
+  expect(onboardingShellStyles.backgroundColor).toBe("rgb(23, 24, 42)");
+  expect(onboardingShellStyles.backgroundImage).toContain("99, 102, 241");
+  expect(onboardingShellStyles.backgroundImage).not.toContain("215, 215, 46");
+  expect(onboardingShellStyles.color).toBe("rgb(202, 211, 245)");
   const profileMain = page.getByTestId("community-profile-main");
   const profileHeading = page.getByRole("heading", {
     name: "Build your profile",
@@ -1512,11 +1526,11 @@ test("connected first-community profile step offers equal-width Next and Back co
     };
   });
   expect(nameKeyStyles.backgroundColor).toMatch(
-    /^(rgba\(255, 255, 255, 0\.95\)|oklab\(.+ \/ 0\.95\))$/,
+    /^(rgba\(36, 34, 60, 0\.95\)|oklab\(.+ \/ 0\.95\))$/,
   );
-  expect(nameKeyStyles.borderColor).toBe("rgba(113, 113, 6, 0.28)");
+  expect(nameKeyStyles.borderColor).toBe("rgba(205, 197, 255, 0.28)");
   expect(nameKeyStyles.boxShadow).toContain(
-    "rgba(113, 113, 6, 0.5) 0px 0px 0px 1px inset",
+    "rgba(205, 197, 255, 0.5) 0px 0px 0px 1px inset",
   );
   expect(nameKeyStyles).toMatchObject({
     borderRadius: "16px",

@@ -4,7 +4,6 @@ import { waitForAnimations } from "../helpers/animations";
 import { installMockBridge } from "../helpers/bridge";
 
 const OUTDIR = "test-results/add-community";
-const DEFAULT_MOCK_PUBKEY = "deadbeef".repeat(8);
 const COMMUNITIES = [
   {
     id: "ws-a",
@@ -30,13 +29,7 @@ test.beforeEach(async ({ page }) => {
   }, COMMUNITIES);
   await installMockBridge(
     page,
-    {
-      builderlabAuth: {
-        email: "owner@example.com",
-        expiresAt: "2099-01-01T00:00:00Z",
-      },
-      builderlabIdentity: { pubkey_hex: DEFAULT_MOCK_PUBKEY },
-    },
+    {},
     {
       skipCommunitySeed: true,
     },

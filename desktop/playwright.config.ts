@@ -31,7 +31,7 @@ export default defineConfig({
         "**/channel-browser.spec.ts",
         "**/channel-add-screenshots.spec.ts",
         "**/add-community-screenshots.spec.ts",
-        "**/hosted-communities-settings-screenshots.spec.ts",
+        "**/local-communities-settings-screenshots.spec.ts",
         "**/invites-settings-screenshots.spec.ts",
         "**/messaging.spec.ts",
         "**/custom-emoji.spec.ts",

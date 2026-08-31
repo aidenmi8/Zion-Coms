@@ -117,7 +117,7 @@ New to Zion? Pick the path that matches you.
 
 Grab a packaged build from the [latest release](https://github.com/block/buzz/releases/latest) — macOS (`.dmg`), Linux (`.AppImage` / `.deb`), or Windows (`.exe`). Install it like any other app.
 
-By default the app connects to `ws://localhost:3000`. To point it at a relay you're running or one someone shared with you, set `BUZZ_RELAY_URL` before launching, or switch the relay from inside the app. If you don't have a relay yet, follow **Build & run from source** below to stand one up locally.
+By default the app connects to `ws://localhost:3000`. **Create a new community** provisions a Zion-owned community on the active relay using a path-scoped address, for example `ws://localhost:3000/c/north-star`; it does not open a hosted-service login. This also works through a private Tailscale relay, for example `wss://zion-coms.tail1bd36d.ts.net/c/north-star`, without requiring wildcard DNS. To point the app at a relay you're running or one someone shared with you, set `BUZZ_RELAY_URL` before launching, or switch the relay from inside the app. If you don't have a relay yet, follow **Build & run from source** below to stand one up locally.
 
 ### I work at Block
 

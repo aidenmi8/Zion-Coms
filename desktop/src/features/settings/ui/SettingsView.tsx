@@ -9,6 +9,8 @@ import {
 } from "@/shared/api/relayMembers";
 import {
   currentZionReleaseChannel,
+  currentZionBuild,
+  formatZionBuildLabel,
   formatZionReleaseLabel,
 } from "@/shared/constants/zionRelease";
 import { getFeature } from "@/shared/features/manifest";
@@ -69,7 +71,7 @@ const settingsNavGroups: Array<{
   },
   {
     label: "Communities",
-    sections: ["hosted-communities", "channel-templates", "community-members"],
+    sections: ["local-communities", "channel-templates", "community-members"],
   },
   {
     label: "App",
@@ -158,7 +160,7 @@ export function SettingsView({
   }, [myMembershipQuery.data, featureState]);
 
   const [isLoaded, setIsLoaded] = React.useState(false);
-  const [appVersion, setAppVersion] = React.useState<string | null>(null);
+  const [appVersion, setAppVersion] = React.useState("unknown");
 
   React.useEffect(() => {
     const frameId = window.requestAnimationFrame(() => setIsLoaded(true));
@@ -166,7 +168,9 @@ export function SettingsView({
   }, []);
 
   React.useEffect(() => {
-    void getVersion().then(setAppVersion);
+    void getVersion()
+      .then(setAppVersion)
+      .catch(() => setAppVersion("unknown"));
   }, []);
 
   React.useEffect(() => {
@@ -291,7 +295,6 @@ export function SettingsView({
                   {group.sections.map((entry) => (
                     <SettingsSectionButton
                       active={entry.value === section}
-                      disabled={entry.value === "hosted-communities"}
                       key={entry.value}
                       onSelect={onSectionChange}
                       section={entry}
@@ -304,15 +307,18 @@ export function SettingsView({
         </SidebarContent>
 
         <SidebarFooter>
-          {appVersion ? (
-            <p
-              className="px-2 pb-1 text-xs text-sidebar-foreground/45"
-              data-buzz-sidebar-secondary
-              data-testid="settings-version"
-            >
+          <div
+            className="space-y-0.5 px-2 pb-1 text-xs text-sidebar-foreground/45"
+            data-buzz-sidebar-secondary
+            data-testid="settings-version"
+          >
+            <p>
               {formatZionReleaseLabel(appVersion, currentZionReleaseChannel)}
             </p>
-          ) : null}
+            <p className="truncate" data-testid="settings-build-info">
+              {formatZionBuildLabel(currentZionBuild)}
+            </p>
+          </div>
         </SidebarFooter>
       </Sidebar>
 

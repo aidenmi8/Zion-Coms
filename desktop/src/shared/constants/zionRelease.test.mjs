@@ -3,6 +3,8 @@ import test from "node:test";
 
 import {
   currentZionReleaseChannel,
+  currentZionBuild,
+  formatZionBuildLabel,
   formatZionReleaseLabel,
   resolveZionReleaseChannel,
   ZionReleaseChannel,
@@ -28,4 +30,23 @@ test("release builds remove only the DV channel label", () => {
     formatZionReleaseLabel("0.0.9", ZionReleaseChannel.Release),
     "Zion - V0.0.9",
   );
+});
+
+test("build labels preserve the source identity", () => {
+  assert.equal(
+    formatZionBuildLabel({
+      buildId: "20260821.1",
+      commit: "5a1bb5349",
+      worktree: "dirty",
+    }),
+    "Build 20260821.1 · commit 5a1bb5349 · local changes",
+  );
+});
+
+test("unconfigured builds retain a readable local identity", () => {
+  assert.deepEqual(currentZionBuild, {
+    buildId: "local",
+    commit: "unknown",
+    worktree: "unknown",
+  });
 });

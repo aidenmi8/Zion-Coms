@@ -444,10 +444,11 @@ pub async fn create_auth_event(
     state: State<'_, AppState>,
 ) -> Result<String, String> {
     let keys = state.signing_keys()?;
+    let relay_auth_url = crate::relay::relay_auth_url(&relay_url);
 
     tauri::async_runtime::spawn_blocking(move || {
         let tags = vec![
-            Tag::parse(vec!["relay", &relay_url])
+            Tag::parse(vec!["relay", &relay_auth_url])
                 .map_err(|error| format!("relay tag failed: {error}"))?,
             Tag::parse(vec!["challenge", &challenge])
                 .map_err(|error| format!("challenge tag failed: {error}"))?,

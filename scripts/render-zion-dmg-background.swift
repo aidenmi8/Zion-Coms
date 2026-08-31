@@ -3,13 +3,12 @@ import CoreGraphics
 import Foundation
 import ImageIO
 
-guard CommandLine.arguments.count == 3 else {
-  fputs("usage: render-zion-dmg-background.swift <transparent-lockup.png> <output.png>\n", stderr)
+guard CommandLine.arguments.count == 2 else {
+  fputs("usage: render-zion-dmg-background.swift <output.png>\n", stderr)
   exit(2)
 }
 
-let sourceURL = URL(fileURLWithPath: CommandLine.arguments[1])
-let outputURL = URL(fileURLWithPath: CommandLine.arguments[2])
+let outputURL = URL(fileURLWithPath: CommandLine.arguments[1])
 let width = 1320
 let height = 1000
 let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
@@ -68,40 +67,65 @@ context.drawRadialGradient(
 )
 context.setBlendMode(.normal)
 
-guard let source = CGImageSourceCreateWithURL(sourceURL as CFURL, nil),
-      let lockup = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
-  fputs("could not load transparent lockup at \(sourceURL.path)\n", stderr)
-  exit(1)
+// Keep the artwork in the upper band of the image. Finder places the app and
+// Applications alias around the vertical center of the DMG, so artwork here
+// cannot sit behind their labels or icons.
+func pointFromTopLeft(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+  CGPoint(x: x, y: y)
 }
 
-// CGContext draws CGImage pixels from a bottom-left image origin. Flip only
-// this placed image so the transparent source remains upright in the
-// top-left layout used by the rest of this composition.
-context.saveGState()
-context.translateBy(x: 150, y: 600)
-context.scaleBy(x: 1, y: -1)
-context.draw(lockup, in: CGRect(x: 0, y: 0, width: 420, height: 420))
-context.restoreGState()
+func drawPolygon(_ points: [(CGFloat, CGFloat)], color: CGColor) {
+  let path = CGMutablePath()
+  path.move(to: pointFromTopLeft(points[0].0, points[0].1))
+  for point in points.dropFirst() {
+    path.addLine(to: pointFromTopLeft(point.0, point.1))
+  }
+  path.closeSubpath()
+  context.addPath(path)
+  context.setFillColor(color)
+  context.fillPath()
+}
 
+drawPolygon(
+  [(165, 98), (285, 98), (235, 164), (115, 164)],
+  color: NSColor(calibratedWhite: 0.98, alpha: 1).cgColor
+)
+drawPolygon(
+  [(235, 178), (355, 178), (305, 244), (185, 244)],
+  color: NSColor(calibratedWhite: 0.68, alpha: 1).cgColor
+)
+
+// The Finder item centers are x=191 and x=469 in the 660px DMG window. Keep
+// the compact drag cue at their midpoint and on their center row.
+let installArrowCenterX: CGFloat = 330
+let installArrowY: CGFloat = 330
+let installArrowHalfLength: CGFloat = 55
+let installArrowHeadLength: CGFloat = 20
 context.setStrokeColor(NSColor(calibratedRed: 0.82, green: 0.75, blue: 1, alpha: 0.9).cgColor)
-context.setLineWidth(8)
+context.setLineWidth(5)
 context.setLineCap(.round)
-context.move(to: CGPoint(x: 720, y: 500))
-context.addLine(to: CGPoint(x: 900, y: 500))
-context.move(to: CGPoint(x: 900, y: 500))
-context.addLine(to: CGPoint(x: 862, y: 462))
-context.move(to: CGPoint(x: 900, y: 500))
-context.addLine(to: CGPoint(x: 862, y: 538))
+context.move(to: pointFromTopLeft(installArrowCenterX - installArrowHalfLength, installArrowY))
+context.addLine(to: pointFromTopLeft(installArrowCenterX + installArrowHalfLength, installArrowY))
+context.move(to: pointFromTopLeft(installArrowCenterX + installArrowHalfLength, installArrowY))
+context.addLine(to: pointFromTopLeft(installArrowCenterX + installArrowHalfLength - installArrowHeadLength, installArrowY - installArrowHeadLength))
+context.move(to: pointFromTopLeft(installArrowCenterX + installArrowHalfLength, installArrowY))
+context.addLine(to: pointFromTopLeft(installArrowCenterX + installArrowHalfLength - installArrowHeadLength, installArrowY + installArrowHeadLength))
 context.strokePath()
 
 let graphicsContext = NSGraphicsContext(cgContext: context, flipped: true)
 let previousContext = NSGraphicsContext.current
 NSGraphicsContext.current = graphicsContext
 let attributes: [NSAttributedString.Key: Any] = [
+  .font: NSFont.systemFont(ofSize: 54, weight: .semibold),
+  .foregroundColor: NSColor(calibratedRed: 0.92, green: 0.89, blue: 1, alpha: 0.9),
+]
+("Zion" as NSString).draw(at: NSPoint(x: 382, y: 125), withAttributes: attributes)
+
+let instructionAttributes: [NSAttributedString.Key: Any] = [
   .font: NSFont.systemFont(ofSize: 26, weight: .medium),
   .foregroundColor: NSColor(calibratedRed: 0.92, green: 0.89, blue: 1, alpha: 0.9),
 ]
-("Drag to install" as NSString).draw(at: NSPoint(x: 754, y: 550), withAttributes: attributes)
+("Drag to install" as NSString).draw(at: NSPoint(x: 238, y: 270), withAttributes: instructionAttributes)
 NSGraphicsContext.current = previousContext
 
 guard let image = context.makeImage(),

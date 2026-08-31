@@ -40,10 +40,7 @@ fn relay_origin(active_relay_url: &str) -> Result<Url, String> {
     Ok(parsed)
 }
 
-pub(crate) fn community_relay_url(
-    active_relay_url: &str,
-    name: &str,
-) -> Result<String, String> {
+pub(crate) fn community_relay_url(active_relay_url: &str, name: &str) -> Result<String, String> {
     let normalized_name = normalized_community_name(name)?;
     let mut parsed = relay_origin(active_relay_url)?;
     let scheme = match parsed.scheme() {
@@ -178,8 +175,7 @@ mod tests {
     #[test]
     fn preserves_a_local_relay_without_using_a_localhost_subdomain() {
         assert_eq!(
-            community_relay_url("ws://localhost:3000", "north-star")
-                .expect("community relay URL"),
+            community_relay_url("ws://localhost:3000", "north-star").expect("community relay URL"),
             "ws://localhost:3000/c/north-star"
         );
     }

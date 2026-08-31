@@ -157,8 +157,7 @@ pub fn build_nip98_auth_header_for_keys(
     let nonce_hex = uuid::Uuid::new_v4().to_string();
 
     let tags = vec![
-        Tag::parse(vec!["u", &signing_url])
-            .map_err(|error| format!("url tag failed: {error}"))?,
+        Tag::parse(vec!["u", &signing_url]).map_err(|error| format!("url tag failed: {error}"))?,
         Tag::parse(vec!["method", method.as_str()])
             .map_err(|error| format!("method tag failed: {error}"))?,
         Tag::parse(vec!["payload", &payload_hash])
@@ -679,8 +678,7 @@ mod tests {
     use super::{
         build_profile_event, classify_intercepted_response, effective_agent_relay_url,
         extract_retry_in_hint, nip98_signing_url, parse_command_response, relay_auth_url,
-        relay_http_base_url,
-        MALFORMED_RESPONSE_MESSAGE,
+        relay_http_base_url, MALFORMED_RESPONSE_MESSAGE,
     };
     use serde::Deserialize;
 

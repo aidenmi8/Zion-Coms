@@ -641,7 +641,10 @@ export function useRichTextEditor({
   }, [editor]);
 
   const clearContent = React.useCallback(() => {
-    editor?.commands.clearContent(true);
+    // The draft lifecycle can clear during route teardown after Tiptap has
+    // destroyed its command manager but before React drops this editor ref.
+    if (!editor || editor.isDestroyed) return;
+    editor.commands.clearContent(true);
   }, [editor]);
 
   const setContent = React.useCallback(

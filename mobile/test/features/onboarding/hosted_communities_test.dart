@@ -369,7 +369,7 @@ Future<void> revealOptionsWithSemantics(WidgetTester tester) async {
       'More connection options',
     );
     // The action belongs to the wordmark, never an unlabelled page-sized stop.
-    expect(data.label, 'Buzz');
+    expect(data.label, 'Zion');
     expect(wordmark.rect.height, lessThan(200));
     wordmark.owner!.performAction(
       wordmark.id,

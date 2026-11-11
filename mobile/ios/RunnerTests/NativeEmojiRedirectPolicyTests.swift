@@ -1,5 +1,5 @@
 import XCTest
-@testable import Buzz
+@testable import Zion
 
 final class NativeEmojiRedirectPolicyTests: XCTestCase {
   private let session = URLSession(configuration: .ephemeral)

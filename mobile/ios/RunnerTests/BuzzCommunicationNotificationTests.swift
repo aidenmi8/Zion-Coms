@@ -4,7 +4,7 @@ import Intents
 import UserNotifications
 import XCTest
 
-@testable import Buzz
+@testable import Zion
 
 final class BuzzCommunicationNotificationTests: XCTestCase {
   func testIntentUsesVerifiedSenderAvatarAndGroupName() throws {

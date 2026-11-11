@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
 import XCTest
-@testable import Buzz
+@testable import Zion
 
 final class BrowserAuthBridgeTests: XCTestCase {
   @MainActor

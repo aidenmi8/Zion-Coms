@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
 import XCTest
-@testable import Buzz
+@testable import Zion
 
 /// Actual UIKit picker presentation and method-channel dispatch, followed by
 /// synthetic document-provider delegate callbacks. Never persists an identity.

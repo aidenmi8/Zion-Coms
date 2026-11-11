@@ -1090,11 +1090,29 @@ test("repeat invocations mirror the lanes they stand in for", () => {
     ),
   );
   const flake = read("../.github/workflows/_ci-flake.yml");
-  for (const runner of ["rust", "tauri", "node", "dart"])
+  for (const runner of ["rust", "tauri"])
     assert.ok(
       flake.includes(`flake-check.mjs ${runner} --iterations=10 $SELECTED`),
       runner,
     );
+  for (const runner of ["node", "dart"]) {
+    const job = flake
+      .split(`  flake-${runner}:`)[1]
+      ?.split(/\n {2}flake-[a-z]+:/)[0];
+    assert.ok(job, `${runner} flake job exists`);
+    assert.ok(
+      job.includes("repeat: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"),
+      `${runner} gets ten independent jobs`,
+    );
+    assert.ok(
+      job.includes(`flake-check.mjs ${runner} --iterations=1 $SELECTED`),
+      `${runner} runs every selection once per job`,
+    );
+    assert.ok(
+      job.includes(`name: flake-${runner}-\${{ matrix.repeat }}`),
+      `${runner} has distinct evidence per repetition`,
+    );
+  }
   // The Tauri lane builds what the Desktop Tauri core lane does: the same
   // workspace cache, system packages and sidecar stubs. The core lane lists
   // its packages in TAURI_APT_PACKAGES, which its .deb cache key hashes.

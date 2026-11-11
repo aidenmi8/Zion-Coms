@@ -177,11 +177,15 @@ jobs:
           retention-days: 7
 
   flake-node:
-    name: Flake check (node:test)
+    name: Flake check (node:test, ${{ matrix.repeat }}/10)
     needs: [flake-select]
     if: needs.flake-select.outputs.node != ''
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        repeat: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     permissions:
       contents: read
     steps:
@@ -201,12 +205,14 @@ jobs:
       - name: Repeat changed node:test files
         env:
           SELECTED: ${{ needs.flake-select.outputs.node }}
-        run: node scripts/flake-check.mjs node --iterations=10 $SELECTED
+        # One complete selection per job; ten jobs preserve all ten
+        # repetitions without a large reconciliation diff timing out.
+        run: node scripts/flake-check.mjs node --iterations=1 $SELECTED
       - name: node:test iteration logs
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: flake-node
+          name: flake-node-${{ matrix.repeat }}
           path: test-results/flake
           if-no-files-found: ignore
           retention-days: 7
@@ -283,11 +289,15 @@ jobs:
           retention-days: 7
 
   flake-dart:
-    name: Flake check (Flutter)
+    name: Flake check (Flutter, ${{ matrix.repeat }}/10)
     needs: [flake-select]
     if: needs.flake-select.outputs.dart != ''
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        repeat: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     permissions:
       contents: read
     steps:
@@ -319,12 +329,14 @@ jobs:
       - name: Repeat changed Flutter tests
         env:
           SELECTED: ${{ needs.flake-select.outputs.dart }}
-        run: node scripts/flake-check.mjs dart --iterations=10 $SELECTED
+        # One full mobile selection per job; each selected test still runs ten
+        # independent times across the matrix.
+        run: node scripts/flake-check.mjs dart --iterations=1 $SELECTED
       - name: Flutter iteration reports
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: flake-dart
+          name: flake-dart-${{ matrix.repeat }}
           path: test-results/flake
           if-no-files-found: ignore
           retention-days: 7

@@ -3,6 +3,7 @@
 # Keep both bases pinned to manifest-list digests so either architecture resolves
 # to immutable source bytes.
 FROM rust:1.98-alpine3.22@sha256:a1796ca6fa216d6727b5f61c69e4c665b120b1a4dcb969639e2f25f1ed309456 AS builder
+ARG TARGETARCH
 
 RUN apk add --no-cache \
       build-base \
@@ -16,7 +17,12 @@ RUN apk add --no-cache \
       protoc
 WORKDIR /build
 COPY . .
-RUN cargo build --locked --profile sprig -p sprig \
+# Rust's static musl link omits libgcc, which Alpine's D-Bus archive needs
+# for its AArch64 out-of-line atomic helpers.
+RUN if [ "$TARGETARCH" = arm64 ]; then \
+      export RUSTFLAGS='-C link-arg=-lgcc'; \
+    fi \
+    && cargo build --locked --profile sprig -p sprig \
     && strip target/sprig/sprig
 
 FROM alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce

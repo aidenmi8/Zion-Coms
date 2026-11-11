@@ -493,7 +493,10 @@ if (assert_no_removed_mobile_release_behavior "$tmp/forbidden-mobile-release-beh
     >/dev/null 2>&1; then
   fail "removed-behavior assertion did not reject a forbidden GitHub Release call"
 fi
-grep -Fq 'version: 0.0.0+1' "$repo_root/mobile/pubspec.yaml"
+# A Zion candidate has a real app version; keep the Flutter version/build
+# format valid without requiring upstream's development placeholder.
+grep -Eq '^version: (0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\+[1-9][0-9]*$' \
+  "$repo_root/mobile/pubspec.yaml" || fail "mobile/pubspec.yaml must have a valid release version and build number"
 if grep -qE 'release-mobile|bump-mobile-version|get-current-mobile-version' "$repo_root/Justfile"; then
   fail "metadata-only mobile release recipe remains in Justfile"
 fi

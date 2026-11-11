@@ -1,0 +1,55 @@
+# OPTIONAL third Compose file. Do not include for the default fresh relay stack.
+# Preparation only: Apple credentials, DML-only runtime role, upstream gateway
+# migrations/grants (--migrate-only) and human push acceptance are pending.
+# Never point DATABASE_URL at the relay DB. Never enable relay push implicitly.
+services:
+  push-postgres:
+    image: ${ZION_POSTGRES_IMAGE:?set ZION_POSTGRES_IMAGE to a verified PostgreSQL 17 digest}
+    environment:
+      POSTGRES_DB: buzz_push
+      POSTGRES_USER: buzz_push_admin
+      POSTGRES_PASSWORD: ${ZION_PUSH_POSTGRES_PASSWORD:?supply a new gateway database admin password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - zion-push-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    networks: [buzz-net]
+
+  push-gateway:
+    image: ${ZION_GATEWAY_IMAGE:?set ZION_GATEWAY_IMAGE to a verified repository@sha256 digest}
+    environment:
+      DATABASE_URL: ${ZION_PUSH_RUNTIME_DATABASE_URL:?supply DML-only runtime URL for the fresh push-postgres service}
+      BUZZ_PUSH_BIND_ADDR: 0.0.0.0:8080
+      BUZZ_PUSH_HEALTH_ADDR: 0.0.0.0:8081
+      BUZZ_PUSH_GRANT_KEYS: ${ZION_PUSH_GRANT_KEYS:?supply an independent grant keyring}
+      BUZZ_PUSH_TOKEN_KEYS: ${ZION_PUSH_TOKEN_KEYS:?supply an independent token keyring}
+      BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS: "2592000"
+      BUZZ_PUSH_APP_ATTEST_APP_ID: ${ZION_PUSH_APP_ID:?supply the exact Apple TEAMID.bundle-id}
+      BUZZ_PUSH_APNS_TOPIC: ${ZION_PUSH_APNS_TOPIC:?supply the exact signed app bundle-id}
+      BUZZ_PUSH_APP_ATTEST_ENVIRONMENT: production
+      BUZZ_PUSH_APNS_ENVIRONMENT: production
+      BUZZ_PUSH_APNS_CERT_PATH: /run/secrets/zion-push-apns
+      BUZZ_PUSH_APP_ATTEST_ROOT_CERT_PATH: /run/secrets/zion-push-attest-root
+    secrets: [zion-push-apns, zion-push-attest-root]
+    ports:
+      - "127.0.0.1:23360:8080"
+      - "127.0.0.1:23361:8081"
+    depends_on:
+      push-postgres:
+        condition: service_healthy
+    restart: "no"
+    networks: [buzz-net]
+
+volumes:
+  zion-push-postgres-data: {}
+
+secrets:
+  zion-push-apns:
+    file: ${ZION_PUSH_APNS_CERT_FILE:?supply an absolute operator-owned PEM path}
+  zion-push-attest-root:
+    file: ${ZION_PUSH_ATTEST_ROOT_FILE:?supply an absolute operator-owned root PEM path}

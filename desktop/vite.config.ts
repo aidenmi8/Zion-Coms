@@ -1,34 +1,15 @@
-import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
-function readGitValue(args: string[], fallback: string): string {
-  try {
-    return execFileSync("git", args, { encoding: "utf8" }).trim() || fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-export default defineConfig(async () => {
-  const buildId =
-    process.env.VITE_ZION_BUILD_ID ??
-    new Date()
-      .toISOString()
-      .replace(/[-:TZ.]/g, "")
-      .slice(0, 12);
-  const commit =
-    process.env.VITE_ZION_COMMIT ??
-    readGitValue(["rev-parse", "--short=12", "HEAD"], "unknown");
-  const worktree =
-    process.env.VITE_ZION_WORKTREE ??
-    (readGitValue(["status", "--porcelain"], "") === "" ? "clean" : "dirty");
+export default defineConfig(async ({ mode }) => {
+  const modeEnv = loadEnv(mode, __dirname, "");
+  const protectedFeaturesEnabled =
+    (process.env.VITE_BUZZ_BESTIE ?? modeEnv.VITE_BUZZ_BESTIE) === "1";
 
   return {
     plugins: [
@@ -52,12 +33,23 @@ export default defineConfig(async () => {
           __dirname,
           "../preview-features.json",
         ),
+        "@protected-features": path.resolve(
+          __dirname,
+          protectedFeaturesEnabled
+            ? "./src/protectedFeatures/internal.ts"
+            : "./src/protectedFeatures/public.ts",
+        ),
+        "@protected-feature-components": path.resolve(
+          __dirname,
+          protectedFeaturesEnabled
+            ? "./src/protectedFeatures/internalUi.ts"
+            : "./src/protectedFeatures/publicUi.ts",
+        ),
+        "@model-capabilities-manifest": path.resolve(
+          __dirname,
+          "../scripts/model-capabilities.json",
+        ),
       },
-    },
-    define: {
-      "import.meta.env.VITE_ZION_BUILD_ID": JSON.stringify(buildId),
-      "import.meta.env.VITE_ZION_COMMIT": JSON.stringify(commit),
-      "import.meta.env.VITE_ZION_WORKTREE": JSON.stringify(worktree),
     },
 
     // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

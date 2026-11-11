@@ -216,7 +216,8 @@ export function CustomHarnessForm({
    * delete the old file when the id changes. */
   originalId?: string;
   onCancel: () => void;
-  onSaved: () => void;
+  /** Receives the id the harness was saved under (the form may rewrite it). */
+  onSaved: (id: string) => void;
   /** Render without the bordered card chrome (for embedding in the catalog
    * dialog detail pane). */
   chromeless?: boolean;
@@ -273,11 +274,9 @@ export function CustomHarnessForm({
       return;
     }
     try {
-      await save.mutateAsync({
-        definition: definitionFromFormValues(form),
-        originalId,
-      });
-      onSaved();
+      const definition = definitionFromFormValues(form);
+      await save.mutateAsync({ definition, originalId });
+      onSaved(definition.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -397,7 +396,7 @@ export function CustomHarnessForm({
           <p className="text-sm font-medium text-foreground">
             Env vars
             <span className={PERSONA_LABEL_OPTIONAL_CLASS}>
-              (override at spawn time; Zion-managed vars always win)
+              (override at spawn time; Buzz-managed vars always win)
             </span>
           </p>
           <EnvEditor

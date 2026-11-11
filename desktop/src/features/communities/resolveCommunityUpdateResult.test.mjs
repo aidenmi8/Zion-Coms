@@ -83,9 +83,9 @@ test("resolveCommunityUpdateResult_relay_edit_on_inactive_community_no_reinit", 
   assert.deepEqual(result, { kind: "updated", requiresReinit: false });
 });
 
-test("resolveCommunityUpdateResult_repos_dir_change_on_active_requires_reinit", () => {
+test("resolveCommunityUpdateResult_token_change_on_active_requires_reinit", () => {
   const result = resolveCommunityUpdateResult(COMMUNITIES, "ws-1", "ws-1", {
-    reposDir: "/Users/dev/repos",
+    token: "new-token",
   });
   assert.deepEqual(result, { kind: "updated", requiresReinit: true });
 });

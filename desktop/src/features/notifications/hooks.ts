@@ -4,6 +4,7 @@ import { useHomeFeedQuery } from "@/features/home/hooks";
 import { useUsersBatchQuery } from "@/features/profile/hooks";
 import type { UserProfileLookup } from "@/features/profile/lib/identity";
 import type { Channel, FeedItem, HomeFeedResponse } from "@/shared/api/types";
+import { scheduleAfterForegroundReady } from "@/shared/lib/foregroundReady";
 import {
   getDesktopNotificationPermissionState,
   requestDesktopNotificationAccess,
@@ -210,14 +211,23 @@ export function useNotificationSettings(pubkey?: string) {
   }, [normalizedPubkey]);
 
   React.useEffect(() => {
+    let cancelPendingRefresh: (() => void) | null = null;
     const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") {
-        void refreshPermission();
+      if (document.visibilityState !== "visible") {
+        cancelPendingRefresh?.();
+        cancelPendingRefresh = null;
+        return;
       }
+      if (cancelPendingRefresh) return;
+      cancelPendingRefresh = scheduleAfterForegroundReady(() => {
+        cancelPendingRefresh = null;
+        if (document.visibilityState === "visible") void refreshPermission();
+      });
     };
     document.addEventListener("visibilitychange", refreshWhenVisible);
     window.addEventListener("focus", refreshWhenVisible);
     return () => {
+      cancelPendingRefresh?.();
       document.removeEventListener("visibilitychange", refreshWhenVisible);
       window.removeEventListener("focus", refreshWhenVisible);
     };
@@ -260,7 +270,7 @@ export function useNotificationSettings(pubkey?: string) {
         }));
         setErrorMessage(
           nextPermission === "denied"
-            ? "Desktop notifications are blocked for Zion. Enable them in system settings to turn alerts on."
+            ? "Desktop notifications are blocked for Buzz. Enable them in system settings to turn alerts on."
             : "Desktop notifications are unavailable in this environment.",
         );
         return false;
@@ -375,6 +385,7 @@ export function useHomeFeedNotificationState(
   pubkey: string | undefined,
   settings: NotificationSettings,
   setDesktopEnabled: (enabled: boolean) => Promise<boolean>,
+  desktopNotificationsEnabled: boolean,
   isHomeActive: boolean,
   // NIP-RS read marker lookup, shared with the sidebar via AppShell. When
   // provided, channel-backed feed items are treated as read iff their
@@ -400,15 +411,18 @@ export function useHomeFeedNotificationState(
   // has not been advanced by opening Home.
   getMessageReadAt: (messageId: string) => number | null = () => null,
   channels: ReadonlyArray<Pick<Channel, "id" | "name" | "channelType">> = [],
+  silentChannelIds?: ReadonlySet<string>,
 ) {
   useFeedDesktopNotifications(
     feed,
     pubkey,
     settings,
     setDesktopEnabled,
+    desktopNotificationsEnabled,
     profiles,
     mutedChannelIds,
     channels,
+    silentChannelIds,
   );
   const normalizedPubkey = pubkey?.trim().toLowerCase() ?? "";
   const [seenFeedIds, setSeenFeedIds] = React.useState<string[]>(() =>

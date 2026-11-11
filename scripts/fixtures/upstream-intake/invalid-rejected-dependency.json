@@ -1,8 +1,0 @@
-{
-  "base_fixture": "mixed-batch.json",
-  "mutation": {
-    "entry_sha": "2222222222222222222222222222222222222222",
-    "field": "integration_method",
-    "value": "take"
-  }
-}

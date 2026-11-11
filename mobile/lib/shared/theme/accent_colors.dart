@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Accent colors available across the Zion mobile client.
+/// Accent colors matching the desktop Buzz app.
 class AccentColor {
   final String name;
   final Color light;
@@ -80,36 +80,19 @@ const accentColors = [
     wireValue: '#6366f1',
   ),
   AccentColor(
-    name: 'Zion Violet',
-    light: Color(0xFF7C3AED),
-    dark: Color(0xFFA78BFA),
-    wireValue: '#7c3aed',
+    name: 'Chartreuse',
+    light: Color(0xFFD7D72E),
+    dark: Color(0xFFD7D72E),
+    wireValue: '#d7d72e',
   ),
 ];
 
-Color accentColorForScheme(ColorScheme scheme, int accentIndex) {
-  if (accentIndex < 0 || accentIndex >= accentColors.length) {
-    return scheme.primary;
-  }
-  final accent = accentColors[accentIndex];
-  if (scheme.brightness == Brightness.dark && accent.useThemeForegroundInDark) {
-    return scheme.onSurface;
-  }
-  return scheme.brightness == Brightness.light ? accent.light : accent.dark;
-}
-
-/// Default: Zion Violet.
+/// New default: Black.
 ///
 /// Keep this at the end of [accentColors] so existing saved accent indexes keep
 /// pointing at the same colors.
-const defaultAccentIndex = 10;
 const neutralAccentIndex = 0;
-
-/// Legacy default: Catppuccin Mauve/the base theme primary.
-const legacyDefaultAccentIndex = -1;
-
-/// The automatic black default used by the prior public Zion theme.
-const legacyAutomaticBlackAccentIndex = 8;
+const defaultAccentIndex = neutralAccentIndex;
 
 int? accentIndexForWireValue(String value) {
   final index = accentColors.indexWhere((accent) => accent.wireValue == value);

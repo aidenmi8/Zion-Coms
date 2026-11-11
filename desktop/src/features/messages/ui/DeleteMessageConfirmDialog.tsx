@@ -10,6 +10,13 @@ import {
 } from "@/shared/ui/alert-dialog";
 import { Button } from "@/shared/ui/button";
 
+/**
+ * The "Delete message?" confirmation. Single definition shared by every
+ * surface that deletes a message — the message action menu (MessageActionBar)
+ * and the empty-edit delete path (clearing an edit to empty and hitting accept
+ * routes here, so it prompts exactly like the menu's Delete does). `onConfirm`
+ * fires when the user presses Delete; the caller owns the actual deletion.
+ */
 export function DeleteMessageConfirmDialog({
   open,
   onOpenChange,

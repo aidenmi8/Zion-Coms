@@ -1,59 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# destination:source — canonical Zion launchers and legacy compatibility names
-# point at the same compiled personalities.
-SIDECARS=(
-    "zion-acp:buzz-acp"
-    "zion-agent:buzz-agent"
-    "zion-dev-mcp:buzz-dev-mcp"
-    "zion:buzz"
-    "buzz-acp:buzz-acp"
-    "buzz-agent:buzz-agent"
-    "buzz-dev-mcp:buzz-dev-mcp"
-    "git-credential-nostr:git-credential-nostr"
-    "buzz:buzz"
-)
+SIDECARS=(buzz-acp buzz-agent buzz-dev-mcp git-credential-nostr buzz)
 HOST=$(rustc -vV | sed -n 's|host: ||p')
-PROFILE=release
-TARGET=""
-EXPLICIT_TARGET=false
-
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --debug)
-            PROFILE=debug
-            ;;
-        --release)
-            PROFILE=release
-            ;;
-        -*)
-            echo "Error: unsupported option: $1" >&2
-            exit 1
-            ;;
-        *)
-            [[ -z "$TARGET" ]] || {
-                echo "Error: target specified more than once" >&2
-                exit 1
-            }
-            TARGET="$1"
-            EXPLICIT_TARGET=true
-            ;;
-    esac
-    shift
-done
-
-TARGET=${TARGET:-$HOST}
+TARGET=${1:-$HOST}
+if [[ "$TARGET" != *windows* ]]; then
+    SIDECARS+=(buzz-backend-kubernetes)
+    BUILD_HINT="cargo build --release -p buzz-acp -p buzz-agent -p buzz-backend-kubernetes -p buzz-dev-mcp -p git-credential-nostr -p buzz-cli"
+else
+    BUILD_HINT="cargo build --release -p buzz-acp -p buzz-agent -p buzz-dev-mcp -p git-credential-nostr -p buzz-cli"
+fi
 BINARIES_DIR="desktop/src-tauri/binaries"
 
 # When --target is passed explicitly to cargo (even if it matches the host),
 # binaries land in target/<triple>/release/. Without --target, they land in
 # target/release/. The script receives the target as $1 only when cargo was
 # invoked with --target, so use the qualified path whenever $1 is set.
-if [[ "$EXPLICIT_TARGET" == true ]]; then
-    SRC_DIR="target/${TARGET}/${PROFILE}"
+if [[ -n "${1:-}" ]]; then
+    SRC_DIR="target/${TARGET}/release"
 else
-    SRC_DIR="target/${PROFILE}"
+    SRC_DIR="target/release"
 fi
 
 # MSVC emits <name>.exe; Tauri's externalBin then expects binaries/<name>-<triple>.exe.
@@ -64,22 +30,19 @@ else
 fi
 
 missing=()
-for pair in "${SIDECARS[@]}"; do
-    source_bin="${pair#*:}"
-    [[ -s "$SRC_DIR/${source_bin}${EXE}" ]] || missing+=("${source_bin}${EXE}")
+for bin in "${SIDECARS[@]}"; do
+    [[ -f "$SRC_DIR/${bin}${EXE}" ]] || missing+=("${bin}${EXE}")
 done
 if [[ ${#missing[@]} -gt 0 ]]; then
-    echo "Error: missing or empty ${PROFILE} binaries in $SRC_DIR: ${missing[*]}" >&2
-    echo "Build the sidecars before bundling them." >&2
+    echo "Error: missing release binaries in $SRC_DIR: ${missing[*]}" >&2
+    echo "Run '$BUILD_HINT' first." >&2
     exit 1
 fi
 
 mkdir -p "$BINARIES_DIR"
-for pair in "${SIDECARS[@]}"; do
-    destination_bin="${pair%%:*}"
-    source_bin="${pair#*:}"
-    destination="$BINARIES_DIR/${destination_bin}-${TARGET}${EXE}"
-    cp "$SRC_DIR/${source_bin}${EXE}" "$destination"
+for bin in "${SIDECARS[@]}"; do
+    destination="$BINARIES_DIR/${bin}-${TARGET}${EXE}"
+    cp "$SRC_DIR/${bin}${EXE}" "$destination"
 
     # cp preserves the mode of an existing destination on macOS. Generated
     # sidecar placeholders may not be executable, so make the bundled Unix
@@ -88,4 +51,4 @@ for pair in "${SIDECARS[@]}"; do
         chmod 755 "$destination"
     fi
 done
-echo "${PROFILE} sidecars bundled for $TARGET"
+echo "Sidecars bundled for $TARGET"

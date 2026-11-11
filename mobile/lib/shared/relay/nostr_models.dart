@@ -2,15 +2,26 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+import 'thread_reference.dart';
+
 /// Nostr event kind constants.
 ///
-/// Keep in sync with `desktop/src/shared/constants/kinds.ts`.
+/// Keep in sync with `crates/buzz-core/src/kind.rs`.
 abstract final class EventKind {
+  /// Kind:0 user profile metadata.
+  static const profile = 0;
   static const note = 1;
   static const contactList = 3;
   static const deletion = 5;
   static const reaction = 7;
+
+  /// Kind:9030 event requesting that the relay add a community member.
+  static const relayAdminAddMember = 9030;
+
+  /// Kind:13534 event containing the current relay-community membership.
+  static const relayMembership = 13534;
   static const streamMessage = 9;
+  static const nip29EditMetadata = 9002;
   static const nip29DeleteEvent = 9005;
   static const presenceUpdate = 20001;
   static const typingIndicator = 20002;
@@ -22,13 +33,6 @@ abstract final class EventKind {
   static const userStatus = 30315;
   static const dmVisibility = 30622;
   static const streamMessageV2 = 40002;
-  static const workflowApprovalRequested = 46010;
-  static const workflowApprovalGranted = 46011;
-  static const workflowApprovalDenied = 46012;
-  static const workflowApprovalDelegated = 46013;
-  static const workflowApprovalGrantCommand = 46030;
-  static const workflowApprovalDenyCommand = 46031;
-  static const workflowApprovalPassCommand = 46032;
   static const channelThreadSummary = 39005;
   static const channelWindowBounds = 39006;
   static const streamMessageEdit = 40003;
@@ -40,6 +44,8 @@ abstract final class EventKind {
   static const jobResult = 43004;
   static const jobCancel = 43005;
   static const jobError = 43006;
+  static const memberAddedNotification = 44100;
+  static const memberRemovedNotification = 44101;
   static const forumPost = 45001;
   static const forumComment = 45003;
   static const huddleStarted = 48100;
@@ -70,7 +76,6 @@ abstract final class EventKind {
     huddleParticipantJoined, // 48101 — huddle lifecycle metadata
     huddleParticipantLeft, // 48102 — huddle lifecycle metadata
     huddleEnded, // 48103 — visible huddle ended row
-    channelThreadSummary, // 39005 — live channel-window thread recount
   ];
 
   /// Auxiliary timeline kinds that overlay or hide existing rows.
@@ -81,12 +86,14 @@ abstract final class EventKind {
     streamMessageEdit,
   ];
 
-  /// Visible content kinds requested by the NIP-CW channel-window path.
-  static const channelTimelineContentKinds = [
+  /// Row kinds a NIP-CW channel-window page reads. System notices (40099)
+  /// are read apart by [NostrFilters.channelNotices]: a page counts every row
+  /// kind against its limit, so a burst of joins would otherwise fill the
+  /// first page and hold the messages back.
+  static const channelWindowPageKinds = [
     streamMessage,
     streamMessageV2,
     streamMessageDiff,
-    systemMessage,
     jobRequest,
     jobAccepted,
     jobProgress,
@@ -94,6 +101,13 @@ abstract final class EventKind {
     jobCancel,
     jobError,
     huddleStarted,
+    huddleEnded,
+  ];
+
+  /// Visible content kinds of the channel timeline.
+  static const channelTimelineContentKinds = [
+    ...channelWindowPageKinds,
+    systemMessage,
   ];
 }
 
@@ -155,36 +169,9 @@ class NostrEvent {
   /// The channel/group ID from the `h` tag (NIP-29).
   String? get channelId => getTagValue('h');
 
-  /// Extract thread parent and root IDs from `e` tags.
-  ///
-  /// Matches the desktop's `getThreadReference` logic:
-  /// - Tags with marker `"reply"` identify the direct parent.
-  /// - Tags with marker `"root"` identify the thread root.
-  /// - If no markers are present, falls back to null (top-level message).
-  ({String? parentId, String? rootId}) get threadReference {
-    final eTags = [
-      for (final tag in tags)
-        if (tag.length >= 2 && tag[0] == 'e') tag,
-    ];
-
-    if (eTags.isEmpty) return (parentId: null, rootId: null);
-
-    // Find tagged root and reply markers (desktop convention).
-    List<String>? rootTag;
-    List<String>? replyTag;
-    for (final tag in eTags) {
-      if (tag.length >= 4) {
-        if (tag[3] == 'root') rootTag = tag;
-        if (tag[3] == 'reply') replyTag = tag;
-      }
-    }
-
-    if (replyTag == null) return (parentId: null, rootId: null);
-
-    final parentId = replyTag[1];
-    final rootId = rootTag?[1] ?? parentId;
-    return (parentId: parentId, rootId: rootId);
-  }
+  /// Validated, lowercase thread IDs shared by timeline and Inbox navigation.
+  ({String? parentId, String? rootId}) get threadReference =>
+      parseThreadReference(tags);
 
   /// The parent event ID from the `e` tag.
   String? get parentEventId => threadReference.parentId;
@@ -300,6 +287,12 @@ class ChannelData {
   final String id;
   final String name;
   final String channelType;
+
+  /// NIP-CL labels in `t` tags after the leading channel-type tag.
+  final List<String> labels;
+
+  /// Original channel creator from the relay-authored uppercase `P` tag.
+  final String? creator;
   final String visibility;
   final String description;
   final String? topic;
@@ -308,6 +301,10 @@ class ChannelData {
   final DateTime? ttlDeadline;
   final bool isArchived;
 
+  /// The relay's bare `["unlisted"]` flag: an unlisted channel is left out of
+  /// listings and does not hold its name in the listed-name rule.
+  final bool isUnlisted;
+
   const ChannelData({
     required this.id,
     required this.name,
@@ -315,10 +312,13 @@ class ChannelData {
     required this.visibility,
     required this.description,
     this.topic,
+    this.labels = const [],
+    this.creator,
     this.participantPubkeys = const [],
     this.ttlSeconds,
     this.ttlDeadline,
     this.isArchived = false,
+    this.isUnlisted = false,
   });
 
   factory ChannelData.fromEvent(NostrEvent event) {
@@ -360,6 +360,12 @@ class ChannelData {
       id: id,
       name: name,
       channelType: channelType,
+      labels: event.tags
+          .where((t) => t.length >= 2 && t[0] == 't')
+          .skip(1)
+          .map((t) => t[1])
+          .toList(),
+      creator: event.getTagValue('P'),
       visibility: visibility,
       description: description,
       topic: topic,
@@ -367,6 +373,7 @@ class ChannelData {
       ttlSeconds: ttlSeconds,
       ttlDeadline: ttlDeadline,
       isArchived: isArchived,
+      isUnlisted: event.tags.any((t) => t.isNotEmpty && t[0] == 'unlisted'),
     );
   }
 }

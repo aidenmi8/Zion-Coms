@@ -1,14 +1,11 @@
 import * as React from "react";
 import { Check, Copy } from "lucide-react";
 
-import { LocalCommunityOnboarding } from "@/features/communities/ui/LocalCommunityOnboarding";
+import { HostedCommunityOnboarding } from "@/features/communities/ui/HostedCommunityOnboarding";
 import { useCommunityOnboarding } from "@/features/onboarding/communityOnboarding";
 import { InviteRedeemForm } from "@/features/onboarding/ui/InviteRedeemForm";
 import { OnboardingChrome } from "@/features/onboarding/ui/OnboardingChrome";
-import {
-  OnboardingFooter,
-  OnboardingFooterProvider,
-} from "@/features/onboarding/ui/OnboardingFooter";
+import { OnboardingFooterProvider } from "@/features/onboarding/ui/OnboardingFooter";
 import {
   type OnboardingTransitionDirection,
   OnboardingSlideTransition,
@@ -41,6 +38,10 @@ export function WelcomeSetup({
   const [page, setPage] = React.useState<WelcomeSetupPage>(initialPage);
   const [transitionMode, setTransitionMode] =
     React.useState<WelcomeTransitionMode>(initialTransitionMode);
+  // While true, the Builderlab sign-in modal floats over the current page —
+  // we only navigate to the hosted stage once sign-in completes, so the page
+  // behind the modal never changes out from under the user.
+  const [isHostedSignInOpen, setIsHostedSignInOpen] = React.useState(false);
   const [copiedNpub, setCopiedNpub] = React.useState(false);
   const communityOnboarding = useCommunityOnboarding();
   const identityQuery = useIdentityQuery();
@@ -88,27 +89,49 @@ export function WelcomeSetup({
     [communityOnboarding, page],
   );
 
+  const beginHostedCommunity = React.useCallback(
+    () => setIsHostedSignInOpen(true),
+    [],
+  );
+
   const transitionDirection =
     transitionMode === "backward" ? "backward" : "forward";
-  const welcomeEffect =
-    transitionMode === "backward" ? "line-slide" : "mask-reveal-up";
+  const backAction =
+    page === "welcome" && onBack
+      ? { onClick: onBack, testId: "welcome-setup-back" }
+      : page === "existing"
+        ? {
+            onClick: () => showPage("welcome"),
+            testId: "existing-back",
+          }
+        : page === "join"
+          ? {
+              onClick: () => showPage("welcome"),
+              testId: "welcome-join-back",
+            }
+          : page === "member"
+            ? {
+                onClick: () => showPage("existing"),
+                testId: "welcome-member-back",
+              }
+            : undefined;
 
   return (
     <div
       className="buzz-onboarding-neutral-theme buzz-startup-shell flex h-dvh items-start justify-center overflow-y-auto bg-background px-4 pb-36 pt-[106px] text-foreground"
       data-system-color-scheme={systemColorScheme}
+      data-testid="welcome-setup"
     >
       <StartupWindowDragRegion />
       <OnboardingChrome current={5} />
-      <OnboardingFooterProvider>
+      <OnboardingFooterProvider backAction={backAction}>
         <div className="relative flex min-h-0 w-full max-w-[920px] flex-1 flex-col items-center text-center">
           {page === "welcome" ? (
             <OnboardingSlideTransition
               className="flex h-full min-h-0 w-full flex-col items-center text-center"
               containerClassName="h-full min-h-0 [&>.buzz-onboarding-transition-line]:h-full"
               direction={transitionDirection}
-              effect={welcomeEffect}
-              transitionKey={`welcome-${welcomeEffect}-${transitionDirection}`}
+              transitionKey={`welcome-${transitionDirection}`}
             >
               <div className="w-full max-w-[760px]">
                 <h1 className="text-title font-normal">
@@ -140,7 +163,7 @@ export function WelcomeSetup({
                 >
                   <button
                     data-testid="community-choice-create"
-                    onClick={() => showPage("owned")}
+                    onClick={beginHostedCommunity}
                     type="button"
                   >
                     Create a community
@@ -160,19 +183,6 @@ export function WelcomeSetup({
                   </button>
                 </Card>
               </div>
-              {onBack ? (
-                <OnboardingFooter>
-                  <Button
-                    className="h-9 rounded-full bg-foreground/10 px-6 hover:bg-foreground/15"
-                    data-testid="welcome-setup-back"
-                    onClick={onBack}
-                    type="button"
-                    variant="ghost"
-                  >
-                    Back
-                  </Button>
-                </OnboardingFooter>
-              ) : null}
             </OnboardingSlideTransition>
           ) : page === "existing" ? (
             <OnboardingSlideTransition
@@ -197,7 +207,7 @@ export function WelcomeSetup({
                 >
                   <button
                     data-testid="existing-choice-owner"
-                    onClick={() => showPage("owned")}
+                    onClick={beginHostedCommunity}
                     type="button"
                   >
                     I own the community
@@ -217,17 +227,6 @@ export function WelcomeSetup({
                   </button>
                 </Card>
               </div>
-              <OnboardingFooter>
-                <Button
-                  className="h-9 rounded-full bg-foreground/10 px-6 hover:bg-foreground/15"
-                  data-testid="existing-back"
-                  onClick={() => showPage("welcome")}
-                  type="button"
-                  variant="ghost"
-                >
-                  Back
-                </Button>
-              </OnboardingFooter>
             </OnboardingSlideTransition>
           ) : page === "owned" ? (
             <OnboardingSlideTransition
@@ -235,7 +234,7 @@ export function WelcomeSetup({
               direction={transitionDirection}
               transitionKey={`owned-${transitionDirection}`}
             >
-              <LocalCommunityOnboarding onBack={() => showPage("welcome")} />
+              <HostedCommunityOnboarding onBack={() => showPage("welcome")} />
             </OnboardingSlideTransition>
           ) : (
             <OnboardingSlideTransition
@@ -316,6 +315,16 @@ export function WelcomeSetup({
               </div>
             </OnboardingSlideTransition>
           )}
+          {isHostedSignInOpen && page !== "owned" ? (
+            <HostedCommunityOnboarding
+              onBack={() => setIsHostedSignInOpen(false)}
+              onReady={() => {
+                setIsHostedSignInOpen(false);
+                showPage("owned");
+              }}
+              stageHidden
+            />
+          ) : null}
         </div>
       </OnboardingFooterProvider>
     </div>

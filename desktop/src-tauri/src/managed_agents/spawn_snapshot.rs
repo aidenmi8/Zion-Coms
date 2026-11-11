@@ -1,7 +1,30 @@
-//! Runtime-only snapshot of the effective managed-agent spawn configuration.
+//! Spawn-time config snapshot for the restart-required badge.
 //!
-//! This is the prerequisite contract used by the restart-diff and parallelism
-//! intake lines. It deliberately never crosses a persistence boundary.
+//! [`SpawnConfigSnapshot`] captures the *effective spawned values* — what a
+//! process launch of a record would actually receive. The running process
+//! stamps one on [`super::ManagedAgentProcess`] at spawn; the summary builder
+//! recomputes a prospective one from current disk state and compares. Drift
+//! means a restart would change what runs, and the field-by-field difference
+//! is what the UI shows (see [`diff`]).
+//!
+//! Scope rules (decided in #centralize-personas-and-agents, revised in PR
+//! #1602 review):
+//! - Inputs mirror what a start would actually run: the start/restore paths
+//!   re-snapshot the linked persona's prompt/model/provider/env onto the
+//!   record immediately before spawning (`start_local_agent_with_preflight`,
+//!   `restore_managed_agents_on_launch`), so persona edits to those fields DO
+//!   apply on a plain restart and reach the prospective snapshot via the same
+//!   re-snapshot. Harness command, args/mcp, env layering, and the record
+//!   fields the spawn env writes read are captured as spawn resolves them.
+//! - The relay URL is captured in resolved form (`effective_agent_relay_url`):
+//!   every record spawns against the active workspace relay (legacy per-record
+//!   pins are ignored), so a workspace relay change means a restart would
+//!   change what runs.
+//! - Channel membership is not an input: agents pick up channel changes live
+//!   (#1468), never via restart.
+//!
+//! The snapshot never crosses a process or persistence boundary — it is
+//! runtime state only, held on the running `ManagedAgentProcess`.
 
 use std::collections::BTreeMap;
 
@@ -14,111 +37,14 @@ use super::{
     readiness::EffectiveHarnessDescriptor,
     runtime::{resolve_session_title, SESSION_TITLE_ENV_VAR},
     types::{AgentDefinition, ManagedAgentRecord, TeamRecord},
-    GlobalAgentConfig,
+    AcpSessionPolicy, GlobalAgentConfig,
 };
 
-/// Inputs already resolved by the spawn path.
-pub(crate) struct SpawnConfigInputs<'a> {
-    pub record: &'a ManagedAgentRecord,
-    pub descriptor: &'a EffectiveHarnessDescriptor,
-    pub relay_url: &'a str,
-    pub team_instructions: Option<&'a str>,
-    pub system_prompt: Option<&'a str>,
-    pub model: Option<&'a str>,
-    pub provider: Option<&'a str>,
-}
+pub(crate) mod diff;
+pub(crate) use diff::{eligible_restart_diff, RestartDiffEntry, TrackedSpawnState};
 
-/// Effective values that determine what the child process receives.
-#[derive(Clone, Serialize, PartialEq)]
-pub(crate) struct SpawnConfigSnapshot {
-    pub acp_command: String,
-    pub command: String,
-    pub args: Vec<String>,
-    pub mcp_command: String,
-    pub env: BTreeMap<String, String>,
-    pub relay_url: String,
-    pub team_instructions: Option<String>,
-    pub system_prompt: Option<String>,
-    pub model: Option<String>,
-    pub provider: Option<String>,
-    pub session_title: Option<String>,
-    pub auth_tag: Option<String>,
-    pub respond_to: String,
-    pub respond_to_allowlist: Option<Vec<String>>,
-    pub idle_timeout_seconds: Option<u64>,
-    pub max_turn_duration_seconds: Option<u64>,
-    pub parallelism: u32,
-}
-
-impl SpawnConfigSnapshot {
-    pub(crate) fn from_inputs(inputs: SpawnConfigInputs<'_>) -> Self {
-        let SpawnConfigInputs {
-            record,
-            descriptor,
-            relay_url,
-            team_instructions,
-            system_prompt,
-            model,
-            provider,
-        } = inputs;
-        Self {
-            acp_command: record.acp_command.clone(),
-            command: descriptor.command.clone(),
-            args: descriptor.args.clone(),
-            mcp_command: known_acp_runtime(&descriptor.command)
-                .and_then(|runtime| runtime.mcp_command)
-                .unwrap_or("")
-                .to_string(),
-            env: descriptor.env.clone(),
-            relay_url: relay_url.to_string(),
-            team_instructions: team_instructions.map(str::to_string),
-            system_prompt: system_prompt.map(str::to_string),
-            model: model.map(str::to_string),
-            provider: provider.map(str::to_string),
-            session_title: (!descriptor.env.contains_key(SESSION_TITLE_ENV_VAR))
-                .then(|| resolve_session_title(record.display_name.as_deref(), &record.name))
-                .flatten(),
-            auth_tag: record.auth_tag.clone(),
-            respond_to: record.respond_to.as_str().to_string(),
-            respond_to_allowlist: (record.respond_to == super::types::RespondTo::Allowlist).then(
-                || {
-                    super::types::validate_respond_to_allowlist(&record.respond_to_allowlist)
-                        .unwrap_or_else(|_| record.respond_to_allowlist.clone())
-                },
-            ),
-            idle_timeout_seconds: record.idle_timeout_seconds,
-            max_turn_duration_seconds: record.max_turn_duration_seconds,
-            parallelism: super::effective_parallelism(&descriptor.command, record.parallelism),
-        }
-    }
-
-    /// Canonical projection used for runtime equality checks.
-    pub(crate) fn canonical(&self) -> serde_json::Value {
-        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
-    }
-}
-
-impl std::fmt::Debug for SpawnConfigSnapshot {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("SpawnConfigSnapshot")
-            .field("acp_command", &self.acp_command)
-            .field("command", &self.command)
-            .field("args", &"<redacted>")
-            .field(
-                "safe_env_key_count",
-                &self
-                    .env
-                    .keys()
-                    .filter(|key| super::env_vars::is_safe_to_reveal(key))
-                    .count(),
-            )
-            .field("relay_url", &"<redacted>")
-            .field("parallelism", &self.parallelism)
-            .finish()
-    }
-}
-
-/// Resolve the current team instructions for a deployment.
+/// Resolve the current instructions for this instance's deployment-time team binding.
+/// A deleted team deliberately degrades to no team section.
 pub(crate) fn effective_team_instructions(
     record: &ManagedAgentRecord,
     teams: &[TeamRecord],
@@ -132,49 +58,298 @@ pub(crate) fn effective_team_instructions(
         .map(str::to_string)
 }
 
-/// Snapshot the effective spawn configuration as if the record started now.
+/// The already-resolved values a spawn feeds into its `Command`.
+///
+/// Taking them rather than re-resolving is what makes the stamp describe the
+/// process that was actually launched: a persona/harness/global edit landing
+/// between spawn's resolution and the stamp can no longer suppress the badge.
+pub(crate) struct SpawnConfigInputs<'a> {
+    pub record: &'a ManagedAgentRecord,
+    pub descriptor: &'a EffectiveHarnessDescriptor,
+    /// Resolved workspace/pair relay — never the record's legacy pin.
+    pub relay_url: &'a str,
+    pub team_instructions: Option<&'a str>,
+    pub system_prompt: Option<&'a str>,
+    pub model: Option<&'a str>,
+    pub provider: Option<&'a str>,
+    /// Compile-time distribution capability projected at this runtime boundary.
+    /// The stored record remains portable; only effective spawned access is stamped.
+    pub enforced_owner_only: bool,
+    /// The effective ACP session policy (`channel`/`thread`) the launch applies.
+    /// Resolved from the current linked definition at the shared launch
+    /// boundary; captured here so editing the definition while an agent runs
+    /// drives the existing restart-required path.
+    pub session_policy: AcpSessionPolicy,
+}
+
+/// The effective spawn configuration of one managed-agent process.
+///
+/// Serialization invariants (load-bearing — the drift comparison and the diff
+/// walk both read `canonical()`):
+/// - plain derived `Serialize`: no `flatten`, no `skip_serializing_if`, no
+///   custom or fallible field serializers, no colliding serialized names, so
+///   every field is always present on both sides of a comparison;
+/// - `Option::None` serializes as JSON `null`; a *missing* key is reserved for
+///   dynamic-map membership (`env.<KEY>` added/removed);
+/// - arrays are atomic leaves — `args` and `respond_to_allowlist` compare and
+///   render whole, never element-wise.
+///
+/// `Debug` is implemented by hand: [`ManagedAgentProcess`] derives `Debug`, so
+/// a derived impl here would print env values, auth tags, and CLI arguments.
+///
+/// [`ManagedAgentProcess`]: super::ManagedAgentProcess
+#[derive(Clone, Serialize)]
+pub(crate) struct SpawnConfigSnapshot {
+    /// The ACP harness binary the desktop launches (`buzz-acp`).
+    pub acp_command: String,
+    /// The effective agent command the harness drives.
+    pub command: String,
+    pub args: Vec<String>,
+    /// Catalog-derived from `command`; `""` when the runtime has none.
+    pub mcp_command: String,
+    /// Fully layered process env: baked floor -> runtime metadata ->
+    /// definition -> global -> persona -> agent.
+    pub env: BTreeMap<String, String>,
+    pub relay_url: String,
+    pub team_instructions: Option<String>,
+    pub system_prompt: Option<String>,
+    pub model: Option<String>,
+    pub provider: Option<String>,
+    /// `None` when a user env override shadows `BUZZ_ACP_SESSION_TITLE`: spawn
+    /// writes the title BEFORE the user env layer, so the override is what
+    /// actually runs and it already reaches this snapshot through `env`.
+    /// Capturing the record-derived value under an override would badge a
+    /// rename that changes nothing.
+    pub session_title: Option<String>,
+    pub auth_tag: Option<String>,
+    pub respond_to: String,
+    /// `None` outside allowlist mode — spawn sets
+    /// `BUZZ_ACP_RESPOND_TO_ALLOWLIST` only there, so edits to a dormant list
+    /// must not badge. Normalized (trim/lowercase/dedup) as the env receives
+    /// it, so edits that don't survive normalization must not badge either.
+    pub respond_to_allowlist: Option<Vec<String>>,
+    pub idle_timeout_seconds: Option<u64>,
+    pub max_turn_duration_seconds: Option<u64>,
+    pub parallelism: u32,
+    /// The startup effort the harness will actually apply, resolved by
+    /// [`effective_effort`]: the single effort key the harness-agnostic
+    /// projection left in `descriptor.env` under the runtime's destination key.
+    /// This is the *sole* representation of the effective effort in the
+    /// snapshot: the projection's destination key is stripped from `env` (see
+    /// `from_inputs`) so an authority handoff that leaves the effective value
+    /// unchanged produces no spurious drift entry, and an effort edit the
+    /// projection consumed surfaces as exactly one `effort_level` entry. For an
+    /// unknown/custom runtime the projection consumes nothing beyond the
+    /// sentinel, so any other effort-looking key the child receives stays in
+    /// `env` as ordinary state and diffs normally.
+    pub effort_level: Option<String>,
+    /// The effective ACP session policy this launch applies (`channel` or
+    /// `thread`). The harness reads `BUZZ_ACP_SESSION_POLICY` only at launch, so
+    /// capturing the resolved policy here lets a toggle flip while an agent runs
+    /// raise the restart-required badge instead of silently leaving the running
+    /// process on the old policy. Written directly on the spawn `Command` (not
+    /// via layered env), so it must be captured explicitly rather than read back
+    /// out of `env`.
+    pub session_policy: String,
+}
+
+/// The startup effort a spawn actually applied, read from the single effort key
+/// the harness-agnostic projection left in `descriptor.env`.
+///
+/// The projection (`config_bridge::effort`) ran inside the descriptor resolver,
+/// resolving the effective value over the canonical column and every env tier,
+/// then reducing the env to exactly one effort key under the runtime's
+/// destination key (`effort_dest_key`). Reading that key here means the badge
+/// compares precisely what launched — no separate precedence to drift from the
+/// spawn path, and an invalid canonical that fell through to an inherited tier
+/// is reflected as the inherited value, not the raw column.
+pub(crate) fn effective_effort(descriptor: &EffectiveHarnessDescriptor) -> Option<String> {
+    let runtime = known_acp_runtime(&descriptor.command);
+    let dest_key = super::config_bridge::effort::effort_dest_key(runtime);
+    // Read case-insensitively (exact-first) so a mixed-case sentinel a custom
+    // runtime passed through (the projection uses an EMPTY suppress set, so a
+    // user-set `buzz_acp_effort_level` survives into `descriptor.env` and the
+    // child reads it as `BUZZ_ACP_EFFORT_LEVEL` on Windows) is captured here.
+    // The read must match the snapshot strip, which is also case-insensitive:
+    // if the read were exact-case it would miss the mixed-case sentinel, the
+    // strip would still remove it, and the value would land in neither
+    // `snapshot.env` nor `effort_level` — producing no restart diff on an edit.
+    super::config_bridge::effort::get_ci(&descriptor.env, dest_key).cloned()
+}
+
+impl SpawnConfigSnapshot {
+    /// Assemble the snapshot from values a spawn has already resolved.
+    pub(crate) fn from_inputs(inputs: SpawnConfigInputs<'_>) -> Self {
+        let SpawnConfigInputs {
+            record,
+            descriptor,
+            relay_url,
+            team_instructions,
+            system_prompt,
+            model,
+            provider,
+            enforced_owner_only,
+            session_policy,
+        } = inputs;
+        let (respond_to, respond_to_allowlist) =
+            super::projected_access_with_policy(record, enforced_owner_only);
+        Self {
+            acp_command: record.acp_command.clone(),
+            command: descriptor.command.clone(),
+            args: descriptor.args.clone(),
+            mcp_command: known_acp_runtime(&descriptor.command)
+                .and_then(|runtime| runtime.mcp_command)
+                .unwrap_or("")
+                .to_string(),
+            // Effort has ONE representation in the snapshot: `effort_level`
+            // below, always holding the projected effective value. The keys
+            // stripped here mirror EXACTLY what the launch projection suppressed
+            // for this runtime (`snapshot_suppress_keys`): a known runtime swept
+            // every effort key to its single destination key, so the full set is
+            // stripped (a no-op beyond that dest key); an unknown/custom runtime
+            // used an empty suppress set (external-review-#2 pass-through), so
+            // only the ACP-startup sentinel is stripped and every other
+            // effort-looking key the child actually receives (e.g. a hand-rolled
+            // `GOOSE_THINKING_EFFORT`) stays as ordinary env — an edit to it must
+            // diff the snapshot and fire the restart badge. Stripping is
+            // ASCII-case-insensitive to match the projection's `apply`.
+            env: {
+                let mut env = descriptor.env.clone();
+                let suppress = super::config_bridge::effort::snapshot_suppress_keys(
+                    known_acp_runtime(&descriptor.command),
+                );
+                env.retain(|k, _| {
+                    !suppress
+                        .iter()
+                        .any(|suppressed| k.eq_ignore_ascii_case(suppressed))
+                });
+                env
+            },
+            relay_url: relay_url.to_string(),
+            team_instructions: team_instructions.map(str::to_string),
+            system_prompt: system_prompt.map(str::to_string),
+            model: model.map(str::to_string),
+            provider: provider.map(str::to_string),
+            session_title: (!descriptor.env.contains_key(SESSION_TITLE_ENV_VAR))
+                .then(|| resolve_session_title(record.display_name.as_deref(), &record.name))
+                .flatten(),
+            auth_tag: record.auth_tag.clone(),
+            respond_to: respond_to.as_str().to_string(),
+            respond_to_allowlist: (respond_to == super::types::RespondTo::Allowlist).then(|| {
+                // A list spawn would reject is captured raw: the stamped
+                // snapshot comes from a successful spawn, so any invalid
+                // edit correctly compares unequal.
+                super::types::validate_respond_to_allowlist(&respond_to_allowlist)
+                    .unwrap_or(respond_to_allowlist)
+            }),
+            idle_timeout_seconds: record.idle_timeout_seconds,
+            max_turn_duration_seconds: record.max_turn_duration_seconds,
+            // Hash the effective parallelism so over-cap edits that don't change
+            // the running pool size (e.g. 10 → 8, both clamp to 5 on OpenClaw)
+            // do not raise a spurious "restart required" badge. Cap crossings
+            // (e.g. 8 → 3, where 3 is below the cap) do change the effective
+            // pool and must badge. The diff surface consequently displays the
+            // effective value — that is correct, it is what actually runs.
+            parallelism: super::effective_parallelism(&descriptor.command, record.parallelism),
+            // Sole effort representation — see the field doc and the `env`
+            // strip above. Reads the single projected effort key the descriptor
+            // resolver left in `descriptor.env`, so the badge compares exactly
+            // what launched regardless of which tier supplied the value.
+            effort_level: effective_effort(descriptor),
+            session_policy: session_policy.as_str().to_string(),
+        }
+    }
+
+    /// Canonical JSON projection — the single representation both the drift
+    /// comparison and the diff walk read, so a lit badge always has a
+    /// non-empty diff and vice versa.
+    ///
+    /// Infallible by the serialization invariants documented on the struct
+    /// (plain derive over strings, scalars, string maps, and string vectors);
+    /// a failure here is a broken invariant, never a runtime condition, so it
+    /// must not degrade into an empty diff.
+    pub(crate) fn canonical(&self) -> serde_json::Value {
+        serde_json::to_value(self).expect("SpawnConfigSnapshot serializes infallibly")
+    }
+}
+
+impl std::fmt::Debug for SpawnConfigSnapshot {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "SpawnConfigSnapshot({})",
+            diff::redacted_canonical(&self.canonical())
+        )
+    }
+}
+
+/// Snapshot the effective spawn configuration `record` would get if it were
+/// started right now under the current `personas`/`teams`/`global`, resolving
+/// a blank record relay against `workspace_relay`.
+///
+/// Pure — no `AppHandle`, no disk, no keyring. This is the *prospective* side
+/// of the comparison; the stamped side is built at spawn from the values that
+/// actually fed the child's `Command`.
 pub(crate) fn prospective_spawn_config_snapshot(
     record: &ManagedAgentRecord,
     personas: &[AgentDefinition],
     teams: &[TeamRecord],
     workspace_relay: &str,
     global: &GlobalAgentConfig,
+    enforced_owner_only: bool,
 ) -> SpawnConfigSnapshot {
-    let prospective_record = preview_prospective_persona_snapshot(record, personas);
-    let descriptor = crate::managed_agents::resolve_effective_harness_descriptor(
-        &prospective_record,
-        personas,
-        global,
-    )
-    .unwrap_or_else(|_| {
-        let command = crate::managed_agents::record_agent_command(&prospective_record, personas);
-        let args = normalize_agent_args(&command, prospective_record.agent_args.clone());
-        EffectiveHarnessDescriptor {
-            command,
-            args,
-            env: Default::default(),
-        }
-    });
+    // Prospective re-snapshot: apply the same `apply_persona_snapshot` the
+    // start/restore paths run right before spawning, so this describes what a
+    // restart would actually run. Idempotent, so a spawn-time stamp taken
+    // after those paths saved the record compares equal when nothing changed.
+    // The persona env itself arrives through the descriptor's layered env
+    // below; `persona_source_version` is set on the clone but is not an input.
+    let record = preview_prospective_persona_snapshot(record, personas);
+    let record = &record;
 
-    let (prompt, model, provider) =
-        match resolve_effective_config(&prospective_record, personas, global) {
-            EffectiveConfigResult::Resolved(config) => (
-                config.system_prompt.value,
-                config.model.value,
-                config.provider.value,
-            ),
-            EffectiveConfigResult::OrphanedInstance { .. } => (None, None, None),
-        };
-    let team_instructions = effective_team_instructions(&prospective_record, teams);
-    let relay_url =
-        crate::relay::effective_agent_relay_url(&prospective_record.relay_url, workspace_relay);
+    // Resolve command, args, and env via the single typed descriptor — same
+    // path as spawn_agent_child. Dangling harness id falls back to the
+    // infallible record_agent_command (no-op: a dangling harness can't be
+    // spawned, so the snapshot never matters for that agent).
+    let descriptor =
+        crate::managed_agents::resolve_effective_harness_descriptor(record, personas, global)
+            .unwrap_or_else(|_| {
+                let command = crate::managed_agents::record_agent_command(record, personas);
+                let args = normalize_agent_args(&command, record.agent_args.clone());
+                EffectiveHarnessDescriptor {
+                    command,
+                    args,
+                    env: Default::default(),
+                }
+            });
+
+    // Prompt, model, and provider all come from ONE `resolve_effective_config`
+    // call — the SAME resolve `spawn_agent_child` performs for the env write,
+    // so env write and this badge cannot disagree. An orphaned link (missing
+    // definition) resolves as if all three were absent: `spawn_agent_child`
+    // refuses to spawn an orphan regardless, and `eligible_restart_diff`
+    // suppresses the badge for one.
+    let (prompt, model, provider) = match resolve_effective_config(record, personas, global) {
+        EffectiveConfigResult::Resolved(cfg) => {
+            (cfg.system_prompt.value, cfg.model.value, cfg.provider.value)
+        }
+        EffectiveConfigResult::OrphanedInstance { .. } => (None, None, None),
+    };
+
     SpawnConfigSnapshot::from_inputs(SpawnConfigInputs {
-        record: &prospective_record,
+        record,
         descriptor: &descriptor,
-        relay_url: &relay_url,
-        team_instructions: team_instructions.as_deref(),
+        // Resolved, not stored: every record spawns on the workspace relay
+        // (legacy pins ignored), so a workspace relay change must badge.
+        relay_url: &crate::relay::effective_agent_relay_url(&record.relay_url, workspace_relay),
+        team_instructions: effective_team_instructions(record, teams).as_deref(),
         system_prompt: prompt.as_deref(),
         model: model.as_deref(),
         provider: provider.as_deref(),
+        enforced_owner_only,
+        session_policy: record.session_policy,
     })
 }
+
+#[cfg(test)]
+mod tests;

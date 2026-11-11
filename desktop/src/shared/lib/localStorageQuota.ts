@@ -10,8 +10,11 @@
 const PURE_CACHE_KEY_PREFIXES = [
   "buzz-channel-messages.v1:",
   "buzz-channels.v1:",
+  "buzz-observed-unread.v1:",
+  "buzz-projects.v1:",
   "buzz-sidebar-skeleton-shape.v1:",
   "buzz-timeline-skeleton-shape.v1:",
+  "buzz-user-labels.v1:",
 ];
 
 const QUOTA_RECOVERY_MARKER_KEY = "buzz-local-storage-quota-recovery.v1";
@@ -130,7 +133,7 @@ function notifyStorageFull(): void {
     .then(({ toast }) => {
       toast.error("Local storage is full", {
         description:
-          "Zion could not save some local data — read positions may not persist across restarts.",
+          "Buzz could not save some local data — read positions may not persist across restarts.",
       });
     })
     .catch(() => {});

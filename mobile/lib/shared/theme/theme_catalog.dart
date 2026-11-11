@@ -25,49 +25,11 @@ class ThemeColors {
   bool get isDark => bg.computeLuminance() < 0.5;
 
   /// Human-readable display name: 'catppuccin-mocha' → 'Catppuccin Mocha'.
-  ///
-  /// The first-party theme IDs remain legacy-compatible storage keys, while
-  /// their newly rendered labels use the canonical Zion product name.
-  String get displayName {
-    switch (name) {
-      case 'buzz':
-        return 'Zion';
-      case 'buzz-dark':
-        return 'Zion Dark';
-      default:
-        return name
-            .split('-')
-            .map(
-              (w) =>
-                  w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w,
-            )
-            .join(' ');
-    }
-  }
+  String get displayName => name
+      .split('-')
+      .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w)
+      .join(' ');
 }
-
-/// Known light theme names — used to show sun/moon icons before loading.
-const lightThemeNames = <String>{
-  'buzz',
-  'catppuccin-latte',
-  'everforest-light',
-  'github-light',
-  'github-light-default',
-  'github-light-high-contrast',
-  'gruvbox-light-hard',
-  'gruvbox-light-medium',
-  'gruvbox-light-soft',
-  'kanagawa-lotus',
-  'light-plus',
-  'material-theme-lighter',
-  'min-light',
-  'one-light',
-  'rose-pine-dawn',
-  'slack-ochin',
-  'snazzy-light',
-  'solarized-light',
-  'vitesse-light',
-};
 
 /// All available color schemes, sorted alphabetically.
 const themeCatalog = <ThemeColors>[
@@ -551,14 +513,6 @@ const themeCatalog = <ThemeColors>[
     comment: Color(0xFFA0ADA0),
     added: Color(0xFF1E754F),
     deleted: Color(0xFFAB5959),
-  ),
-  ThemeColors(
-    name: 'zion-orbit',
-    bg: Color(0xFF100A18),
-    fg: Color(0xFFF3EDFF),
-    comment: Color(0xFFB8A7CC),
-    added: Color(0xFFC4B5FD),
-    deleted: Color(0xFFFF9BB0),
   ),
 ];
 

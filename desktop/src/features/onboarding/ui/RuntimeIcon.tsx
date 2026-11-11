@@ -3,7 +3,7 @@ import { TerminalSquare } from "lucide-react";
 
 import type { AcpRuntimeCatalogEntry } from "@/shared/api/types";
 import { cn } from "@/shared/lib/cn";
-import { ZionMark } from "@/shared/ui/zion-brand/ZionMark";
+import { BuzzMark } from "@/shared/ui/buzz-logo/BuzzMark";
 import claudeLogoUrl from "../assets/harness-logos/claude.png?inline";
 import { RUNTIME_MARKS } from "./HarnessMarks";
 
@@ -17,7 +17,9 @@ const RUNTIME_LOGOS: Record<string, string> = {
 // Public-path logos for bundled presets. Served from /harness-logos/ at runtime.
 // Keys match the preset `id` values emitted by the backend PRESET_HARNESSES.
 export const PRESET_LOGOS: Record<string, string> = {
+  devin: "/harness-logos/devin.svg",
   omp: "/harness-logos/omp.svg",
+  pi: "/harness-logos/pi.svg",
   grok: "/harness-logos/grok.svg",
   opencode: "/harness-logos/opencode.svg",
   kimi: "/harness-logos/kimi.png",
@@ -33,7 +35,7 @@ function isBuzzRuntime(runtime: AcpRuntimeCatalogEntry): boolean {
 export function getRuntimeDisplayLabel(
   runtime: AcpRuntimeCatalogEntry,
 ): string {
-  return isBuzzRuntime(runtime) ? "Zion" : runtime.label;
+  return isBuzzRuntime(runtime) ? "Buzz" : runtime.label;
 }
 
 function getRuntimeLogoUrl(runtime: AcpRuntimeCatalogEntry): string | null {
@@ -58,7 +60,7 @@ export function RuntimeIcon({
   if (isBuzzRuntime(runtime)) {
     // The mark's wide viewBox letterboxes inside a square box, so honoring
     // the caller's size keeps it optically in line with the square logos.
-    return <ZionMark className={cn(className, "text-foreground")} />;
+    return <BuzzMark className={cn(className, "text-foreground")} />;
   }
 
   if (Mark) {

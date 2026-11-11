@@ -2,7 +2,7 @@ import * as React from "react";
 import { ArrowLeft, ChevronRight, Link2, Plus } from "lucide-react";
 
 import type { AddCommunityPrefillRequest } from "@/features/communities/addCommunityPrefill";
-import { LocalCommunityCreateFlow } from "@/features/communities/ui/LocalCommunityCreateFlow";
+import { HostedCommunityCreateFlow } from "@/features/communities/ui/HostedCommunityCreateFlow";
 import { useCommunityOnboarding } from "@/features/onboarding/communityOnboarding";
 import { InviteRedeemForm } from "@/features/onboarding/ui/InviteRedeemForm";
 import {
@@ -87,7 +87,7 @@ export function AddCommunityDialog({
 
   const description =
     mode === "create"
-      ? "Creates the community on your local Zion server."
+      ? "Opens Builderlab in your browser."
       : mode === "join"
         ? "Use the community URL or invite link you received."
         : "Create a new community or join one you already have.";
@@ -146,7 +146,7 @@ export function AddCommunityDialog({
                     Create a new community
                   </span>
                   <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
-                    Claim a Zion address for your team.
+                    Claim a Buzz address for your team.
                   </span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" />
@@ -189,7 +189,7 @@ export function AddCommunityDialog({
               variant="add-community"
             />
           ) : (
-            <LocalCommunityCreateFlow onComplete={handleClose} />
+            <HostedCommunityCreateFlow onComplete={handleClose} />
           )}
         </div>
       </DialogContent>

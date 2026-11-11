@@ -18,6 +18,31 @@ overrides:
   # 5.0.1 / 5.0.2 respectively; pin >=5.0.2 to cover both. Removable once
   # markdown-it resolves linkify-it >=5.0.2 on its own.
   linkify-it: "^5.0.2"
+  # Router Core's ^1.x ranges otherwise retain vulnerable Seroval releases in
+  # both the web client and legacy desktop. Keep the core and web plugins on
+  # patched versions together (GHSA-72px-vh6m-89wc, GHSA-g966-mc3v-w67r).
+  seroval: 1.7.9
+  seroval-plugins: 1.7.8
+  # Keep shared build tools and parsers above the current audit floors.
+  # The deprecated desktop remains in this workspace, but is not a Zion
+  # packaging target; these pins keep the shared audit/checks healthy.
+  vite: 8.1.6
+  postcss: 8.5.26
+  nanoid: 3.3.18
+  source-map-js: 1.2.2
+  postcss-selector-parser: 6.1.5
+  markdown-it: 14.3.3
+  prosemirror-view: 1.42.3
+  zod: 4.6.6
+  # Tiptap React resolves these optional editor menus independently; keep their
+  # exact core/pm peer versions aligned with the patched 3.30.5 editor suite.
+  '@tiptap/extension-bubble-menu': 3.30.5
+  '@tiptap/extension-floating-menu': 3.30.5
+  # Router-plugin build dependencies: patched Babel source-map handling,
+  # Browserslist query/stats handling, and baseline mapping validation.
+  '@babel/core': 7.29.6
+  browserslist: 4.28.7
+  baseline-browser-mapping: 2.11.0
 patchedDependencies:
   isomorphic-git: patches/isomorphic-git.patch
   virtua@0.49.3: patches/virtua@0.49.3.patch

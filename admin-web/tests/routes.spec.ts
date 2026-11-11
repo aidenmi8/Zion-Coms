@@ -1,9 +1,40 @@
 import { expect, test } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
+  // Every admin API call returns 200, so the probe resolves to disabled mode
+  // and the dashboard renders without a credential.
   await page.route("**/api/admin/v1/**", async (route) => {
     await route.fulfill({ contentType: "application/json", body: "[]" });
   });
+});
+
+test("Zion admin identity preserves report and feedback navigation", async ({
+  page,
+}) => {
+  await page.goto("/reports");
+  await expect(page).toHaveTitle("Zion admin");
+  const brand = page.getByRole("link", { name: "Zion Admin" });
+  await expect(brand).toBeVisible();
+  await expect(brand).toHaveAttribute("href", "/reports");
+  await expect(brand.locator("img")).toHaveJSProperty("naturalWidth", 1024);
+  await expect(brand.locator(".brand-mark")).toHaveCSS(
+    "background-color",
+    "rgb(10, 10, 10)",
+  );
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "Feedback" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Feedback", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Recent product feedback from across Zion."),
+  ).toBeVisible();
+  await brand.click();
+  await expect(
+    page.getByRole("heading", { name: "Open reports" }),
+  ).toBeVisible();
 });
 
 for (const [path, heading] of [
@@ -16,47 +47,6 @@ for (const [path, heading] of [
     await expect(page.getByText("No records.")).toBeVisible();
   });
 }
-
-test("shared header renders a compact high-contrast Zion mark", async ({
-  page,
-}) => {
-  for (const path of ["/reports", "/feedback"]) {
-    await page.goto(path);
-
-    const slot = page.locator(".brand-mark");
-    const mark = slot.locator("svg");
-    await expect(mark).toBeVisible();
-    await expect(slot.locator("img")).toHaveCount(0);
-
-    const metrics = await mark.evaluate((element) => {
-      const svg = element as SVGSVGElement;
-      const glyph = svg.querySelector<SVGGraphicsElement>("g");
-      if (!glyph) throw new Error("Zion mark glyph is missing");
-
-      const slotRect = svg.parentElement?.getBoundingClientRect();
-      const markRect = svg.getBoundingClientRect();
-      const glyphBounds = glyph.getBBox();
-      const viewBox = svg.viewBox.baseVal;
-
-      return {
-        background: getComputedStyle(svg.parentElement as Element)
-          .backgroundColor,
-        fill: getComputedStyle(glyph).fill,
-        glyphHeightRatio: glyphBounds.height / viewBox.height,
-        glyphWidthRatio: glyphBounds.width / viewBox.width,
-        markToSlotRatio: slotRect ? markRect.width / slotRect.width : 0,
-      };
-    });
-
-    expect(metrics.glyphHeightRatio).toBeGreaterThanOrEqual(0.5);
-    expect(metrics.glyphWidthRatio).toBeGreaterThanOrEqual(0.5);
-    expect(metrics.markToSlotRatio).toBeGreaterThanOrEqual(0.5);
-    expect(metrics.markToSlotRatio).toBeLessThanOrEqual(0.75);
-    expect(
-      contrastRatio(metrics.fill, metrics.background),
-    ).toBeGreaterThanOrEqual(4.5);
-  }
-});
 
 test("forbidden reads have an explicit state", async ({ page }) => {
   await page.route("**/api/admin/v1/reports?**", (route) =>
@@ -265,7 +255,75 @@ test("feedback can be searched and filtered by community and time", async ({
   await expect(page.getByText("Calls are much more reliable")).toHaveCount(0);
 });
 
-test("feedback status is stored locally by feedback id", async ({ page }) => {
+test("feedback filters keep long community names usable", async ({ page }) => {
+  await page.route("**/api/admin/v1/feedback", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "long-community",
+          communityId: "long-community",
+          communityHost: `${"long-community-name.".repeat(4)}buzz.example.com`,
+          submitterPubkey: "21".repeat(32),
+          category: "bug",
+          bodySummary: "The filter row stays within its container",
+          receivedAt: new Date().toISOString(),
+        },
+      ]),
+    }),
+  );
+
+  for (const viewport of [
+    { name: "desktop", width: 1200 },
+    { name: "mobile", width: 720 },
+  ]) {
+    await test.step(viewport.name, async () => {
+      await page.setViewportSize({ width: viewport.width, height: 720 });
+      await page.goto("/feedback");
+
+      const filters = page.locator(".feedback-filters");
+      const search = page.getByRole("searchbox", { name: "Search feedback" });
+      const community = page.getByRole("combobox", { name: "Community" });
+      const status = page.getByLabel("Status");
+      await expect(filters).toBeVisible();
+      await expect(community).toBeVisible();
+      await expect(status).toBeVisible();
+
+      const [filtersBox, searchBox, communityBox, statusBox] =
+        await Promise.all([
+          filters.boundingBox(),
+          search.boundingBox(),
+          community.boundingBox(),
+          status.boundingBox(),
+        ]);
+      if (!filtersBox || !searchBox || !communityBox || !statusBox) {
+        throw new Error("feedback filter bounds were unavailable");
+      }
+      expect(statusBox.x + statusBox.width).toBeLessThanOrEqual(
+        filtersBox.x + filtersBox.width,
+      );
+
+      if (viewport.name === "desktop") {
+        const rootFontSize = await page.evaluate(() =>
+          Number.parseFloat(
+            getComputedStyle(document.documentElement).fontSize,
+          ),
+        );
+        expect(communityBox.width).toBeGreaterThanOrEqual(14 * rootFontSize);
+      } else {
+        expect(Math.abs(communityBox.width - searchBox.width)).toBeLessThan(1);
+      }
+
+      const pageWidths = await page.evaluate(() => ({
+        client: document.documentElement.clientWidth,
+        scroll: document.documentElement.scrollWidth,
+      }));
+      expect(pageWidths.scroll).toBe(pageWidths.client);
+    });
+  }
+});
+
+test("feedback filters by the relay-owned status", async ({ page }) => {
   await page.route("**/api/admin/v1/feedback", (route) =>
     route.fulfill({
       contentType: "application/json",
@@ -276,6 +334,7 @@ test("feedback status is stored locally by feedback id", async ({ page }) => {
           communityHost: "design.buzz.xyz",
           submitterPubkey: "21".repeat(32),
           category: "bug",
+          status: "reviewed",
           bodySummary: "Composer freezes after sleep",
           receivedAt: new Date().toISOString(),
         },
@@ -284,12 +343,12 @@ test("feedback status is stored locally by feedback id", async ({ page }) => {
   );
 
   await page.goto("/feedback");
-  await page.getByRole("checkbox", { name: "Acted on" }).check();
-  await page.reload();
-  await expect(page.getByRole("checkbox", { name: "Acted on" })).toBeChecked();
-  await page.getByLabel("Status").selectOption("acted-on");
+  await expect(page.locator(".feedback-record .status-reviewed")).toHaveText(
+    "Reviewed",
+  );
+  await page.getByLabel("Status").selectOption("reviewed");
   await expect(page.getByText("Composer freezes after sleep")).toBeVisible();
-  await page.getByLabel("Status").selectOption("pending");
+  await page.getByLabel("Status").selectOption("new");
   await expect(page.getByText("No matching feedback.")).toBeVisible();
 });
 
@@ -297,8 +356,18 @@ test("feedback attachments render from imeta without raw markdown", async ({
   page,
 }) => {
   const id = "feedback-with-attachments";
-  const imageUrl = `https://design.buzz.xyz/media/${"a".repeat(64)}.png`;
-  const fileUrl = `https://design.buzz.xyz/media/${"b".repeat(64)}.txt`;
+  const imageHash = "a".repeat(64);
+  const fileHash = "b".repeat(64);
+  const imageUrl = `https://design.buzz.xyz/media/${imageHash}.png`;
+  const fileUrl = `https://design.buzz.xyz/media/${fileHash}.txt`;
+  await page.route(`**/api/admin/v1/feedback/${id}/attachments/**`, (route) =>
+    route.fulfill({
+      contentType: route.request().url().endsWith(imageHash)
+        ? "image/png"
+        : "application/octet-stream",
+      body: "bytes",
+    }),
+  );
   await page.route(`**/api/admin/v1/feedback/${id}`, (route) =>
     route.fulfill({
       contentType: "application/json",
@@ -342,47 +411,12 @@ test("feedback attachments render from imeta without raw markdown", async ({
   await expect(page.getByText("![image]", { exact: false })).toHaveCount(0);
   await expect(
     page.getByRole("img", { name: "screenshot.png" }),
-  ).toHaveAttribute(
-    "src",
-    `/api/admin/v1/feedback/${id}/attachments/${"a".repeat(64)}`,
-  );
+  ).toHaveAttribute("src", /^blob:/);
   await expect(
     page.getByRole("link", { name: /diagnostics.txt/ }),
-  ).toHaveAttribute(
-    "href",
-    `/api/admin/v1/feedback/${id}/attachments/${"b".repeat(64)}`,
-  );
+  ).toHaveAttribute("href", /^blob:/);
   const fileHeight = await page
     .locator(".file-attachment")
     .evaluate((element) => element.getBoundingClientRect().height);
   expect(fileHeight).toBeLessThan(100);
 });
-
-function contrastRatio(foreground: string, background: string) {
-  const foregroundLuminance = relativeLuminance(parseRgb(foreground));
-  const backgroundLuminance = relativeLuminance(parseRgb(background));
-  const lighter = Math.max(foregroundLuminance, backgroundLuminance);
-  const darker = Math.min(foregroundLuminance, backgroundLuminance);
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-function parseRgb(color: string) {
-  const channels = color
-    .match(/\d+(?:\.\d+)?/g)
-    ?.slice(0, 3)
-    .map(Number);
-  if (channels?.length !== 3) {
-    throw new Error(`Expected an rgb color, received ${color}`);
-  }
-  return channels;
-}
-
-function relativeLuminance(channels: number[]) {
-  const [red, green, blue] = channels.map((channel) => {
-    const normalized = channel / 255;
-    return normalized <= 0.04045
-      ? normalized / 12.92
-      : ((normalized + 0.055) / 1.055) ** 2.4;
-  });
-  return red * 0.2126 + green * 0.7152 + blue * 0.0722;
-}

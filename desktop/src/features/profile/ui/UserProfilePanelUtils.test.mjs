@@ -6,6 +6,7 @@ import {
   parseProfilePanelView,
   personaManagedAgentUpdate,
   profilePanelTabFromSearch,
+  profilePanelTargetKey,
   profilePanelViewFromSearch,
 } from "./UserProfilePanelUtils.ts";
 
@@ -57,6 +58,8 @@ function persona(overrides = {}) {
     namePool: [],
     isBuiltIn: false,
     isActive: true,
+    respondTo: "owner-only",
+    respondToAllowlist: [],
     envVars: { NEW_KEY: "2" },
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
@@ -92,21 +95,38 @@ test("personaManagedAgentUpdate syncs edited persona identity to linked agent", 
   });
 });
 
-test("personaManagedAgentUpdate syncs persona parallelism to a linked agent", () => {
+test("personaManagedAgentUpdate syncs definition access to the linked agent", () => {
   assert.deepEqual(
     personaManagedAgentUpdate(
-      agent({
-        name: "Fizz Prime",
-        systemPrompt: "New prompt",
-        model: "new-model",
-        envVars: { NEW_KEY: "2" },
-        parallelism: 24,
-      }),
-      persona({ parallelism: 1 }),
+      agent({ respondTo: "anyone" }),
+      persona({ respondTo: "owner-only" }),
     ),
     {
       pubkey: "deadbeef".repeat(8),
-      parallelism: 1,
+      name: "Fizz Prime",
+      systemPrompt: "New prompt",
+      model: "new-model",
+      envVars: { NEW_KEY: "2" },
+      respondTo: "owner-only",
+    },
+  );
+
+  assert.deepEqual(
+    personaManagedAgentUpdate(
+      agent({ respondTo: "anyone" }),
+      persona({
+        respondTo: "allowlist",
+        respondToAllowlist: ["a".repeat(64)],
+      }),
+    ),
+    {
+      pubkey: "deadbeef".repeat(8),
+      name: "Fizz Prime",
+      systemPrompt: "New prompt",
+      model: "new-model",
+      envVars: { NEW_KEY: "2" },
+      respondTo: "allowlist",
+      respondToAllowlist: ["a".repeat(64)],
     },
   );
 });
@@ -207,4 +227,20 @@ test("profilePanelTabFromSearch falls back to info for invalid values", () => {
   assert.equal(parseProfilePanelTab("missing"), null);
   assert.equal(profilePanelTabFromSearch("missing"), "info");
   assert.equal(profilePanelTabFromSearch(null), "info");
+});
+
+test("profile target identity stays stable while a requested pubkey is canonicalized", () => {
+  const historicalPubkey = "a".repeat(64);
+  assert.equal(
+    profilePanelTargetKey(historicalPubkey, undefined),
+    historicalPubkey,
+  );
+  assert.equal(
+    profilePanelTargetKey(historicalPubkey, "resolved-persona"),
+    historicalPubkey,
+  );
+  assert.equal(
+    profilePanelTargetKey(undefined, "requested-persona"),
+    "persona:requested-persona",
+  );
 });

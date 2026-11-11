@@ -1,16 +1,85 @@
 import { createHash } from "node:crypto";
 import { expect, test } from "@playwright/test";
 
-test("home page loads with Zion branding", async ({ page }) => {
-  await page.goto("/");
-  await expect(
-    page.getByRole("main").getByRole("img", { name: "Zion" }),
-  ).toBeVisible();
+const ZION_RELEASES_PAGE = "https://github.com/aidenmi8/Zion-Coms/releases";
+
+test.beforeEach(async ({ page }) => {
+  // Platform-specific tests override this fallback; never query live releases.
+  await page.route("https://api.github.com/**", (route) =>
+    route.fulfill({ json: [] }),
+  );
 });
 
-test("home page shows repositories section", async ({ page }) => {
+test("empty community shows Zion identity and a compatible connect control", async ({
+  page,
+}) => {
+  await page.routeWebSocket("ws://127.0.0.1:4173/**", (socket) => {
+    socket.onMessage((message) => {
+      const [type, subscription] = JSON.parse(String(message));
+      if (type === "REQ") socket.send(JSON.stringify(["EOSE", subscription]));
+    });
+  });
+  await page.goto("/");
+  await expect(page).toHaveTitle("Zion");
+  const logo = page
+    .getByRole("main")
+    .getByRole("img", { name: "Zion", exact: true });
+  await expect(logo).toBeVisible();
+  await expect(logo).toHaveJSProperty("naturalWidth", 1024);
+  await expect(
+    page.getByRole("heading", { name: "This community is empty" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Open in Zion" }),
+  ).toHaveAttribute("href", "buzz://connect?relay=ws%3A%2F%2F127.0.0.1%3A4173");
+  await expect(page.getByRole("link", { name: "Open in Zion" })).toHaveCSS(
+    "background-color",
+    "rgb(78, 124, 255)",
+  );
+});
+
+test("repository search keeps working with Zion connect branding", async ({
+  page,
+}) => {
+  await page.routeWebSocket("ws://127.0.0.1:4173/**", (socket) => {
+    socket.onMessage((message) => {
+      const [type, subscription] = JSON.parse(String(message));
+      if (type !== "REQ") return;
+      socket.send(
+        JSON.stringify([
+          "EVENT",
+          subscription,
+          {
+            id: "a".repeat(64),
+            pubkey: "b".repeat(64),
+            kind: 30617,
+            created_at: 1,
+            content: "Example repository",
+            sig: "c".repeat(128),
+            tags: [
+              ["d", "example"],
+              ["name", "Example"],
+              ["clone", "https://example.org/example.git"],
+            ],
+          },
+        ]),
+      );
+      socket.send(JSON.stringify(["EOSE", subscription]));
+    });
+  });
   await page.goto("/");
   await expect(page.getByText("Repositories")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Open in Zion" }).last(),
+  ).toHaveAttribute("href", /^buzz:\/\/connect\?relay=/);
+  await page.getByPlaceholder("Find a repository...").fill("no match");
+  await expect(
+    page.getByRole("heading", { name: "No matching repositories" }),
+  ).toBeVisible();
+  await page.getByPlaceholder("Find a repository...").fill("example");
+  await expect(
+    page.getByRole("link", { name: "Example", exact: true }),
+  ).toBeVisible();
 });
 
 test("invite requires age and legal consent before opening Zion", async ({
@@ -36,30 +105,25 @@ test("invite requires age and legal consent before opening Zion", async ({
       contentType: "application/json",
       headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify([
-        { draft: false, prerelease: false, assets: [] },
+        { draft: false, prerelease: true, assets: [] },
         {
           draft: false,
-          prerelease: false,
+          prerelease: true,
           assets: [
             {
-              name: "Zion_0.4.9_aarch64.dmg",
+              name: "Buzz_0.4.9_aarch64.dmg",
               browser_download_url:
-                "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_aarch64.dmg",
+                "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_aarch64.dmg",
             },
             {
-              name: "Zion_0.4.9_x64.dmg",
+              name: "Buzz_0.4.9_x86_64.AppImage",
               browser_download_url:
-                "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_x64.dmg",
+                "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_x86_64.AppImage",
             },
             {
-              name: "Zion_0.4.9_amd64.AppImage",
+              name: "Buzz_0.4.9_x64_unsigned.exe",
               browser_download_url:
-                "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_amd64.AppImage",
-            },
-            {
-              name: "Zion_0.4.9_x64-setup_alpha-unsigned.exe",
-              browser_download_url:
-                "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_x64-setup_alpha-unsigned.exe",
+                "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_x64_unsigned.exe",
             },
           ],
         },
@@ -67,17 +131,25 @@ test("invite requires age and legal consent before opening Zion", async ({
     });
   });
   await page.goto("/invite/demo-code");
+  await expect(
+    page.getByRole("img", { name: "Zion", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Join your community on Zion.")).toBeVisible();
+  await expect(page.locator(".invite-page")).toHaveCSS(
+    "background-color",
+    "rgb(10, 10, 10)",
+  );
 
   await expect(
-    page.getByRole("link", { name: "Download it now" }),
-  ).toHaveAttribute(
-    "href",
-    "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_x64-setup_alpha-unsigned.exe",
+    page.getByRole("link", { name: "Download Zion" }),
+  ).toHaveAttribute("href", ZION_RELEASES_PAGE);
+  await expect(page.getByRole("link", { name: "Browse releases" })).toHaveCount(
+    0,
   );
 
   const ageConfirmation = page.getByLabel("I am 18 years of age or older.");
   const agreementConfirmation = page.getByLabel(
-    "I agree to the Zion Terms of Service and Privacy Policy.",
+    "I agree to the Buzz Terms of Service and Privacy Policy.",
   );
   const acceptInvite = page.getByRole("button", {
     name: "Accept invite in Zion",
@@ -106,7 +178,7 @@ test("invite requires age and legal consent before opening Zion", async ({
   await page
     .locator("label")
     .filter({
-      hasText: "I agree to the Zion Terms of Service and Privacy Policy.",
+      hasText: "I agree to the Buzz Terms of Service and Privacy Policy.",
     })
     .click({ position: { x: 8, y: 8 } });
   await expect(agreementConfirmation).toBeChecked();
@@ -201,90 +273,99 @@ test("invite can enroll a NIP-07 identity for browser access", async ({
   expect(claimObserved).toBe(true);
 });
 
-test("invite hides direct downloads when Zion-Coms has no artifact", async ({
-  browser,
-}) => {
-  const context = await browser.newContext({
-    userAgent:
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Version/26.5 Safari/605.1.15",
-  });
-  await context.addInitScript(() => {
-    Object.defineProperties(navigator, {
-      platform: { configurable: true, value: "MacIntel" },
-      maxTouchPoints: { configurable: true, value: 0 },
-      userAgentData: { configurable: true, value: undefined },
-    });
-  });
-  const page = await context.newPage();
-  await page.route("**/api/join-policy", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ policy: null }),
-    });
-  });
-  await page.route("https://api.github.com/**", async (route) => {
-    await route.fulfill({ status: 500 });
-  });
-
-  await page.goto("/invite/demo-code");
-  await expect(page.getByRole("link", { name: "Download it now" })).toHaveCount(
-    0,
-  );
-  await expect(
-    page.getByRole("link", { name: "View Zion-Coms Releases" }),
-  ).toHaveAttribute("href", "https://github.com/aidenmi8/Zion-Coms/releases");
-  await expect(
-    page.getByRole("link", { name: "Accept invite in Zion" }),
-  ).toHaveAttribute("href", /zion:\/\/join\?/);
-  await context.close();
-});
-
-test("invite links unsupported devices only to Zion-Coms releases", async ({
-  browser,
-}) => {
-  const unsupportedDevices = [
-    {
-      name: "iPhone Safari",
-      platform: "iPhone",
-      userAgent:
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15",
-      maxTouchPoints: 5,
-    },
-    {
-      name: "iPadOS desktop mode",
-      platform: "MacIntel",
-      userAgent:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15",
-      maxTouchPoints: 5,
-    },
-    {
-      name: "Android phone",
-      platform: "Linux armv8l",
-      userAgent:
-        "Mozilla/5.0 (Linux; Android 15; Pixel 9 Pro) AppleWebKit/537.36 Mobile",
-      maxTouchPoints: 5,
-    },
-    {
-      name: "ChromeOS",
-      platform: "Linux x86_64",
-      userAgent: "Mozilla/5.0 (X11; CrOS x86_64 16093.68.0) AppleWebKit/537.36",
-      maxTouchPoints: 0,
-    },
-  ];
-
-  for (const device of unsupportedDevices) {
-    const context = await browser.newContext({ userAgent: device.userAgent });
-    await context.addInitScript(({ platform, maxTouchPoints }) => {
-      Object.defineProperties(navigator, {
-        platform: { configurable: true, value: platform },
-        maxTouchPoints: { configurable: true, value: maxTouchPoints },
-        userAgentData: {
-          configurable: true,
-          value: { platform, mobile: maxTouchPoints > 0 },
+for (const [sentinel, guidance] of [
+  [
+    "invite_restricted",
+    "This account, or the account that owns it, is restricted in this community. Contact a community administrator. If the restriction is temporary, try again after it ends.",
+  ],
+  [
+    "invite_owner_mismatch",
+    "This account does not match its recorded owner. Use the correct account or owner identity to join this community.",
+  ],
+]) {
+  test(`invite shows recovery for ${sentinel} without automatically retrying`, async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      Object.assign(window, {
+        nostr: {
+          async getPublicKey() {
+            return "ab".repeat(32);
+          },
+          async signEvent(event: Record<string, unknown>) {
+            return {
+              ...event,
+              id: "cd".repeat(32),
+              pubkey: "ab".repeat(32),
+              sig: "ef".repeat(64),
+            };
+          },
         },
       });
-    }, device);
+    });
+    await page.route("**/api/join-policy", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ policy: null }),
+      }),
+    );
+    let attempts = 0;
+    await page.route("**/api/invites/claim", async (route) => {
+      attempts++;
+      expect(route.request().postDataJSON()).toEqual({ code: "browser-code" });
+      await route.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: JSON.stringify({ error: sentinel }),
+      });
+    });
+    await page.goto("/invite/browser-code");
+    const join = page.getByRole("button", { name: "Join in browser" });
+    await join.click();
+    await expect(page.getByRole("alert")).toHaveText(guidance);
+    await expect(join).toBeEnabled();
+    expect(attempts).toBe(1);
+    await expect(page).toHaveURL(/\/invite\/browser-code$/);
+    await join.click();
+    await expect(page.getByRole("alert")).toHaveText(guidance);
+    expect(attempts).toBe(2);
+  });
+}
+
+for (const architecture of ["unknown", "x64"]) {
+  test(`invite explains Mac support for ${architecture} architecture`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Version/26.5 Safari/605.1.15",
+    });
+    await context.addInitScript((architecture) => {
+      Object.defineProperties(navigator, {
+        platform: { configurable: true, value: "MacIntel" },
+        maxTouchPoints: { configurable: true, value: 0 },
+        userAgentData: {
+          configurable: true,
+          value:
+            architecture === "unknown"
+              ? undefined
+              : {
+                  platform: "macOS",
+                  getHighEntropyValues: async () => ({
+                    architecture: "x86",
+                    bitness: "64",
+                  }),
+                },
+        },
+      });
+    }, architecture);
+    await context.route(ZION_RELEASES_PAGE, (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: "Installer destination",
+      }),
+    );
     const page = await context.newPage();
     await page.route("**/api/join-policy", async (route) => {
       await route.fulfill({
@@ -295,23 +376,157 @@ test("invite links unsupported devices only to Zion-Coms releases", async ({
     });
     await page.route("https://api.github.com/**", async (route) => {
       await route.fulfill({
+        json: [
+          {
+            draft: false,
+            prerelease: true,
+            assets: [
+              {
+                name: "Buzz_0.4.9_aarch64.dmg",
+                browser_download_url:
+                  "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_aarch64.dmg",
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    await page.goto("/invite/demo-code");
+    const download = page.getByRole("link", { name: "Download Zion" });
+    await expect(download).toHaveAttribute("aria-haspopup", "dialog");
+    await download.click();
+
+    const chooser = page.getByRole("dialog", {
+      name: "Which Mac do you have?",
+    });
+    await expect(chooser).toBeVisible();
+    await expect(
+      chooser.getByRole("link", { name: /Apple Silicon Mac/ }),
+    ).toContainText("Mac with an Apple M-series chip");
+    await expect(chooser.getByRole("link", { name: /Older Mac/ })).toHaveCount(
+      0,
+    );
+    await expect(
+      chooser.getByText(
+        "Zion for Mac requires Apple Silicon. Intel Macs are not supported.",
+      ),
+    ).toBeVisible();
+    await expect(chooser.getByText("About This Mac")).toBeVisible();
+
+    const openedPagePromise = context.waitForEvent("page");
+    await chooser.getByRole("link", { name: /Apple Silicon Mac/ }).click();
+    const openedPage = await openedPagePromise;
+    await expect(chooser).toBeHidden();
+    await expect(openedPage).toHaveURL(ZION_RELEASES_PAGE);
+    await expect(page).toHaveURL(/\/invite\/demo-code$/);
+    await openedPage.close();
+
+    await download.click();
+    await expect(chooser).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(chooser).toBeHidden();
+    await expect(download).toBeFocused();
+    await context.close();
+  });
+}
+
+test("invite download opens Zion releases instead of upstream artifacts on every platform", async ({
+  browser,
+}) => {
+  const devices = [
+    {
+      name: "iPhone Safari",
+      expectedUrl: ZION_RELEASES_PAGE,
+      platform: "iPhone",
+      userAgent:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15",
+      maxTouchPoints: 5,
+    },
+    {
+      name: "iPadOS desktop mode",
+      expectedUrl: ZION_RELEASES_PAGE,
+      platform: "MacIntel",
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15",
+      maxTouchPoints: 5,
+    },
+    {
+      name: "Android phone",
+      expectedUrl: ZION_RELEASES_PAGE,
+      platform: "Linux armv8l",
+      userAgent:
+        "Mozilla/5.0 (Linux; Android 15; Pixel 9 Pro) AppleWebKit/537.36 Mobile",
+      maxTouchPoints: 5,
+    },
+    {
+      name: "Fire tablet",
+      expectedUrl: ZION_RELEASES_PAGE,
+      platform: "Linux armv8l",
+      userAgent:
+        "Mozilla/5.0 (Linux; Android 9; KFMAWI) AppleWebKit/537.36 Silk/126.0 like Chrome/126.0.0.0 Safari/537.36",
+      maxTouchPoints: 5,
+    },
+    {
+      name: "ChromeOS",
+      expectedUrl: ZION_RELEASES_PAGE,
+      platform: "Linux x86_64",
+      userAgent: "Mozilla/5.0 (X11; CrOS x86_64 16093.68.0) AppleWebKit/537.36",
+      maxTouchPoints: 0,
+    },
+  ];
+
+  for (const device of devices) {
+    const context = await browser.newContext({ userAgent: device.userAgent });
+    await context.addInitScript(({ platform, maxTouchPoints }) => {
+      Object.defineProperties(navigator, {
+        platform: { configurable: true, value: platform },
+        maxTouchPoints: { configurable: true, value: maxTouchPoints },
+        userAgentData: {
+          configurable: true,
+          value: {
+            platform,
+            mobile: maxTouchPoints > 0,
+            // The releases page must not wait for desktop architecture hints.
+            getHighEntropyValues: () => new Promise(() => {}),
+          },
+        },
+      });
+    }, device);
+    await context.addInitScript(() => {
+      sessionStorage.setItem(
+        "buzz.latestDownload.v2",
+        JSON.stringify({
+          expiresAt: Date.now() + 60 * 60 * 1000,
+          platform: { operatingSystem: "linux", architecture: "x64" },
+          url: "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_x86_64.AppImage",
+        }),
+      );
+    });
+    const page = await context.newPage();
+    await page.route("**/api/join-policy", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ policy: null }),
+      });
+    });
+    let releaseRequests = 0;
+    await page.route("https://api.github.com/**", async (route) => {
+      releaseRequests += 1;
+      await route.fulfill({
         status: 200,
         contentType: "application/json",
         headers: { "Access-Control-Allow-Origin": "*" },
         body: JSON.stringify([
           {
             draft: false,
-            prerelease: false,
+            prerelease: true,
             assets: [
               {
-                name: "Zion_0.4.9_x64.dmg",
+                name: "Buzz_0.4.9_x86_64.AppImage",
                 browser_download_url:
-                  "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_x64.dmg",
-              },
-              {
-                name: "Zion_0.4.9_amd64.AppImage",
-                browser_download_url:
-                  "https://github.com/aidenmi8/Zion-Coms/releases/download/v0.4.9/Zion_0.4.9_amd64.AppImage",
+                  "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_x86_64.AppImage",
               },
             ],
           },
@@ -320,14 +535,139 @@ test("invite links unsupported devices only to Zion-Coms releases", async ({
     });
 
     await page.goto("/invite/demo-code");
+    await page.waitForLoadState("networkidle");
     await expect(
-      page.getByRole("link", { name: "View Zion-Coms Releases" }),
+      page.getByRole("link", { name: "Download Zion" }),
       device.name,
-    ).toHaveAttribute("href", "https://github.com/aidenmi8/Zion-Coms/releases");
+    ).toHaveAttribute("href", device.expectedUrl);
+    expect(releaseRequests, device.name).toBe(0);
     await expect(
-      page.getByRole("link", { name: "Download it now" }),
-      device.name,
+      page.getByRole("link", { name: "Browse releases" }),
     ).toHaveCount(0);
+    await context.route(device.expectedUrl, (route) =>
+      route.fulfill({ contentType: "text/html", body: "Store destination" }),
+    );
+    const destination = context.waitForEvent("page");
+    await page.getByRole("link", { name: "Download Zion" }).click();
+    await expect(await destination).toHaveURL(device.expectedUrl);
     await context.close();
   }
+});
+
+test("invite shows community artwork and name with a text-only fallback", async ({
+  page,
+}) => {
+  await page.route("**/api/join-policy", (route) =>
+    route.fulfill({ json: { policy: null } }),
+  );
+  await page.route("https://api.github.com/**", (route) =>
+    route.fulfill({ json: [] }),
+  );
+  let metadata: { name: string; icon?: string } = {
+    name: "Honeycomb Studios",
+    icon:
+      "data:image/svg+xml," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#D7D72E"/></svg>',
+      ),
+  };
+  await page.route("http://127.0.0.1:4173/", (route) => {
+    if (route.request().headers().accept === "application/nostr+json")
+      return route.fulfill({ json: metadata });
+    return route.continue();
+  });
+  for (const width of [1280, 375]) {
+    await page.setViewportSize({ width, height: 850 });
+    await page.goto("/invite/visual-preview");
+    await expect(page.locator(".invite-community")).toHaveText(
+      "Honeycomb Studios",
+    );
+    await expect(page.locator(".invite-community-icon")).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Accept invite in Zion" }),
+    ).toHaveAttribute(
+      "href",
+      "buzz://join?relay=ws%3A%2F%2F127.0.0.1%3A4173&code=visual-preview",
+    );
+    const widths = await page.evaluate(() => ({
+      button: document
+        .querySelector(".invite-actions a")
+        ?.getBoundingClientRect().width,
+      row: document.querySelector(".invite-actions")?.getBoundingClientRect()
+        .width,
+      overflow: document.documentElement.scrollWidth > innerWidth,
+    }));
+    expect(widths.button).toBe(widths.row);
+    expect(widths.overflow).toBe(false);
+  }
+  metadata = { name: "Honeycomb Studios", icon: "/missing-community-icon.png" };
+  await page.goto("/invite/visual-preview");
+  await expect(page.locator(".invite-community")).toHaveText(
+    "Honeycomb Studios",
+  );
+  await expect(page.locator(".invite-community-icon")).toBeHidden();
+  metadata = { name: "Buzz Relay" };
+  await page.goto("/invite/visual-preview");
+  await expect(page.locator(".invite-community")).toHaveText("127.0.0.1:4173");
+  await expect(page.locator(".invite-community-icon")).toHaveCount(0);
+});
+
+test("invite Zion slash marks preserve decorative motion and reduced-motion resizing", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/join-policy", (route) =>
+    route.fulfill({ json: { policy: null } }),
+  );
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/invite/resize-preview");
+  const positions = () =>
+    page.locator(".zion-sprite").evaluateAll((sprites) =>
+      sprites.map((sprite) => {
+        const node = sprite.parentElement;
+        const field = node?.parentElement;
+        if (!node || !field) throw new Error("Missing bee field");
+        const transform = new DOMMatrix(getComputedStyle(node).transform);
+        return {
+          x: transform.m41 / field.clientWidth,
+          y: transform.m42 / field.clientHeight,
+        };
+      }),
+    );
+  await expect(page.locator(".zion-sprite")).toHaveCount(24);
+  const mark = page.locator(".zion-sprite").first();
+  await expect(mark).toHaveAttribute("aria-hidden", "true");
+  await expect(mark.locator("path")).toHaveAttribute(
+    "d",
+    "M16 30 32 12h20L36 30H16Z M12 52 28 34h20L32 52H12Z",
+  );
+  const original = await positions();
+  for (const viewport of [
+    { width: 700, height: 1000 },
+    { width: 700, height: 700 },
+    { width: 1800, height: 1200 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect
+      .poll(async () => {
+        const current = await positions();
+        return Math.max(
+          ...current.map((p, i) =>
+            Math.max(
+              Math.abs(p.x - original[i].x),
+              Math.abs(p.y - original[i].y),
+            ),
+          ),
+        );
+      })
+      .toBeLessThan(0.001);
+    await expect(page.locator(".zion-sprite")).toHaveCount(24);
+  }
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect
+    .poll(async () => {
+      const current = await positions();
+      return Math.max(...current.map((p, i) => Math.abs(p.x - original[i].x)));
+    })
+    .toBeGreaterThan(0.001);
 });

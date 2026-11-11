@@ -23,7 +23,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Toggle } from "@/shared/ui/toggle";
 import { AnimatedCount } from "@/shared/ui/AnimatedCount";
-import { ZionMotion } from "@/shared/ui/zion-brand/ZionMotion";
+import { FuzzyLogo } from "@/shared/ui/buzz-logo/FuzzyLogo";
 import type { PromptSection, TranscriptItem } from "./agentSessionTypes";
 import { TurnLivenessIndicator } from "./TurnLivenessIndicator";
 import { PromptSectionList as PromptContextSections } from "./PromptSectionAccordion";
@@ -206,15 +206,12 @@ export function AgentSessionTranscriptList({
 
     return (
       <div className={scrollContainerClassNames}>
-        <div
-          className="flex h-full min-h-40 flex-col items-center justify-center px-6 py-10 text-center"
-          role={isLoading ? "status" : undefined}
-        >
+        <div className="flex h-full min-h-40 flex-col items-center justify-center px-6 py-10 text-center">
           {isLoading ? (
-            <ZionMotion
+            <FuzzyLogo
               ariaLabel="Waiting for ACP activity"
-              className="mx-auto w-12! text-muted-foreground"
-              variant="liveness"
+              className="mx-auto text-muted-foreground"
+              fuzz={false}
               loop
             />
           ) : (
@@ -750,7 +747,7 @@ function PromptContextDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="max-w-xl overflow-hidden p-0">
-        <div className="flex max-h-[85vh] flex-col">
+        <div className="flex min-w-0 max-h-[85vh] flex-col">
           <DialogHeader className="px-6 pb-3 pt-5 pr-14">
             <DialogTitle>Prompt context</DialogTitle>
             {setupText ? (

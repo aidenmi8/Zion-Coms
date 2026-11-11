@@ -1,9 +1,10 @@
 import {
+  AlertCircle,
   Bell,
   Clock,
   Ellipsis,
   ExternalLink,
-  FileText,
+  LoaderCircle,
   MailOpen,
 } from "lucide-react";
 import * as React from "react";
@@ -15,10 +16,11 @@ import {
   type InboxTypeLabel,
 } from "@/features/home/lib/inbox";
 import { buildInboxListRows } from "@/features/home/lib/inboxListRows";
+import { hasRenderedVideoAttachment } from "@/features/messages/lib/videoReviewContext";
+import { getThreadReference } from "@/features/messages/lib/threading";
 import { InboxFilterMenu } from "@/features/home/ui/InboxFilterMenu";
 import {
   DraftsPanel,
-  getDraftPreview,
   type DraftViewItem,
 } from "@/features/messages/ui/DraftsPanel";
 import { UserProfilePopover } from "@/features/profile/ui/UserProfilePopover";
@@ -38,7 +40,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/shared/ui/context-menu";
-import { Markdown } from "@/shared/ui/markdown";
+import { VideoReviewCommentMarkdown } from "@/shared/ui/VideoReviewCommentMarkdown";
 import {
   MENTION_CHIP_BASE_CLASSES,
   MESSAGE_MARKDOWN_CLASS,
@@ -90,13 +92,14 @@ function InboxLabel({
     <div
       className={cn(
         MESSAGE_MARKDOWN_CLASS,
-        "mt-0 flex min-w-0 items-center gap-1.5 text-2xs leading-3 group-hover/inbox-item:pr-[6.75rem] group-focus-within/inbox-item:pr-[6.75rem]",
+        "mt-0 flex min-h-[var(--inline-chip-min-height)] min-w-0 items-center gap-1.5 text-2xs leading-3 group-hover/inbox-item:pr-[6.75rem] group-focus-within/inbox-item:pr-[6.75rem]",
         isActionRequired && !isDone
           ? "font-medium text-amber-600/80 dark:text-amber-300/80"
           : isDone
             ? "font-normal text-muted-foreground/70"
             : "font-medium text-muted-foreground/80",
       )}
+      data-inbox-type-label=""
     >
       <span className="shrink-0">{label.text}</span>
       {label.channelLabel ? (
@@ -128,9 +131,36 @@ function formatReminderStatus(notBefore: number | undefined) {
   return `Reminder in ${Math.floor(secondsUntil / 86_400)}d`;
 }
 
+function getInboxVideoReviewCommentRootId(item: InboxItem) {
+  const feedItems = [item.item, ...item.groupItems];
+  const feedItemById = new Map(
+    feedItems.map((feedItem) => [feedItem.id, feedItem]),
+  );
+  const videoMessageIds = new Set(
+    feedItems
+      .filter((feedItem) =>
+        hasRenderedVideoAttachment({
+          body: feedItem.content,
+          tags: feedItem.tags,
+        }),
+      )
+      .map((feedItem) => feedItem.id),
+  );
+  const visited = new Set<string>();
+  let ancestorId = getThreadReference(item.item.tags).parentId;
+
+  while (ancestorId && !visited.has(ancestorId)) {
+    if (videoMessageIds.has(ancestorId)) return ancestorId;
+    visited.add(ancestorId);
+    const ancestor = feedItemById.get(ancestorId);
+    ancestorId = ancestor ? getThreadReference(ancestor.tags).parentId : null;
+  }
+
+  return undefined;
+}
+
 function PersonalItemRow({
   id,
-  kind,
   location,
   onClick,
   preview,
@@ -138,16 +168,12 @@ function PersonalItemRow({
   status,
 }: {
   id: string;
-  kind: "drafts" | "reminders";
   location: InboxTypeLabel | null;
   onClick: () => void;
   preview: string;
   selected: boolean;
   status: string;
 }) {
-  const isDraft = kind === "drafts";
-  const Icon = isDraft ? FileText : Bell;
-
   return (
     <button
       aria-current={selected ? "true" : undefined}
@@ -155,16 +181,16 @@ function PersonalItemRow({
         "flex w-full items-center gap-3 border-b border-border/45 px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-hidden",
         selected && "bg-muted/40",
       )}
-      data-testid={`home-all-${kind}-${id}`}
+      data-testid={`home-all-reminders-${id}`}
       onClick={onClick}
       type="button"
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        <Icon className="h-4 w-4" />
+        <Bell className="h-4 w-4" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-foreground">
-          {isDraft ? "Draft" : "Reminder"}
+          Reminder
         </span>
         {location ? (
           <InboxLabel
@@ -197,6 +223,8 @@ type InboxListPaneProps = {
   onMarkRead: (itemId: string) => void;
   onMarkUnread: (itemId: string) => void;
   onOpenDirect: (item: InboxItem) => void;
+  isReopenPending?: (channelId: string | null | undefined) => boolean;
+  isReopenErrored?: (channelId: string | null | undefined) => boolean;
   onRemindLater: (item: InboxItem) => void;
   onSelect: (itemId: string) => void;
   onSelectDraft: (draftKey: string) => void;
@@ -225,6 +253,8 @@ export function InboxListPane({
   onMarkRead,
   onMarkUnread,
   onOpenDirect,
+  isReopenPending,
+  isReopenErrored,
   onRemindLater,
   onSelect,
   onSelectDraft,
@@ -246,7 +276,6 @@ export function InboxListPane({
   const inboxRows = React.useMemo(
     () =>
       buildInboxListRows({
-        drafts: unreadOnly || !isMixedInboxView ? [] : draftItems,
         items,
         reminders: unreadOnly
           ? []
@@ -254,7 +283,7 @@ export function InboxListPane({
               isDue(reminder, Math.floor(Date.now() / 1_000)),
             ),
       }),
-    [draftItems, isMixedInboxView, items, reminders, unreadOnly],
+    [items, reminders, unreadOnly],
   );
   const visibleInboxRows = React.useMemo(
     () =>
@@ -286,7 +315,16 @@ export function InboxListPane({
         (eventId) => activeReminderEventIds?.has(eventId) ?? false,
       );
     const hasChannelTarget = Boolean(item.item.channelId);
+    const isReopening = isReopenPending?.(item.item.channelId) ?? false;
+    const hasReopenError = isReopenErrored?.(item.item.channelId) ?? false;
+    const canOpen = hasChannelTarget && !isReopening;
+    const openLabel = !hasChannelTarget
+      ? "No channel link"
+      : isReopening
+        ? "Reopening…"
+        : "Open in channel";
     const typeLabel = getInboxTypeLabel(item);
+    const videoReviewCommentRootId = getInboxVideoReviewCommentRootId(item);
     const isSenderAgent =
       agentPubkeys?.has(normalizePubkey(item.item.pubkey)) === true;
     const profileRole = isSenderAgent ? "bot" : undefined;
@@ -345,16 +383,19 @@ export function InboxListPane({
                 botIdenticonValue={item.senderLabel}
                 pubkey={item.item.pubkey}
                 role={profileRole}
+                triggerClassName={cn(
+                  "shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                  isSenderAgent ? "rounded-[30%]" : "rounded-full",
+                )}
                 triggerElement="span"
+                triggerTestId={`home-inbox-avatar-${item.id}`}
               >
-                <span
-                  className="inline-flex shrink-0 rounded-full focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-                  data-testid={`home-inbox-avatar-${item.id}`}
-                >
+                <span className="inline-flex shrink-0">
                   <UserAvatar
                     avatarUrl={item.avatarUrl}
                     className="h-9 w-9"
                     displayName={item.senderLabel}
+                    shape={isSenderAgent ? "squircle" : "circle"}
                     size="md"
                   />
                 </span>
@@ -413,19 +454,61 @@ export function InboxListPane({
                 </div>
               ) : null}
 
+              {isReopening || hasReopenError ? (
+                <div
+                  aria-live="polite"
+                  className={cn(
+                    "mt-1 flex items-center gap-1 text-2xs font-medium",
+                    hasReopenError
+                      ? "text-destructive"
+                      : "text-muted-foreground",
+                  )}
+                  data-testid={`home-inbox-reopen-status-${item.id}`}
+                  role="status"
+                >
+                  {isReopening ? (
+                    <>
+                      <LoaderCircle className="h-3 w-3 shrink-0 animate-spin" />
+                      Reopening…
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      Couldn’t reopen
+                      {canOpen ? (
+                        <button
+                          className="ml-0.5 rounded font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                          data-testid={`home-inbox-reopen-retry-${item.id}`}
+                          onClick={(event) => {
+                            // The row wrapper selects on click; stop it so
+                            // Retry only re-issues the reopen for this row.
+                            event.stopPropagation();
+                            onOpenDirect(item);
+                          }}
+                          type="button"
+                        >
+                          Retry
+                        </button>
+                      ) : null}
+                    </>
+                  )}
+                </div>
+              ) : null}
+
               <div
                 className={cn(
-                  "mt-1.5 text-sm leading-5 [&_a]:font-medium [&_a]:text-current",
+                  "mt-1.5 text-message [&_a]:font-medium [&_a]:text-current",
                   isDone
                     ? "font-normal text-muted-foreground"
                     : "font-semibold text-foreground",
                 )}
               >
-                <Markdown
-                  className="inbox-preview-markdown text-inherit leading-5"
+                <VideoReviewCommentMarkdown
+                  className="inbox-preview-markdown text-inherit"
                   content={item.preview}
                   interactive={false}
                   mentionNames={item.mentionNames}
+                  videoReviewCommentRootId={videoReviewCommentRootId}
                 />
               </div>
             </div>
@@ -449,8 +532,8 @@ export function InboxListPane({
             </InboxRowActionButton>
           )}
           <InboxRowActionButton
-            disabled={!hasChannelTarget}
-            label={hasChannelTarget ? "Open in channel" : "No channel link"}
+            disabled={!canOpen}
+            label={openLabel}
             onClick={() => onOpenDirect(item)}
           >
             <ExternalLink className="!h-4 !w-4" />
@@ -490,15 +573,15 @@ export function InboxListPane({
           )}
           <ContextMenuSeparator />
           <ContextMenuItem
-            disabled={!hasChannelTarget}
+            disabled={!canOpen}
             onClick={() => {
-              if (hasChannelTarget) {
+              if (canOpen) {
                 onOpenDirect(item);
               }
             }}
           >
             <ExternalLink className="h-4 w-4" />
-            {hasChannelTarget ? "Open in channel" : "No channel link"}
+            {openLabel}
           </ContextMenuItem>
           <ContextMenuItem
             disabled={!hasChannelTarget}
@@ -632,57 +715,30 @@ export function InboxListPane({
                   return renderItem(row.item, row.dueReminder);
                 }
 
-                if (row.kind === "reminder") {
-                  const source = reminderSources.get(row.reminder.id);
-                  return (
-                    <PersonalItemRow
-                      id={row.reminder.id}
-                      kind="reminders"
-                      location={
-                        source?.channel
-                          ? source.channel.channelType === "dm"
-                            ? {
-                                text: `In DM with ${source.channelLabel}`,
-                                channelLabel: null,
-                              }
-                            : { text: "In", channelLabel: source.channelLabel }
-                          : null
-                      }
-                      onClick={() => {
-                        onSelectReminder(row.reminder.id);
-                      }}
-                      preview={
-                        row.reminder.content.target?.preview ||
-                        row.reminder.content.note ||
-                        "Reminder"
-                      }
-                      selected={selectedReminderId === row.reminder.id}
-                      status={formatReminderStatus(row.reminder.notBefore)}
-                    />
-                  );
-                }
-
-                const { entry, source } = row.item;
+                const source = reminderSources.get(row.reminder.id);
                 return (
                   <PersonalItemRow
-                    id={entry.key}
-                    kind="drafts"
+                    id={row.reminder.id}
                     location={
-                      source.channel
+                      source?.channel
                         ? source.channel.channelType === "dm"
                           ? {
-                              text: `In DM with ${source.label}`,
+                              text: `In DM with ${source.channelLabel}`,
                               channelLabel: null,
                             }
-                          : { text: "In", channelLabel: source.label }
+                          : { text: "In", channelLabel: source.channelLabel }
                         : null
                     }
                     onClick={() => {
-                      onSelectDraft(entry.key);
+                      onSelectReminder(row.reminder.id);
                     }}
-                    preview={getDraftPreview(entry.draft)}
-                    selected={selectedDraftKey === entry.key}
-                    status="Draft saved"
+                    preview={
+                      row.reminder.content.target?.preview ||
+                      row.reminder.content.note ||
+                      "Reminder"
+                    }
+                    selected={selectedReminderId === row.reminder.id}
+                    status={formatReminderStatus(row.reminder.notBefore)}
                   />
                 );
               }}

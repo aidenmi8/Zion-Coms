@@ -54,7 +54,10 @@ test("migrateLegacyCommunityStorage does not overwrite new community state", () 
 });
 
 test("signed-build relay defaults auto-connect during first-run onboarding", () => {
-  assert.equal(shouldAutoConnectDefaultRelay("wss://relay.example.com"), true);
+  assert.equal(
+    shouldAutoConnectDefaultRelay("wss://buzz.block.builderlab.xyz"),
+    true,
+  );
   assert.equal(shouldAutoConnectDefaultRelay("ws://localhost:3000"), false);
   assert.equal(shouldAutoConnectDefaultRelay("ws://127.0.0.1:3000"), false);
   assert.equal(shouldAutoConnectDefaultRelay("ws://[::1]:3000"), false);
@@ -128,77 +131,4 @@ test("clearCommunityStorage preserves completed final-leave discovery", () => {
 
   assert.equal(storage.length, 1);
   assert.equal(loadCommunityDiscoveryAfterLeave(storage), true);
-});
-
-test("loadCommunities strips obsolete token secrets and persists the cleaned list", () => {
-  const storage = createMemoryStorage({
-    "buzz-communities": JSON.stringify([
-      {
-        id: "community-1",
-        name: "Existing relay",
-        relayUrl: "wss://relay.example.com",
-        token: "buzz_legacy-secret",
-        addedAt: "2026-06-12T00:00:00.000Z",
-      },
-    ]),
-  });
-  const hadWindow = "window" in globalThis;
-  const previousWindow = globalThis.window;
-  globalThis.localStorage = storage;
-  globalThis.window = { localStorage: storage };
-
-  try {
-    const communities = loadCommunities();
-
-    assert.equal("token" in communities[0], false);
-    const persisted = JSON.parse(storage.getItem("buzz-communities"));
-    assert.equal("token" in persisted[0], false);
-    assert.equal(persisted[0].relayUrl, "wss://relay.example.com");
-  } finally {
-    delete globalThis.localStorage;
-    if (hadWindow) {
-      globalThis.window = previousWindow;
-    } else {
-      delete globalThis.window;
-    }
-  }
-});
-
-test("saveCommunities strips obsolete token and nsec fields at the write boundary", () => {
-  const storage = createMemoryStorage();
-  const hadWindow = "window" in globalThis;
-  const previousWindow = globalThis.window;
-  globalThis.localStorage = storage;
-  globalThis.window = { localStorage: storage };
-
-  try {
-    const staleCommunity = JSON.parse(
-      JSON.stringify({
-        id: "community-1",
-        name: "Existing relay",
-        relayUrl: "wss://relay.example.com",
-        token: "buzz_legacy-secret",
-        nsec: "nsec1legacy-secret",
-        addedAt: "2026-06-12T00:00:00.000Z",
-      }),
-    );
-
-    assert.equal(saveCommunities([staleCommunity]), true);
-    const persisted = JSON.parse(storage.getItem("buzz-communities"));
-    assert.deepEqual(persisted, [
-      {
-        id: "community-1",
-        name: "Existing relay",
-        relayUrl: "wss://relay.example.com",
-        addedAt: "2026-06-12T00:00:00.000Z",
-      },
-    ]);
-  } finally {
-    delete globalThis.localStorage;
-    if (hadWindow) {
-      globalThis.window = previousWindow;
-    } else {
-      delete globalThis.window;
-    }
-  }
 });

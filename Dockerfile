@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1.7
 #
-# Public Buzz relay image — published as ghcr.io/block/buzz:<tag>.
+# Zion distributor relay image; upstream runtime and protocol names are retained.
 #
-# Builds the `buzz-relay` binary (Rust 1.95) and the `buzz-web` static bundle
+# Builds the `buzz-relay` binary (Rust 1.98) and the `buzz-web` static bundle
 # (pnpm + vite), then assembles them into a small debian-slim runtime with
 # `git` available (the relay shells out to git for repo hydrate / receive-pack
 # / upload-pack — see crates/buzz-relay/src/api/git).
@@ -11,7 +11,7 @@
 # native arm64 runners (see .github/workflows/docker.yml). The Dockerfile
 # itself is platform-agnostic; do not add --platform pins.
 
-ARG RUST_VERSION=1.95
+ARG RUST_VERSION=1.98
 ARG NODE_VERSION=24
 ARG DEBIAN_VERSION=bookworm
 
@@ -54,6 +54,7 @@ FROM chef AS builder
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
+        cmake \
         pkg-config \
         libssl-dev \
         ca-certificates \
@@ -63,10 +64,21 @@ RUN apt-get update \
 # locations. The normal runtime strips it below; runtime-debug retains it.
 ENV CARGO_PROFILE_RELEASE_DEBUG=line-tables-only
 COPY --from=planner /build/recipe.json recipe.json
+# Cargo Chef does not materialize excluded path-patch crates from the recipe.
+# Keep these tracked vendor packages available while cooking dependencies.
+COPY vendor/ vendor/
 # Cook the full workspace recipe — relay deps include workspace siblings, so
 # scoping to -p buzz-relay misses transitive deps and re-builds them later.
 RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
+# Compile immutable artifact identity into the relay. Defaults preserve local
+# and third-party builds that do not run in provenance-aware CI.
+ARG BUZZ_SOURCE_SHA=unknown
+ARG BUZZ_BUILD_ID=local
+ARG BUZZ_BUILD_URL=unknown
+ENV BUZZ_SOURCE_SHA=${BUZZ_SOURCE_SHA} \
+    BUZZ_BUILD_ID=${BUZZ_BUILD_ID} \
+    BUZZ_BUILD_URL=${BUZZ_BUILD_URL}
 RUN cargo build --release --locked -p buzz-relay --bin buzz-relay \
                                    -p buzz-admin --bin buzz-admin \
                                    -p buzz-pair-relay --bin buzz-pair-relay
@@ -124,11 +136,11 @@ FROM debian:${DEBIAN_VERSION}-slim AS runtime-base
 # OCI annotations: required for GHCR to auto-link the image to this repo and
 # inherit its visibility. org.opencontainers.image.source is the load-bearing
 # one — without it GHCR keeps the image private even when the repo is public.
-LABEL org.opencontainers.image.title="Buzz" \
-      org.opencontainers.image.description="WebSocket relay server for the Buzz communications platform" \
-      org.opencontainers.image.source="https://github.com/block/buzz" \
-      org.opencontainers.image.url="https://github.com/block/buzz" \
-      org.opencontainers.image.documentation="https://github.com/block/buzz#readme" \
+LABEL org.opencontainers.image.title="Zion" \
+      org.opencontainers.image.description="WebSocket relay server for the Zion communications platform" \
+      org.opencontainers.image.source="https://github.com/aidenmi8/Zion-Coms" \
+      org.opencontainers.image.url="https://github.com/aidenmi8/Zion-Coms" \
+      org.opencontainers.image.documentation="https://github.com/aidenmi8/Zion-Coms#readme" \
       org.opencontainers.image.licenses="Apache-2.0"
 
 RUN apt-get update \

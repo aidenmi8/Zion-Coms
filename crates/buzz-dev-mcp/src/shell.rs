@@ -1,6 +1,5 @@
 use crate::shim::Shim;
-use buzz_core::branding;
-use rmcp::model::{CallToolResult, Content};
+use rmcp::model::{CallToolResult, ContentBlock};
 use rmcp::ErrorData;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -15,7 +14,7 @@ use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
 
 const DEFAULT_TIMEOUT_MS: u64 = 120_000;
-const MAX_TIMEOUT_MS: u64 = 600_000;
+const MAX_TIMEOUT_MS: u64 = 1_200_000;
 const MAX_COMMAND_BYTES: usize = 1_000_000;
 const CAPTURE_CAP: usize = 10 * 1024 * 1024;
 const MAX_BYTES: usize = 50 * 1024;
@@ -75,19 +74,18 @@ impl SharedState {
 
 fn build_bootstrap(cwd: &Path, shell_hint: &str) -> String {
     let stack = detect_stack(cwd);
-    let zion_hint = if branding::env_alias("ZION_RELAY_URL", "BUZZ_RELAY_URL").is_some()
-        && branding::env_alias("ZION_PRIVATE_KEY", "BUZZ_PRIVATE_KEY").is_some()
-    {
-        "\nZion relay configured. Run `zion --help` to see available commands.\n"
-    } else {
-        ""
-    };
+    let buzz_hint =
+        if std::env::var("BUZZ_RELAY_URL").is_ok() && std::env::var("BUZZ_PRIVATE_KEY").is_ok() {
+            "\nBuzz relay configured. Run `buzz --help` to see available commands.\n"
+        } else {
+            ""
+        };
     format!(
         "Working directory: {}\n\
          Detected stack: {}\n\
-         Shell: {shell_hint} (set ZION_SHELL to override) — write command strings in that shell's syntax.\n\
+         Shell: {shell_hint} (set BUZZ_SHELL to override) — write command strings in that shell's syntax.\n\
          Pass `workdir` per call rather than `cd`.\n\
-         {zion_hint}",
+         {buzz_hint}",
         cwd.display(),
         stack,
     )
@@ -118,39 +116,19 @@ fn detect_stack(cwd: &Path) -> String {
     }
 }
 
-#[cfg(all(test, not(windows)))]
-mod zion_shell_tests {
-    use super::*;
-    use std::sync::Mutex;
-
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
-
-    #[test]
-    fn zion_shell_override_wins_over_legacy_fallback() {
-        let _guard = ENV_LOCK.lock().unwrap_or_else(|poison| poison.into_inner());
-        let dir = tempfile::tempdir().expect("tempdir");
-        let zion_shell = dir.path().join("zion-shell");
-        let legacy_shell = dir.path().join("legacy-shell");
-        std::fs::write(&zion_shell, "").expect("write Zion shell");
-        std::fs::write(&legacy_shell, "").expect("write legacy shell");
-        std::env::set_var("ZION_SHELL", &zion_shell);
-        std::env::set_var("BUZZ_SHELL", &legacy_shell);
-        let resolved = resolve_bash("").expect("resolve shell").0;
-        std::env::remove_var("ZION_SHELL");
-        std::env::remove_var("BUZZ_SHELL");
-        assert_eq!(resolved, zion_shell);
-    }
-}
-
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct ShellParams {
     pub command: String,
     #[serde(default)]
     pub workdir: Option<String>,
-    /// Defaults to 120000 ms (2 min) if omitted; capped at 600000 ms (10 min).
+    /// Defaults to 120000 ms (2 min) if omitted; capped at 1,200,000 ms (20 min).
     /// For long-running commands (git push with hooks, cargo build, test suites), use 300000+.
     #[serde(default)]
     pub timeout_ms: Option<u64>,
+}
+
+fn effective_timeout_ms(requested: Option<u64>) -> u64 {
+    requested.unwrap_or(DEFAULT_TIMEOUT_MS).min(MAX_TIMEOUT_MS)
 }
 
 pub async fn run(
@@ -164,10 +142,7 @@ pub async fn run(
             None,
         ));
     }
-    let timeout_ms = p
-        .timeout_ms
-        .unwrap_or(DEFAULT_TIMEOUT_MS)
-        .min(MAX_TIMEOUT_MS);
+    let timeout_ms = effective_timeout_ms(p.timeout_ms);
     let workdir: PathBuf = p
         .workdir
         .as_deref()
@@ -186,18 +161,13 @@ pub async fn run(
 
     let bash = match &state.resolved_shell {
         Ok((path, _)) => path.clone(),
-        Err(msg) => return Ok(CallToolResult::error(vec![Content::text(msg.clone())])),
+        Err(msg) => return Ok(CallToolResult::error(vec![ContentBlock::text(msg.clone())])),
     };
     let shell_arg = shell_flag(&bash);
     let mut cmd = Command::new(&bash);
     cmd.arg(shell_arg).arg(&p.command);
     cmd.current_dir(&workdir);
     cmd.env("PATH", &state.shim.path_env);
-    // NOSTR_PRIVATE_KEY is already removed from this process's env (shim.rs).
-    // BUZZ_PRIVATE_KEY is intentionally inherited — the buzz CLI needs it.
-    for (k, v) in &state.shim.git_env {
-        cmd.env(k, v);
-    }
     cmd.stdin(Stdio::null());
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
@@ -209,7 +179,7 @@ pub async fn run(
     let mut child = match cmd.spawn() {
         Ok(c) => c,
         Err(e) => {
-            return Ok(CallToolResult::error(vec![Content::text(format!(
+            return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "failed to spawn shell: {e}"
             ))]));
         }
@@ -260,7 +230,7 @@ pub async fn run(
             }
             stdout_handle.abort();
             stderr_handle.abort();
-            return Ok(CallToolResult::error(vec![Content::text("cancelled")]));
+            return Ok(CallToolResult::error(vec![ContentBlock::text("cancelled")]));
         }
         r = tokio::time::timeout(timeout_dur, child.wait()) => match r {
         Ok(Ok(s)) => (Some(s), false),
@@ -346,7 +316,7 @@ pub async fn run(
     });
     let text = serde_json::to_string_pretty(&body).unwrap_or_else(|_| "{}".into());
     kill_group.disarm();
-    Ok(CallToolResult::success(vec![Content::text(text)]))
+    Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
 }
 
 /// The flag used to pass a command string to the shell.
@@ -389,7 +359,7 @@ fn shell_name_from_path(p: &Path) -> String {
 #[cfg(not(windows))]
 fn resolve_bash(_path_env: &str) -> Result<(PathBuf, String), String> {
     // Honor BUZZ_SHELL on Unix so power users can opt into zsh or another shell.
-    if let Some(raw) = branding::env_alias("ZION_SHELL", "BUZZ_SHELL") {
+    if let Some(raw) = std::env::var_os("BUZZ_SHELL") {
         let p = PathBuf::from(&raw);
         // Absolute / rooted path: must exist as a file.
         if p.components().count() > 1 || p.has_root() {
@@ -434,7 +404,7 @@ fn resolve_bash(_path_env: &str) -> Result<(PathBuf, String), String> {
 /// No bash found -> actionable error pointing at the prerequisite.
 #[cfg(windows)]
 fn resolve_bash(path_env: &str) -> Result<(PathBuf, String), String> {
-    if let Some(raw) = branding::env_alias("ZION_SHELL", "BUZZ_SHELL") {
+    if let Some(raw) = std::env::var_os("BUZZ_SHELL") {
         let p = PathBuf::from(&raw);
         if p.components().count() > 1 || p.has_root() {
             if p.is_file() {
@@ -473,19 +443,16 @@ fn resolve_bash(path_env: &str) -> Result<(PathBuf, String), String> {
         return Ok((bash, "bash".to_string()));
     }
 
-    Err(windows_shell_guidance())
-}
-
-#[cfg(any(windows, test))]
-fn windows_shell_guidance() -> String {
-    "Git for Windows (Git Bash) is required but was not found. Checked \\
-     ZION_SHELL, GIT_BASH, bash.exe and git.exe on PATH, the standard Git install locations, \\
-     and HKLM/HKCU\\\\SOFTWARE\\\\GitForWindows. Git's \"Cmd\" PATH option adds \\
-     Git\\\\cmd\\\\git.exe but not Git\\\\bin\\\\bash.exe; Zion normally derives Git Bash from that git.exe. \\
-     Install it from https://git-scm.com/download/win and select \"Git from the command line \\
-     and also from 3rd-party software\", then relaunch Zion. You can also set \\
-     ZION_SHELL to a shell executable."
-        .into()
+    Err(
+        "Git for Windows (Git Bash) is required but was not found. Checked \\
+         BUZZ_SHELL, GIT_BASH, bash.exe and git.exe on PATH, the standard Git install locations, \\
+         and HKLM/HKCU\\\\SOFTWARE\\\\GitForWindows. Git's \"Cmd\" PATH option adds \\
+         Git\\\\cmd\\\\git.exe but not Git\\\\bin\\\\bash.exe; Buzz normally derives Git Bash from that git.exe. \\
+         Install it from https://git-scm.com/download/win and select \"Git from the command line \\
+         and also from 3rd-party software\", then relaunch Buzz. You can also set \\
+         BUZZ_SHELL to a shell executable."
+            .into(),
+    )
 }
 
 /// Git for Windows puts `git.exe` in `<install>\\cmd`; the MSYS bash binary is
@@ -1031,6 +998,15 @@ mod tests {
         serde_json::from_str(&text).expect("json")
     }
 
+    #[test]
+    fn timeout_bounds_preserve_default_and_cap_requests_at_twenty_minutes() {
+        assert_eq!(effective_timeout_ms(None), 120_000);
+        assert_eq!(effective_timeout_ms(Some(120_000)), 120_000);
+        assert_eq!(effective_timeout_ms(Some(1_200_000)), 1_200_000);
+        assert_eq!(effective_timeout_ms(Some(1_200_001)), 1_200_000);
+        assert_eq!(effective_timeout_ms(Some(u64::MAX)), 1_200_000);
+    }
+
     #[tokio::test(flavor = "current_thread")]
     async fn basic_echo() {
         let dir = tempdir().expect("tempdir");
@@ -1040,7 +1016,9 @@ mod tests {
             ShellParams {
                 command: "echo hello".into(),
                 workdir: None,
-                timeout_ms: Some(5_000),
+                // The production default: a cold Git Bash start on a Windows
+                // runner can take more than 5 s. `timeout_fires` covers timeouts.
+                timeout_ms: None,
             },
             CancellationToken::new(),
         )
@@ -1088,7 +1066,7 @@ mod tests {
             ShellParams {
                 command: "pwd".into(),
                 workdir: Some(sub.display().to_string()),
-                timeout_ms: Some(5_000),
+                timeout_ms: None,
             },
             CancellationToken::new(),
         )
@@ -1529,14 +1507,4 @@ mod windows_resolver_tests {
             "alias-only PATH must return None, not the WSL launcher"
         );
     }
-}
-#[test]
-fn windows_shell_guidance_is_zion_only() {
-    let guidance = windows_shell_guidance();
-    assert!(guidance.contains("ZION_SHELL"), "{guidance}");
-    assert!(guidance.contains("relaunch Zion"), "{guidance}");
-    assert!(
-        !guidance.to_ascii_lowercase().contains("buzz"),
-        "{guidance}"
-    );
 }

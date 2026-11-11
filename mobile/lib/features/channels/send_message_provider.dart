@@ -1,11 +1,15 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../shared/mentions/mention_tags.dart';
 import '../../shared/relay/relay.dart';
 import '../channels/channel_management_provider.dart';
-import '../profile/user_cache_provider.dart';
-import '../profile/user_profile.dart';
-import 'channels_provider.dart';
+import '../../shared/profile/user_cache_provider.dart';
+import '../../shared/profile/user_profile.dart';
+import 'channel.dart';
+import 'me/me_messages_provider.dart';
 import 'channel_messages_provider.dart';
+import 'message_mention_pubkeys.dart';
+import 'local_message_send_animation_provider.dart';
 
 /// Sends messages by signing an event with the user's nsec and publishing it
 /// over the relay's NIP-42-authenticated WebSocket session.
@@ -13,28 +17,34 @@ class SendMessage {
   final SignedEventRelay _signedEventRelay;
   final Future<List<ChannelMember>> Function(String channelId) _fetchMembers;
   final Map<String, UserProfile> Function() _readUserCache;
-  final bool Function(String channelId) _isDirectMessage;
   final void Function(String channelId, NostrEvent event) _addLocalMessage;
+  final void Function(String channelId, String eventId)
+  _markLocalMessageForAnimation;
   final void Function(String channelId, String eventId) _completeLocalMessage;
   final void Function(String channelId, String eventId) _removeLocalMessage;
+  final bool Function()? _isDeliveryValid;
 
   SendMessage({
     required SignedEventRelay signedEventRelay,
     required Future<List<ChannelMember>> Function(String channelId)
     fetchMembers,
     required Map<String, UserProfile> Function() readUserCache,
-    required bool Function(String channelId) isDirectMessage,
     required void Function(String channelId, NostrEvent event) addLocalMessage,
+    void Function(String channelId, String eventId)?
+    markLocalMessageForAnimation,
     required void Function(String channelId, String eventId)
     completeLocalMessage,
     required void Function(String channelId, String eventId) removeLocalMessage,
+    bool Function()? isDeliveryValid,
   }) : _signedEventRelay = signedEventRelay,
        _fetchMembers = fetchMembers,
        _readUserCache = readUserCache,
-       _isDirectMessage = isDirectMessage,
        _addLocalMessage = addLocalMessage,
+       _markLocalMessageForAnimation =
+           markLocalMessageForAnimation ?? ((_, _) {}),
        _completeLocalMessage = completeLocalMessage,
-       _removeLocalMessage = removeLocalMessage;
+       _removeLocalMessage = removeLocalMessage,
+       _isDeliveryValid = isDeliveryValid;
 
   /// Send a text message to a channel.
   ///
@@ -49,42 +59,61 @@ class SendMessage {
     String? parentEventId,
     String? rootEventId,
     List<String>? mentionPubkeys,
+    Channel? channel,
     List<List<String>> mediaTags = const [],
   }) async {
+    _ensureDeliveryValid();
     // Use explicitly passed pubkeys, or resolve @mentions against
     // channel members to avoid matching the wrong user.
-    final isDirectMessage = _isDirectMessage(channelId);
-    final directMessageMembers = isDirectMessage
-        ? await _fetchMembers(channelId)
-        : const <ChannelMember>[];
-    final resolvedMentions =
-        mentionPubkeys ??
-        await _resolveMentions(
-          content,
-          channelId,
-          prefetchedMembers: directMessageMembers,
-        );
+    final explicitMentions =
+        mentionPubkeys ?? await _resolveMentions(content, channelId);
     final authorPubkey = _signedEventRelay.pubkey;
+    final dmRecipientPubkeys = channel?.isDm == true
+        ? await _fetchDmRecipientPubkeys(channelId, channel!, authorPubkey)
+        : null;
+    final resolvedMentions = dmRecipientPubkeys != null
+        ? messageMentionPubkeys(
+            channel: channel!,
+            senderPubkey: authorPubkey,
+            explicitMentions: explicitMentions,
+            dmRecipientPubkeys: dmRecipientPubkeys,
+          )
+        : explicitMentions;
 
     // Normalize mentions: lowercase, deduplicate, exclude self (matching
     // the desktop's normalizeMentionPubkeys).
     final selfLower = authorPubkey?.toLowerCase();
     final seenMentions = <String>{?selfLower};
     final normalizedMentions = <String>[
-      for (final pk in [
-        ...resolvedMentions,
-        for (final member in directMessageMembers) member.pubkey,
-      ])
-        if (seenMentions.add(pk.toLowerCase())) pk.toLowerCase(),
+      for (final pk in resolvedMentions)
+        if (seenMentions.add(pk.toLowerCase())) pk,
     ];
+
+    // Two-field `mention` tags are references; they go through the same
+    // writer as recipients so a bad key rejects the message.
+    bool isReference(List<String> tag) =>
+        tag.length == 2 && tag[0] == 'mention';
+    final references = [
+      for (final tag in mediaTags)
+        if (isReference(tag)) tag[1],
+    ];
+    final mentionTags = writeMentionTags(
+      recipients: normalizedMentions,
+      references: references,
+      members: normalizedMentions.isEmpty
+          ? const {}
+          : await _recipientMembers(channelId, dmRecipientPubkeys, selfLower),
+    );
 
     final tags = <List<String>>[
       ['h', channelId],
       if (parentEventId != null) ..._buildReplyTags(parentEventId, rootEventId),
-      for (final pk in normalizedMentions) ['p', pk],
-      ...mediaTags,
+      ...mentionTags,
+      for (final tag in mediaTags)
+        if (!isReference(tag)) tag,
     ];
 
+    _ensureDeliveryValid();
     NostrEvent? localMessage;
     try {
       await _signedEventRelay.submit(
@@ -93,6 +122,7 @@ class SendMessage {
         tags: tags,
         onSigned: (event) {
           localMessage = event;
+          _markLocalMessageForAnimation(channelId, event.id);
           _addLocalMessage(channelId, event);
         },
       );
@@ -105,6 +135,57 @@ class SendMessage {
     }
   }
 
+  /// Resolve every identity that is actually a current member of this DM.
+  ///
+  /// Membership is authoritative for delivery. The channel metadata's `p`
+  /// tags can lag membership changes, so they are only used when the membership
+  /// snapshot is unavailable.
+  Future<Set<String>> _fetchDmRecipientPubkeys(
+    String channelId,
+    Channel channel,
+    String? authorPubkey,
+  ) async {
+    List<ChannelMember>? members;
+    try {
+      members = await _fetchMembers(channelId);
+    } catch (_) {
+      // Fall back to metadata below so an unavailable membership query does
+      // not block ordinary DM sends.
+    }
+
+    final author = authorPubkey?.toLowerCase();
+    return {
+      for (final participant in dmParticipantPubkeys(channel, members))
+        if (participant.trim().isNotEmpty &&
+            participant.toLowerCase() != author)
+          participant.toLowerCase(),
+    };
+  }
+
+  /// Keys that can be recipients: DM participants, or the channel's current
+  /// members. The sender always counts as a member.
+  Future<Set<String>> _recipientMembers(
+    String channelId,
+    Set<String>? dmRecipientPubkeys,
+    String? self,
+  ) async {
+    final members =
+        dmRecipientPubkeys ??
+        {
+          for (final member in await _fetchMembers(channelId))
+            member.pubkey.toLowerCase(),
+        };
+    return {...members, ?self};
+  }
+
+  void _ensureDeliveryValid() {
+    if (_isDeliveryValid?.call() == false) {
+      throw StateError(
+        'Message delivery cancelled because the active community changed',
+      );
+    }
+  }
+
   /// Resolve @mentions to pubkeys, scoped to channel members.
   ///
   /// Fetches channel members from the relay and matches @names only
@@ -112,9 +193,8 @@ class SendMessage {
   /// if the member fetch fails.
   Future<List<String>> _resolveMentions(
     String content,
-    String channelId, {
-    List<ChannelMember>? prefetchedMembers,
-  }) async {
+    String channelId,
+  ) async {
     final mentionPattern = RegExp(r'@(\w+)');
     final matches = mentionPattern.allMatches(content);
     if (matches.isEmpty) return const [];
@@ -122,7 +202,7 @@ class SendMessage {
     // Try to get channel member pubkeys for scoped resolution.
     Set<String>? memberPubkeys;
     try {
-      final members = prefetchedMembers ?? await _fetchMembers(channelId);
+      final members = await _fetchMembers(channelId);
       memberPubkeys = {for (final m in members) m.pubkey.toLowerCase()};
     } catch (_) {
       // Non-fatal — fall through to unscoped cache lookup.
@@ -177,7 +257,15 @@ class SendMessage {
   }
 }
 
-final sendMessageProvider = Provider<SendMessage>((ref) {
+final sendMessageProvider = Provider<SendMessage>((ref) => _sender(ref));
+
+/// Shares signing and delivery with channels, with Me's flat optimistic reader.
+final meSendMessageProvider = Provider<SendMessage>(
+  (ref) => _sender(ref, personal: true),
+);
+
+SendMessage _sender(Ref ref, {bool personal = false}) {
+  final messages = personal ? meMessagesProvider : channelMessagesProvider;
   final config = ref.watch(relayConfigProvider);
   return SendMessage(
     signedEventRelay: SignedEventRelay(
@@ -187,21 +275,19 @@ final sendMessageProvider = Provider<SendMessage>((ref) {
     fetchMembers: (channelId) =>
         ref.read(channelMembersProvider(channelId).future),
     readUserCache: () => ref.read(userCacheProvider),
-    isDirectMessage: (channelId) {
-      final channels = ref.read(channelsProvider).asData?.value;
-      return channels?.any(
-            (channel) => channel.id == channelId && channel.isDm,
-          ) ??
-          false;
+    addLocalMessage: (channelId, event) =>
+        ref.read(messages(channelId).notifier).addLocalMessage(event),
+    markLocalMessageForAnimation: (channelId, eventId) => ref
+        .read(localMessageSendAnimationProvider(channelId).notifier)
+        .mark(eventId),
+    completeLocalMessage: (channelId, eventId) =>
+        ref.read(messages(channelId).notifier).completeLocalMessage(eventId),
+    removeLocalMessage: (channelId, eventId) =>
+        ref.read(messages(channelId).notifier).removeLocalMessage(eventId),
+    isDeliveryValid: () {
+      final currentConfig = ref.read(relayConfigProvider);
+      return currentConfig.baseUrl == config.baseUrl &&
+          currentConfig.nsec == config.nsec;
     },
-    addLocalMessage: (channelId, event) => ref
-        .read(channelMessagesProvider(channelId).notifier)
-        .addLocalMessage(event),
-    completeLocalMessage: (channelId, eventId) => ref
-        .read(channelMessagesProvider(channelId).notifier)
-        .completeLocalMessage(eventId),
-    removeLocalMessage: (channelId, eventId) => ref
-        .read(channelMessagesProvider(channelId).notifier)
-        .removeLocalMessage(eventId),
   );
-});
+}

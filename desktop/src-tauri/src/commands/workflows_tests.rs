@@ -20,32 +20,8 @@ fn wf_event(d: &str, h: &str, yaml: &str) -> nostr::Event {
         .expect("sign")
 }
 
-fn approval_event(kind: u16, digest: &str, created_at: u64) -> nostr::Event {
-    let keys = Keys::generate();
-    let mut tags = vec![
-        Tag::parse(["d", digest]).expect("d tag"),
-        Tag::parse(["workflow", WF]).expect("workflow tag"),
-        Tag::parse(["run", "33333333-3333-3333-3333-333333333333"]).expect("run tag"),
-    ];
-    if kind == 46_010 {
-        tags.extend([
-            Tag::parse(["p", &"11".repeat(32)]).expect("p tag"),
-            Tag::parse(["step", "gate"]).expect("step tag"),
-            Tag::parse(["expiration", "2000000000"]).expect("expiration tag"),
-        ]);
-    } else {
-        tags.push(Tag::parse(["actor", &"22".repeat(32)]).expect("actor tag"));
-    }
-    EventBuilder::new(Kind::Custom(kind), "")
-        .tags(tags)
-        .custom_created_at(nostr::Timestamp::from(created_at))
-        .sign_with_keys(&keys)
-        .expect("sign approval event")
-}
-
 const CHAN: &str = "11111111-1111-1111-1111-111111111111";
 const WF: &str = "22222222-2222-2222-2222-222222222222";
-const RUN: &str = "33333333-3333-3333-3333-333333333333";
 
 const YAML: &str = "\
 name: Greet on join
@@ -65,6 +41,7 @@ fn workflow_from_event_maps_all_fields() {
     let wf = workflow_from_event(&ev);
 
     assert_eq!(wf.id, WF);
+    assert_eq!(wf.revision, ev.id.to_hex());
     assert_eq!(wf.channel_id.as_deref(), Some(CHAN));
     assert_eq!(wf.owner_pubkey, ev.pubkey.to_hex());
     assert_eq!(wf.name, "Greet on join");
@@ -144,6 +121,7 @@ fn tag_value_reads_d_and_h_and_misses_absent() {
 fn workflow_record_shapes_save_inputs() {
     let wf = workflow_record(
         WF.to_string(),
+        "revision-1".to_string(),
         Some(CHAN.to_string()),
         "deadbeef".to_string(),
         YAML,
@@ -163,6 +141,7 @@ fn workflow_record_shapes_save_inputs() {
 fn save_wire_serializes_flat_with_optional_secret() {
     let workflow = workflow_record(
         WF.to_string(),
+        "revision-1".to_string(),
         Some(CHAN.to_string()),
         "deadbeef".to_string(),
         YAML,
@@ -194,44 +173,13 @@ fn save_wire_serializes_flat_with_optional_secret() {
 }
 
 #[test]
-fn approval_lifecycle_events_fold_to_pending_and_terminal_states() {
-    let pending = "aa".repeat(32);
-    let granted = "bb".repeat(32);
-    let denied = "cc".repeat(32);
-    let delegated = "dd".repeat(32);
-    let events = vec![
-        approval_event(46_010, &pending, 10),
-        approval_event(46_010, &granted, 20),
-        approval_event(46_011, &granted, 21),
-        approval_event(46_010, &denied, 30),
-        approval_event(46_012, &denied, 31),
-        approval_event(46_010, &delegated, 40),
-        approval_event(46_013, &delegated, 41),
-    ];
-
-    let approvals = approvals_from_events(&events, WF, RUN);
-
-    assert_eq!(
-        approvals
-            .iter()
-            .map(|approval| approval.status.as_str())
-            .collect::<Vec<_>>(),
-        vec!["delegated", "denied", "granted", "pending"]
-    );
-    assert!(approvals
-        .iter()
-        .filter(|approval| approval.status != "pending")
-        .all(|approval| approval.approver_pubkey.as_deref() == Some(&"22".repeat(32))));
-    assert!(approvals.iter().all(|approval| approval.token.len() == 64));
-}
-
-#[test]
 fn workflow_wire_serializes_with_snake_case_keys() {
     // Guard the wire contract the frontend's RawWorkflow depends on.
     let ev = wf_event(WF, CHAN, YAML);
     let v = serde_json::to_value(workflow_from_event(&ev)).expect("serialize");
     for key in [
         "id",
+        "revision",
         "name",
         "owner_pubkey",
         "channel_id",
@@ -245,21 +193,122 @@ fn workflow_wire_serializes_with_snake_case_keys() {
 }
 
 #[test]
-fn runs_and_approvals_serialize_to_bare_empty_array() {
-    // Regression guard for the crash class this fix closed. The frontend
-    // wrappers `getWorkflowRuns` / `getRunApprovals` do `raw.map(...)`, so the
-    // Rust side MUST return a bare JSON array. A wrapped `{ runs: [...] }` /
-    // `{ approvals: [...] }` shape would make `.map()` throw and crash the
-    // detail panel — the same TypeError class as the original page bug.
-    //
-    // The commands take `State<AppState>`, so we can't invoke them directly in
-    // a unit test; instead we pin the exact value they return (`Vec::new()` of
-    // their `Vec<Value>` element type) and assert its serialized shape.
-    let runs: Vec<Value> = Vec::new();
-    let approvals: Vec<Value> = Vec::new();
-    assert_eq!(serde_json::to_string(&runs).expect("serialize runs"), "[]");
+fn multi_channel_workflow_query_uses_one_filter_per_channel() {
+    let other_channel = "33333333-3333-3333-3333-333333333333";
+    let filters = channel_workflow_filters(vec![CHAN.to_string(), other_channel.to_string()])
+        .expect("valid channels");
+
+    assert_eq!(filters.len(), 2);
     assert_eq!(
-        serde_json::to_string(&approvals).expect("serialize approvals"),
-        "[]"
+        filters[0],
+        serde_json::json!({
+            "kinds": [30620],
+            "#h": [CHAN],
+        })
+    );
+    assert_eq!(
+        filters[1],
+        serde_json::json!({
+            "kinds": [30620],
+            "#h": [other_channel],
+        })
+    );
+}
+
+#[test]
+fn workflow_queries_respect_relay_explicit_channel_limit() {
+    for (channel_count, expected_batch_sizes) in [
+        (WORKFLOW_QUERY_CHANNEL_BATCH_SIZE, vec![128]),
+        (WORKFLOW_QUERY_CHANNEL_BATCH_SIZE + 1, vec![128, 1]),
+    ] {
+        let channel_ids = (0..channel_count)
+            .map(|index| uuid::Uuid::from_u128(index as u128 + 1).to_string())
+            .collect();
+        let batches = channel_workflow_filter_batches(channel_ids).expect("valid channels");
+
+        assert_eq!(
+            batches.iter().map(Vec::len).collect::<Vec<_>>(),
+            expected_batch_sizes
+        );
+        assert!(batches.iter().flatten().all(|filter| filter["#h"]
+            .as_array()
+            .is_some_and(|values| values.len() == 1)));
+    }
+}
+
+#[test]
+fn workflow_query_results_are_deduplicated_by_event_id() {
+    let first = wf_event(WF, CHAN, YAML);
+    let second_workflow = "33333333-3333-3333-3333-333333333333";
+    let second = wf_event(second_workflow, CHAN, YAML);
+    let mut workflows = Vec::new();
+    let mut seen_event_ids = HashSet::new();
+
+    append_unique_workflows(
+        &mut workflows,
+        &mut seen_event_ids,
+        &[first.clone(), second.clone()],
+    );
+    append_unique_workflows(&mut workflows, &mut seen_event_ids, &[first, second]);
+
+    assert_eq!(workflows.len(), 2);
+    assert_eq!(workflows[0].id, WF);
+    assert_eq!(workflows[1].id, second_workflow);
+}
+
+#[test]
+fn channel_workflow_filters_reject_malformed_or_blank_channel_ids() {
+    for channel_id in ["not-a-uuid", "", "   "] {
+        let error = channel_workflow_filters(vec![channel_id.to_string()])
+            .expect_err("malformed channel id must fail before querying the relay");
+        assert_eq!(error, "invalid channel id");
+    }
+}
+
+#[test]
+fn channel_workflow_filters_accepts_empty_input() {
+    assert_eq!(
+        channel_workflow_filters(Vec::new()).expect("empty input is valid"),
+        Vec::<Value>::new()
+    );
+}
+
+#[test]
+fn trigger_response_uses_persisted_run_id_contract() {
+    let wire = trigger_wire_from_message(
+        WF.to_string(),
+        "response:{\"run_id\":\"33333333-3333-3333-3333-333333333333\"}",
+    )
+    .expect("parse trigger response");
+
+    assert_eq!(wire.run_id, "33333333-3333-3333-3333-333333333333");
+    assert_eq!(wire.workflow_id, WF);
+    assert_eq!(wire.status, "pending");
+    let value = serde_json::to_value(wire).expect("serialize trigger response");
+    assert!(value.get("event_id").is_none());
+}
+
+#[test]
+fn trigger_response_rejects_missing_or_empty_run_id() {
+    assert!(trigger_wire_from_message(WF.to_string(), "response:{}").is_err());
+    assert!(trigger_wire_from_message(WF.to_string(), "response:{\"run_id\":\"   \"}",).is_err());
+}
+
+#[test]
+fn run_reads_serialize_to_backend_envelopes() {
+    let runs = WorkflowRunsWire {
+        runs: Vec::new(),
+        next: None,
+    };
+    let approvals = WorkflowApprovalsWire {
+        approvals: Vec::new(),
+    };
+    assert_eq!(
+        serde_json::to_value(runs).expect("serialize runs"),
+        serde_json::json!({ "runs": [], "next": null })
+    );
+    assert_eq!(
+        serde_json::to_value(approvals).expect("serialize approvals"),
+        serde_json::json!({ "approvals": [] })
     );
 }

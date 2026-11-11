@@ -1,11 +1,11 @@
 /**
- * Utilities for extracting and parsing the canonical `zion:config-nudge`
- * sentinel and historical `buzz:config-nudge` sentinels.
+ * Utilities for extracting and parsing the `buzz:config-nudge` sentinel that
+ * `buzz-acp`'s setup-listener appends to its kind:9 nudge body.
  *
  * Wire format (appended by `setup_mode.rs::nudge_body()`):
  *
  * ```
- * ```zion:config-nudge
+ * ```buzz:config-nudge
  * {"agent_name":"…","agent_pubkey":"…","requirements":[…]}
  * ```
  * ```
@@ -32,7 +32,7 @@ export type ConfigNudgeRequirement =
        * Determines which message and CTA the nudge card shows:
        * - "available"         → tooling installed, needs login
        * - "adapter_missing"   → CLI installed but ACP adapter missing
-       * - "adapter_outdated"  → ACP adapter present but from deprecated package; reinstall required
+       * - "adapter_outdated"  → ACP adapter present but unsupported/outdated; reinstall required
        * - "cli_missing"       → ACP adapter installed but CLI missing
        * - "not_installed"     → neither adapter nor CLI found
        */
@@ -63,7 +63,7 @@ export type ConfigNudgeRequirement =
     };
 
 /**
- * The structured payload embedded in a config-nudge sentinel block.
+ * The structured payload embedded in the `buzz:config-nudge` sentinel block.
  * Mirrors the Rust `SetupPayload` struct.
  */
 export type ConfigNudgePayload = {
@@ -75,16 +75,8 @@ export type ConfigNudgePayload = {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const FENCE_OPENS = ["```zion:config-nudge", "```buzz:config-nudge"] as const;
+const FENCE_OPEN = "```buzz:config-nudge";
 const FENCE_CLOSE = "```";
-
-function findFenceOpen(content: string): number {
-  return FENCE_OPENS.reduce((earliest, fence) => {
-    const index = content.indexOf(fence);
-    if (index === -1) return earliest;
-    return earliest === -1 ? index : Math.min(earliest, index);
-  }, -1);
-}
 
 // ── Extractor ─────────────────────────────────────────────────────────────────
 
@@ -100,7 +92,7 @@ function findFenceOpen(content: string): number {
  * render path.
  */
 export function extractConfigNudge(content: string): ConfigNudgePayload | null {
-  const openIdx = findFenceOpen(content);
+  const openIdx = content.indexOf(FENCE_OPEN);
   if (openIdx === -1) return null;
 
   // The JSON starts on the line after the opening fence.
@@ -123,14 +115,14 @@ export function extractConfigNudge(content: string): ConfigNudgePayload | null {
 }
 
 /**
- * Strip a canonical or historical config-nudge sentinel block (and any preceding blank line)
+ * Strip the `buzz:config-nudge` sentinel block (and any preceding blank line)
  * from a message body. Returns the original string unchanged when no sentinel
  * is present.
  *
  * Used so the prose fallback is rendered without the raw code block.
  */
 export function stripConfigNudgeSentinel(content: string): string {
-  const openIdx = findFenceOpen(content);
+  const openIdx = content.indexOf(FENCE_OPEN);
   if (openIdx === -1) return content;
 
   const closeIdx = content.indexOf(`\n${FENCE_CLOSE}`, openIdx);

@@ -1,12 +1,22 @@
 import * as React from "react";
-import { useReducedMotion } from "motion/react";
 
 import {
   isWelcomeKickoffStageExiting,
   type WelcomeKickoffStagePhase,
 } from "@/features/onboarding/useWelcomeKickoffStage";
 import { cn } from "@/shared/lib/cn";
-import { STARTER_TEAM_NAMES, StarterTeamPresence } from "./StarterTeamPresence";
+
+type StageCharacter = {
+  name: string;
+  animationUrl: string;
+};
+
+/** Same animated APNGs the "Meet your starter team" onboarding step uses. */
+const STAGE_CHARACTERS: readonly StageCharacter[] = [
+  { name: "Fizz", animationUrl: "/onboarding/starter-team/fizz.png" },
+  { name: "Honey", animationUrl: "/onboarding/starter-team/honey.png" },
+  { name: "Pollen", animationUrl: "/onboarding/starter-team/pollen.png" },
+];
 
 const STAGE_EXIT_ANIMATION = "motion-kickoff-stage-exit";
 
@@ -29,7 +39,6 @@ export function WelcomeKickoffStage({
   onExitComplete: () => void;
   phase: WelcomeKickoffStagePhase;
 }) {
-  const shouldReduceMotion = useReducedMotion();
   const handleAnimationEnd = React.useCallback(
     (event: React.AnimationEvent<HTMLDivElement>) => {
       if (event.animationName === STAGE_EXIT_ANIMATION) {
@@ -52,18 +61,15 @@ export function WelcomeKickoffStage({
       data-testid="welcome-kickoff-stage"
       onAnimationEnd={handleAnimationEnd}
     >
-      {STARTER_TEAM_NAMES.map((name, index) => (
-        <span
-          className="block h-16 w-16"
-          data-testid={`welcome-kickoff-stage-${name.toLowerCase()}`}
-          key={name}
+      {STAGE_CHARACTERS.map((character, index) => (
+        <img
+          alt=""
+          className="motion-kickoff-character-enter h-16 w-16 object-contain"
+          data-testid={`welcome-kickoff-stage-${character.name.toLowerCase()}`}
+          key={character.name}
+          src={character.animationUrl}
           style={{ "--stagger-index": index } as React.CSSProperties}
-        >
-          <StarterTeamPresence
-            name={name}
-            phase={shouldReduceMotion ? "reduced-motion" : "entering"}
-          />
-        </span>
+        />
       ))}
     </div>
   );

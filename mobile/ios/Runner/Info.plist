@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BuzzAppGroupIdentifier</key>
+	<string>$(BUZZ_APP_GROUP_IDENTIFIER)</string>
+	<key>BuzzKeychainAccessGroup</key>
+	<string>$(AppIdentifierPrefix)$(BUZZ_KEYCHAIN_ACCESS_GROUP)</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -31,7 +35,6 @@
 			<string>com.buzz.deeplink</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>zion</string>
 				<string>buzz</string>
 			</array>
 		</dict>
@@ -44,12 +47,20 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Zion uses Face ID to confirm sensitive identity transfers.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Zion needs camera access so you can take photos to attach to messages and scan QR codes for device pairing.</string>
+	<string>Zion uses the camera to take profile photos and animated avatars, attach photos to messages, and scan QR codes for device pairing.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Zion needs microphone access so you can speak in Huddles and record voice notes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Zion needs photo library access so you can attach images to messages.</string>
+	<string>Zion uses your photo library to select profile photos and images to attach to messages.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Zion needs permission to save images to your photo library.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INSendMessageIntent</string>
+	</array>
 	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

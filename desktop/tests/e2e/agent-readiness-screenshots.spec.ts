@@ -18,7 +18,6 @@ async function openCreateDialog(page: import("@playwright/test").Page) {
   await page.goto("/");
   await page.getByTestId("open-agents-view").click();
   await page.getByTestId("new-agent-card").click();
-  await page.getByRole("menuitem", { name: "Create from scratch" }).click();
   await page.locator("#persona-display-name").fill("Test Agent");
 }
 
@@ -161,7 +160,7 @@ test.describe("agent readiness gate screenshots", () => {
   test("02-create-buzzagent-automatic-model", async ({ page }) => {
     await installMockBridge(page);
     await openCreateDialog(page);
-    await selectProvider(page, "Zion shared compute");
+    await selectProvider(page, "Buzz shared compute");
 
     await expect(page.locator("#persona-model")).toContainText("Automatic");
     await expect(page.getByTestId("persona-dialog-submit")).toBeEnabled();
@@ -233,14 +232,14 @@ test.describe("agent readiness gate screenshots", () => {
       acpRuntimesCatalog: [
         {
           id: "buzz-agent",
-          label: "Zion Agent",
+          label: "Buzz Agent",
           avatar_url: "",
           availability: "available",
           command: "buzz-agent",
           binary_path: "/usr/local/bin/buzz-agent",
           default_args: [],
           mcp_command: "buzz-dev-mcp",
-          install_hint: "Ships with the Zion desktop app.",
+          install_hint: "Ships with the Buzz desktop app.",
           install_instructions_url: "https://github.com/block/buzz",
           can_auto_install: false,
           underlying_cli_path: null,

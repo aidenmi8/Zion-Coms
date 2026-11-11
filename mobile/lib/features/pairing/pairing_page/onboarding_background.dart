@@ -2,50 +2,95 @@ part of '../pairing_page.dart';
 
 class _OnboardingBackground extends StatelessWidget {
   final Widget child;
+  final bool websiteWelcome;
+  final ValueListenable<double> scannerProgress;
 
-  const _OnboardingBackground({required this.child});
+  const _OnboardingBackground({
+    required this.child,
+    this.websiteWelcome = false,
+    this.scannerProgress = const AlwaysStoppedAnimation(0),
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (websiteWelcome) {
+      return _WebsiteWelcomeBackground(
+        scannerProgress: scannerProgress,
+        child: child,
+      );
+    }
+    final isDark = context._onboardingIsDark;
     return DecoratedBox(
       key: const Key('pairing-onboarding-background'),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            context.colors.surface,
-            context.colors.surfaceContainerHighest,
-          ],
-        ),
-      ),
+      decoration: BoxDecoration(color: context.colors.surface),
       child: CustomPaint(
-        painter: _DotGridPainter(
-          color: context.colors.onSurface.withValues(alpha: 0.05),
-        ),
+        painter: _OnboardingShellPainter(isDark: isDark),
         child: child,
       ),
     );
   }
 }
 
-class _DotGridPainter extends CustomPainter {
-  final Color color;
+class _OnboardingShellPainter extends CustomPainter {
+  final bool isDark;
 
-  const _DotGridPainter({required this.color});
+  const _OnboardingShellPainter({required this.isDark});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final dotPaint = Paint()..color = color;
-    const spacing = 24.0;
-
-    for (var x = 0.0; x <= size.width; x += spacing) {
-      for (var y = 0.0; y <= size.height; y += spacing) {
-        canvas.drawCircle(Offset(x, y), 1, dotPaint);
-      }
+    if (size.isEmpty) return;
+    if (isDark) {
+      // Match the desktop's layered CSS farthest-corner ellipses.
+      _paintGlow(
+        canvas,
+        size,
+        const Offset(0.9, 1),
+        0.7,
+        const Color(0xFF1D1B31),
+      );
+      _paintGlow(
+        canvas,
+        size,
+        const Offset(0.15, 0),
+        0.65,
+        const Color(0xFF1D1B31),
+      );
     }
   }
 
+  void _paintGlow(
+    Canvas canvas,
+    Size size,
+    Offset position,
+    double stop,
+    Color color,
+  ) {
+    final radiusX =
+        (position.dx > 0.5 ? position.dx : 1 - position.dx) *
+        size.width *
+        sqrt2 *
+        stop;
+    final radiusY =
+        (position.dy > 0.5 ? position.dy : 1 - position.dy) *
+        size.height *
+        sqrt2 *
+        stop;
+    canvas.save();
+    canvas.clipRect(Offset.zero & size);
+    canvas.translate(position.dx * size.width, position.dy * size.height);
+    canvas.scale(radiusX, radiusY);
+    canvas.drawCircle(
+      Offset.zero,
+      1,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [color, color.withValues(alpha: 0)],
+        ).createShader(const Rect.fromLTWH(-1, -1, 2, 2)),
+    );
+    canvas.restore();
+  }
+
   @override
-  bool shouldRepaint(_DotGridPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(_OnboardingShellPainter oldDelegate) =>
+      oldDelegate.isDark != isDark;
 }

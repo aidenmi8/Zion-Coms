@@ -1,599 +1,474 @@
 {
-  "version": 1,
-  "publicContract": {
-    "productName": "Zion",
-    "relayName": "Zion Relay",
-    "canonicalUrlScheme": "zion",
-    "legacyUrlScheme": "buzz",
-    "releaseRepositoryUrl": "https://github.com/aidenmi8/Zion-Coms",
-    "canonicalLaunchers": [
-      "zion",
-      "zion-acp",
-      "zion-agent",
-      "zion-dev-mcp"
-    ],
-    "legacyLaunchers": [
-      "buzz",
-      "buzz-acp",
-      "buzz-agent",
-      "buzz-dev-mcp"
-    ],
-    "environmentAliases": [
-      {
-        "canonical": "ZION_RELAY_URL",
-        "legacy": "BUZZ_RELAY_URL"
-      },
-      {
-        "canonical": "ZION_PRIVATE_KEY",
-        "legacy": "BUZZ_PRIVATE_KEY"
-      },
-      {
-        "canonical": "ZION_AUTH_TAG",
-        "legacy": "BUZZ_AUTH_TAG"
-      },
-      {
-        "canonical": "ZION_SHELL",
-        "legacy": "BUZZ_SHELL"
-      },
-      {
-        "canonical": "ZION_AGENT_PROVIDER",
-        "legacy": "BUZZ_AGENT_PROVIDER"
-      },
-      {
-        "canonical": "ZION_AGENT_MODEL",
-        "legacy": "BUZZ_AGENT_MODEL"
-      },
-      {
-        "canonical": "ZION_AGENT_THINKING_EFFORT",
-        "legacy": "BUZZ_AGENT_THINKING_EFFORT"
-      },
-      {
-        "canonical": "ZION_AGENT_MAX_OUTPUT_TOKENS",
-        "legacy": "BUZZ_AGENT_MAX_OUTPUT_TOKENS"
-      },
-      {
-        "canonical": "ZION_AGENT_MAX_CONTEXT_TOKENS",
-        "legacy": "BUZZ_AGENT_MAX_CONTEXT_TOKENS"
-      }
+  "schemaVersion": 1,
+  "productName": "Zion",
+  "release": {
+    "desktopVersion": "0.7.0-zion.1",
+    "mobileVersion": "0.7.0+2026110601",
+    "status": "local-committed-brand-layer",
+    "sourceCommits": {
+      "relayMobileCli": "4f8d4b82df87fea54387e0b3f59f1e73b3796366",
+      "desktopWeb": "2f6701ea47ca251dca41649310a78d7859bb89a5"
+    },
+    "artifactDigests": null
+  },
+  "upstream": {
+    "relayMobileCli": {
+      "repository": "block/buzz",
+      "revision": "96af488d968a1ae9d961c2132bea27822735f8da"
+    },
+    "desktopWeb": {
+      "repository": "block/buzz-app",
+      "revision": "cd9090ee07dcffe8737543dcef74bd8d5899962d"
+    }
+  },
+  "presentation": {
+    "background": "#0A0A0A",
+    "gradientTop": "#1C1C1E",
+    "gradientBottom": "#2C2C2E",
+    "accent": "#4E7CFF",
+    "desktopFreshProfileAccent": "iris",
+    "desktopSavedAccents": "Preserve every valid saved accent and legacy color mapping, including Citrus; keep compatibility preference keys",
+    "foreground": "#F5F5F7",
+    "secondary": "#A6A6A8",
+    "markViewBox": "0 0 64 64",
+    "markPaths": ["M16 30 32 12h20L36 30H16Z", "M12 52 28 34h20L32 52H12Z"],
+    "layout": "Current upstream layout/navigation; approved Zion artwork and semantic color roles only"
+  },
+  "compatibility": {
+    "desktopBundleIdentifier": "xyz.block.buzz.app",
+    "iosBundleIdentifier": "do.agente.zion",
+    "deepLinkScheme": "buzz",
+    "technicalIdentifiers": "Preserve upstream package, sidecar, storage, credential-format and wire identifiers; no global rename",
+    "desktopFirstLaunch": "Requires separately approved archive/fresh local-profile cutover before any native launch; use supported legacy-human-identity import, not direct key extraction",
+    "agentTransfer": "Definitions/settings only, new agent identities, no memory; supported import or recreation, no custom migration"
+  },
+  "artworkSource": {
+    "repository": "aidenmi8/Zion-Coms",
+    "revision": "6d46ff376cadbe57cd23e717f9e1bb55b00976a5"
+  },
+  "displayFont": {
+    "family": "Michroma",
+    "usage": "Zion wordmark and prominent headings only; body and controls remain Inter or system sans",
+    "sourceRepository": "google/fonts",
+    "sourceRevision": "5bb28733cec313b63fbd415b574b5ae35c8aa8b8",
+    "sourcePath": "ofl/michroma/Michroma-Regular.ttf",
+    "license": "SIL Open Font License 1.1",
+    "fontSha256": "b62301163788bc5b7f8fcac0b74b184e34e1827e577b499ecb724da065098f87",
+    "licenseSha256": "e349ddd05b7028171de95f5dbacf58043e2511c6d2a80ba59c6f211bf3056e10",
+    "bundles": [
+      "Zion-App-clean/public/fonts",
+      "Zion-Coms-clean/mobile/assets/fonts",
+      "Zion-Coms-clean/web/public/fonts",
+      "Zion-Coms-clean/admin-web/public/fonts"
     ]
   },
-  "sourceDirectory": "/private/tmp/zion-brand-source",
-  "assets": {
-    "sentraV2_2": {
-      "role": "sentraV2",
-      "canonicalPath": "/branding/sentra-v2-2.png",
-      "outputPath": "desktop/public/branding/sentra-v2-2.png",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-2.png",
-      "format": "png",
-      "sha256": "c52e77b57c3e24284bd0794fa917da612a3d953a8725eece6fc4798d43a62e6a",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+  "assets": [
+    {
+      "source": "desktop/src-tauri/icons/32x32.png",
+      "targetRepository": "desktopWeb",
+      "target": "src-tauri/icons/32x32.png",
+      "sha256": "0793aeac87727e59e7025e41779cacab098fdd5af936377c32bd29bae6f3da8f"
     },
-    "sentraV2_3": {
-      "role": "sentraV2",
-      "canonicalPath": "/branding/sentra-v2-3.png",
-      "outputPath": "desktop/public/branding/sentra-v2-3.png",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-3.png",
-      "format": "png",
-      "sha256": "6af0cd4ab5b72e52e4aa2712e0dae003aaaf2ccef774b95e669a3bc75d3b9cd7",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "desktop/src-tauri/icons/128x128.png",
+      "targetRepository": "desktopWeb",
+      "target": "src-tauri/icons/128x128.png",
+      "sha256": "729b69c9dcc416287680e2f243c2c8c44b32b88c87fbc718c9c9ceb902556b47"
     },
-    "sentraV2_4": {
-      "role": "sentraV2",
-      "canonicalPath": "/branding/sentra-v2-4.png",
-      "outputPath": "desktop/public/branding/sentra-v2-4.png",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-4.png",
-      "format": "png",
-      "sha256": "f6ef000cad2cc1dddbd68bc86ca93336ae5299e8f1f0c591bb6053f46cd1de45",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "desktop/src-tauri/icons/128x128@2x.png",
+      "targetRepository": "desktopWeb",
+      "target": "src-tauri/icons/128x128@2x.png",
+      "sha256": "17acca21c46d4da2d591384e5a1777cbc05419943a40b17184c15762de2027bf"
     },
-    "sentraV2_5": {
-      "role": "sentraV2",
-      "canonicalPath": "/branding/sentra-v2-5.png",
-      "outputPath": "desktop/public/branding/sentra-v2-5.png",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-5.png",
-      "format": "png",
-      "sha256": "f44dfea9e6e9b423729ac76f47a7366ae19df304da6a77204b81599c8ff9850f",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "desktop/src-tauri/icons/icon.icns",
+      "targetRepository": "desktopWeb",
+      "target": "src-tauri/icons/icon.icns",
+      "sha256": "2b7b82c4ac3ca63c8b782190f37328ec80beca74a3fa005ad940db1d00de6a70"
     },
-    "sentraV2_6": {
-      "role": "sentraV2",
-      "canonicalPath": "/branding/sentra-v2-6.png",
-      "outputPath": "desktop/public/branding/sentra-v2-6.png",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-6.png",
-      "format": "png",
-      "sha256": "9836d450544705316dc4b0bc894b89922b6470d9006835558ad0227e28bce43f",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "desktop/src-tauri/icons/icon.ico",
+      "targetRepository": "desktopWeb",
+      "target": "src-tauri/icons/icon.ico",
+      "sha256": "a2072992205e2fff83a792b00a23bbeb544ea46f6e3417aff9e19ec8c40aa44d"
     },
-    "sentraV2_7": {
-      "role": "sentraV2",
-      "canonicalPath": "/branding/sentra-v2-7.png",
-      "outputPath": "desktop/public/branding/sentra-v2-7.png",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-7.png",
-      "format": "png",
-      "sha256": "88acc7498b4532393b837b53c89cbe3cbf0dde7d5c887ae49ef28c66eb0da16d",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "desktop/src-tauri/icons/dmg-background.png",
+      "targetRepository": "desktopWeb",
+      "target": "src-tauri/icons/dmg-background.png",
+      "sourceSha256": "d728290b872c28c38116ac5b82d64f63f611f5437ed04a584c6599eb11db6bca",
+      "sha256": "545b6ac2e8d75d297a0dd30aad9f041081ac3a0706843aaaf8935c3fad0af8ba",
+      "transform": "Sentra charcoal/silver/blue edit: retain Zion mark, center half-size drag arrow between icon positions; resize to 1320x1000 with sips",
+      "approvalStatus": "pending-owner-visual-acceptance-before-packaging"
     },
-    "appIcon": {
-      "role": "appIcon",
-      "canonicalPath": "/branding/zion-app-icon-1024.png",
-      "outputPath": "desktop/public/branding/zion-app-icon-1024.png",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-8.png",
-      "format": "png",
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "sha256": "8891df2973b26e340dbb1f546533a1f37263c120de6f1ab5d006ec87db3bc3f7",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png",
+      "sha256": "02331bb9c29f15b6cbf0ae521be2af1c7d3065b267c80764cc72277137435625",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png",
+      "sha256": "8891df2973b26e340dbb1f546533a1f37263c120de6f1ab5d006ec87db3bc3f7",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-hdpi/launch_image.png",
+      "sha256": "59eab6dce8d934891b4fd7035acf7f876ca59d32b314020a2c37d62634599763",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "sha256": "369fbdeee08d739aba2ce99efa9973db90de62b1ec37492326427d9860876ac8",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png",
+      "sha256": "df8b862e579713f102e3329e15a84a5c742ee70098e3e20a6470d5edfeffda8b",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png",
+      "sha256": "369fbdeee08d739aba2ce99efa9973db90de62b1ec37492326427d9860876ac8",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-mdpi/launch_image.png",
+      "sha256": "085d075eab34618290478b2d8774e838a04428acfadae5cb4c0da34e25df25b0",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "sha256": "6d9a1ebfe56aed022f56b0165102c60302f9d633dd469ad87c5ca6b463d88112",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png",
+      "sha256": "4fb1303b54b1093441e5450b2862f815a1f8d8c0e0372dfeb58d6c1534828e7d",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
+      "sha256": "6d9a1ebfe56aed022f56b0165102c60302f9d633dd469ad87c5ca6b463d88112",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xhdpi/launch_image.png",
+      "sha256": "2526babf2a23ec33cbf1a056589d026eb957416d11ffeb570ee19ccee75d4dc1",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "sha256": "8809754de9f437de704ee30c9e8bd2ef729bed07fa84222fdd80b55aa40a4206",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png",
+      "sha256": "490b7c0bb14d587708815eab63fe62cea951322dffffb21a8cf5e162e34e5ec5",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
+      "sha256": "8809754de9f437de704ee30c9e8bd2ef729bed07fa84222fdd80b55aa40a4206",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xxhdpi/launch_image.png",
+      "sha256": "9c10530b8f1d6c07d47f6d8b2ac5d1acc7bf12422e7ffd552c716289c93df427",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "sha256": "4d17de9aeed2d560c8dc5e7d503c8b845a4248a3a97886bcbda6b891fb2fa73a",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png",
+      "sha256": "59eab6dce8d934891b4fd7035acf7f876ca59d32b314020a2c37d62634599763",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
+      "sha256": "4d17de9aeed2d560c8dc5e7d503c8b845a4248a3a97886bcbda6b891fb2fa73a",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/android/app/src/main/res/mipmap-xxxhdpi/launch_image.png",
+      "sha256": "d6b15565b37b0fd09e266dd00b82eaa9c361ffbf8d0d425556e606ef8c4b3b5d",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/assets/images/zion-icon.png",
       "sha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
-      "width": 1024,
-      "height": 1024,
-      "hasAlpha": false,
-      "colorSpace": "RGB",
-      "compatibilityPaths": [
-        "/app-icon@2x.png",
-        "/app-icon@3x.png"
-      ]
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "byte-identical approved PNG copy"
     },
-    "appIcon2x": {
-      "role": "appIcon",
-      "canonicalPath": "/branding/zion-app-icon@2x.png",
-      "outputPath": "desktop/public/branding/zion-app-icon@2x.png",
-      "aliases": [
-        "desktop/public/app-icon@2x.png"
-      ],
-      "sourceFile": "Logos-sentra-v2-8.png",
-      "format": "png",
-      "sha256": "ce3220c0502d51544d0a393ac4d1a366e7af702e132e96708dffc0f1898fb50f",
-      "width": 2048,
-      "height": 2048,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+      "sha256": "dce25adef22442dfed4a4a182ebd759fcab6df5daf33aa8f2faf3536f65f3a42",
+      "sourceSha256": "dce25adef22442dfed4a4a182ebd759fcab6df5daf33aa8f2faf3536f65f3a42",
+      "transform": "byte-identical approved PNG copy"
     },
-    "appIcon3x": {
-      "role": "appIcon",
-      "canonicalPath": "/branding/zion-app-icon@3x.png",
-      "outputPath": "desktop/public/branding/zion-app-icon@3x.png",
-      "aliases": [
-        "desktop/public/app-icon@3x.png",
-        "web/src/assets/zion-app-icon@3x.png",
-        "web/src/assets/app-icon@3x.png"
-      ],
-      "sourceFile": "Logos-sentra-v2-8.png",
-      "format": "png",
-      "sha256": "b9b1b8cad55b1f42db611296ad6d908442b916c79107b5b811fb3a59e4c3f23f",
-      "width": 3072,
-      "height": 3072,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png",
+      "sha256": "94214fe3f164f254cd165cb8e018cbe7eb4d2212f5e52984bd3205ba839efe78",
+      "sourceSha256": "94214fe3f164f254cd165cb8e018cbe7eb4d2212f5e52984bd3205ba839efe78",
+      "transform": "byte-identical approved PNG copy"
     },
-    "dmgBackground": {
-      "role": "dmgBackground",
-      "canonicalPath": "/branding/sentra-dmg-background-1200x800.png",
-      "outputPath": "desktop/public/branding/sentra-dmg-background-1200x800.png",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-9.png",
-      "format": "png",
-      "sha256": "9a410e738605f7a3ad0a04ccc8df0f87e4875c9634a182768ab509bdad02890f",
-      "width": 1200,
-      "height": 800,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png",
+      "sha256": "a3055474480a4383fe460c787ebf1a476443066e52879481bf472dd68f6e2f83",
+      "sourceSha256": "a3055474480a4383fe460c787ebf1a476443066e52879481bf472dd68f6e2f83",
+      "transform": "byte-identical approved PNG copy"
     },
-    "dmgBackgroundSmall": {
-      "role": "dmgBackground",
-      "canonicalPath": "/branding/sentra-dmg-background-600x400.png",
-      "outputPath": "desktop/public/branding/sentra-dmg-background-600x400.png",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-9.png",
-      "format": "png",
-      "sha256": "7b571fff21fb8028883f6c576eba5bec317e122f94b901d72fc29e0ee6369195",
-      "width": 600,
-      "height": 400,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png",
+      "sha256": "edc6b218820d683b54dfd7f57514886d7a19d6ee09efae9d11614b834ad5d539",
+      "sourceSha256": "edc6b218820d683b54dfd7f57514886d7a19d6ee09efae9d11614b834ad5d539",
+      "transform": "byte-identical approved PNG copy"
     },
-    "sentraV2_10": {
-      "role": "sentraV2",
-      "canonicalPath": "/branding/sentra-v2-10.png",
-      "outputPath": "desktop/public/branding/sentra-v2-10.png",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-10.png",
-      "format": "png",
-      "sha256": "8b171011068555e7a6e89cce1355480ce46dc180df2a1b484117601fe4ab3433",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png",
+      "sha256": "234106d1c67b403150cbed1b077721cd9f4f828dea63cca25ed500d27a17e86e",
+      "sourceSha256": "234106d1c67b403150cbed1b077721cd9f4f828dea63cca25ed500d27a17e86e",
+      "transform": "byte-identical approved PNG copy"
     },
-    "sentraWordmark": {
-      "role": "sentraWordmark",
-      "canonicalPath": "/branding/sentra-wordmark.svg",
-      "outputPath": "desktop/public/branding/sentra-wordmark.svg",
-      "aliases": [
-        "desktop/public/landing/buzz-wordmark.png"
-      ],
-      "sourceFile": "logo-TW-wordmark.png",
-      "format": "svg",
-      "sha256": "6928f865105f6a15b2786ad59d8a0fa8c2f6dcfb921ee35b9699a9c1c273b4a8",
-      "width": 1024,
-      "height": 1024,
-      "hasAlpha": true,
-      "colorSpace": "RGB"
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png",
+      "sha256": "67dc999132867a46cc616567baf263d7dc28f771ebfeffe4015565967ee70192",
+      "sourceSha256": "67dc999132867a46cc616567baf263d7dc28f771ebfeffe4015565967ee70192",
+      "transform": "byte-identical approved PNG copy"
     },
-    "sentraLockup": {
-      "role": "sentraLockup",
-      "canonicalPath": "/branding/sentra-lockup-horizontal.svg",
-      "outputPath": "desktop/public/branding/sentra-lockup-horizontal.svg",
-      "aliases": [],
-      "sourceFile": "logo-TW2-wordmark.png",
-      "format": "svg",
-      "sha256": "fe7a257f666946b064571bcd73700f30ebf33e0bcd5076f47790bda076c9b01d",
-      "width": 1024,
-      "height": 1024,
-      "hasAlpha": true,
-      "colorSpace": "RGB"
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png",
+      "sha256": "85b6b4b759180cd7c3aca9b5a9196cf147865ab7d2ca76b1c6f7dcbc1ef8100e",
+      "sourceSha256": "85b6b4b759180cd7c3aca9b5a9196cf147865ab7d2ca76b1c6f7dcbc1ef8100e",
+      "transform": "byte-identical approved PNG copy"
     },
-    "sentraLockupLight": {
-      "role": "sentraLockupLight",
-      "canonicalPath": "/branding/sentra-lockup-light.svg",
-      "outputPath": "desktop/public/branding/sentra-lockup-light.svg",
-      "aliases": [],
-      "sourceFile": "logo-TW2-wordmark.png",
-      "format": "svg",
-      "sha256": "fe7a257f666946b064571bcd73700f30ebf33e0bcd5076f47790bda076c9b01d",
-      "width": 1024,
-      "height": 1024,
-      "hasAlpha": true,
-      "colorSpace": "RGB"
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png",
+      "sha256": "a3055474480a4383fe460c787ebf1a476443066e52879481bf472dd68f6e2f83",
+      "sourceSha256": "a3055474480a4383fe460c787ebf1a476443066e52879481bf472dd68f6e2f83",
+      "transform": "byte-identical approved PNG copy"
     },
-    "sentraLockupDark": {
-      "role": "sentraLockupDark",
-      "canonicalPath": "/branding/sentra-lockup-dark.svg",
-      "outputPath": "desktop/public/branding/sentra-lockup-dark.svg",
-      "aliases": [],
-      "sourceFile": "logo-TB-wordmark.png",
-      "format": "svg",
-      "sha256": "087a92c1efdaba769e851fc72638f777e8f89adb8530f6661428536ee4b0c9d5",
-      "width": 1024,
-      "height": 1024,
-      "hasAlpha": true,
-      "colorSpace": "RGB"
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png",
+      "sha256": "fdcd3814b5ea249ea4d3c18b67ddd0aec60dd9c467f656cb76180bf288c772ab",
+      "sourceSha256": "fdcd3814b5ea249ea4d3c18b67ddd0aec60dd9c467f656cb76180bf288c772ab",
+      "transform": "byte-identical approved PNG copy"
     },
-    "zionMark": {
-      "role": "mark",
-      "canonicalPath": "/branding/zion-mark.svg",
-      "outputPath": "desktop/public/branding/zion-mark.svg",
-      "aliases": [
-        "desktop/public/buzz.svg",
-        "admin-web/public/zion-mark.svg",
-        "admin-web/public/favicon.svg"
-      ],
-      "sourceFile": "Logos-sentra-v2-2.png",
-      "format": "svg",
-      "sha256": "fd0d912d30cb3b817df0b3167b7c77f6929cfa0d0b8f1407c9b1d6d9e7acd124",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB",
-      "compatibilityPaths": [
-        "/buzz.svg",
-        "/favicon.svg"
-      ]
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png",
+      "sha256": "ae6b3189393b67ebf6b6023c8abfee80925a203bd70b05e8b15ea2a44ace1036",
+      "sourceSha256": "ae6b3189393b67ebf6b6023c8abfee80925a203bd70b05e8b15ea2a44ace1036",
+      "transform": "byte-identical approved PNG copy"
     },
-    "sentraStatusGlyph": {
-      "role": "status",
-      "canonicalPath": "/branding/sentra-status-glyph.svg",
-      "outputPath": "desktop/public/branding/sentra-status-glyph.svg",
-      "aliases": [],
-      "sourceFile": "Logos-sentra-v2-2.png",
-      "format": "svg",
-      "sha256": "11eb0f043a2fa5ae10804d9c6b3f96acc41a8958075852b701f65255e6a0338d",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png",
+      "sha256": "ae6b3189393b67ebf6b6023c8abfee80925a203bd70b05e8b15ea2a44ace1036",
+      "sourceSha256": "ae6b3189393b67ebf6b6023c8abfee80925a203bd70b05e8b15ea2a44ace1036",
+      "transform": "byte-identical approved PNG copy"
+    },
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png",
+      "sha256": "4d740bb3020a6bd25d1554f99a1d216698955481ef1cd2616bd3fedf5251054e",
+      "sourceSha256": "4d740bb3020a6bd25d1554f99a1d216698955481ef1cd2616bd3fedf5251054e",
+      "transform": "byte-identical approved PNG copy"
+    },
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png",
+      "sha256": "83eee3cc349cb400c168f4fd9089562407d68098afafca2ae009ccc1f6c3958a",
+      "sourceSha256": "83eee3cc349cb400c168f4fd9089562407d68098afafca2ae009ccc1f6c3958a",
+      "transform": "byte-identical approved PNG copy"
+    },
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png",
+      "sha256": "c4bf52b1a12a3b2fc916e00ece60effc16ad7dd7f4612a2a6a171df6efb23599",
+      "sourceSha256": "c4bf52b1a12a3b2fc916e00ece60effc16ad7dd7f4612a2a6a171df6efb23599",
+      "transform": "byte-identical approved PNG copy"
+    },
+    {
+      "source": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png",
+      "sha256": "906034e11c2acb64c275ed3280d2d9efbc8fae9c889fabd9f38515145a970067",
+      "sourceSha256": "906034e11c2acb64c275ed3280d2d9efbc8fae9c889fabd9f38515145a970067",
+      "transform": "byte-identical approved PNG copy"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png",
+      "sha256": "5a009e7989d940063255160bf9c6705a51e8b405b28d383acdf9c6f66f85bad2",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png",
+      "sha256": "bc0c2980937efe5b07e9b6a2b1cd8486adeb71a85997cdaf3855835e37f623ee",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png",
+      "sha256": "71dbc7215cad7fafedbcd70f3bb6fb166950d7c7f2b12462e4a3ac889d39f842",
+      "sourceSha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50",
+      "transform": "sips resize of approved Zion PNG to existing platform dimensions"
+    },
+    {
+      "source": "desktop/public/branding/zion-app-icon@3x.png",
+      "targetRepository": "desktopWeb",
+      "target": "public/app-icon.png",
+      "sha256": "b9b1b8cad55b1f42db611296ad6d908442b916c79107b5b811fb3a59e4c3f23f"
+    },
+    {
+      "source": "desktop/src-tauri/icons/32x32.png",
+      "targetRepository": "desktopWeb",
+      "target": "public/favicon.png",
+      "sha256": "0793aeac87727e59e7025e41779cacab098fdd5af936377c32bd29bae6f3da8f"
+    },
+    {
+      "source": "desktop/src-tauri/icons/128x128@2x.png",
+      "targetRepository": "desktopWeb",
+      "target": "public/apple-touch-icon.png",
+      "sha256": "17acca21c46d4da2d591384e5a1777cbc05419943a40b17184c15762de2027bf"
+    },
+    {
+      "source": "desktop/src-tauri/icons/icon.ico",
+      "targetRepository": "desktopWeb",
+      "target": "public/favicon.ico",
+      "sha256": "a2072992205e2fff83a792b00a23bbeb544ea46f6e3417aff9e19ec8c40aa44d"
+    },
+    {
+      "source": "Approved Zion mark paths and loading motion",
+      "targetRepository": "desktopWeb",
+      "target": "public/buzz-mark.svg",
+      "sha256": "4f7619f6711f09269b6ad192eb679aadbe3236c93dba911302d40ace0c6d345a",
+      "transform": "Owner-specified 64x64 Zion paths; loading motion from approved read-only Zion CSS, no source directories imported"
+    },
+    {
+      "source": "Approved Zion mark paths and loading motion",
+      "targetRepository": "desktopWeb",
+      "target": "public/buzz-loading-mark.svg",
+      "sha256": "c5191796daf4e2394b75fc6c6f48adf2508751005f70e44707b3f0823c52145c",
+      "transform": "Owner-specified 64x64 Zion paths; loading motion from approved read-only Zion CSS, no source directories imported"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "web/public/zion-icon.png",
+      "sha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50"
+    },
+    {
+      "source": "mobile/assets/images/zion-icon.png",
+      "targetRepository": "relayMobileCli",
+      "target": "admin-web/public/zion-icon.png",
+      "sha256": "4ea736a6dad74fddcb3ef19690ffaf6e62a5dfb738207d628121cfdc7c6cab50"
     }
-  },
-  "aliasInventory": {
-    "desktop/public/app-icon@2x.png": {
-      "sourceAsset": "appIcon2x",
-      "sourceFile": "Logos-sentra-v2-8.png",
-      "publicPath": "/app-icon@2x.png",
-      "format": "png",
-      "sha256": "ce3220c0502d51544d0a393ac4d1a366e7af702e132e96708dffc0f1898fb50f",
-      "width": 2048,
-      "height": 2048,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "desktop/public/app-icon@3x.png": {
-      "sourceAsset": "appIcon3x",
-      "sourceFile": "Logos-sentra-v2-8.png",
-      "publicPath": "/app-icon@3x.png",
-      "format": "png",
-      "sha256": "b9b1b8cad55b1f42db611296ad6d908442b916c79107b5b811fb3a59e4c3f23f",
-      "width": 3072,
-      "height": 3072,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "web/src/assets/zion-app-icon@3x.png": {
-      "sourceAsset": "appIcon3x",
-      "sourceFile": "Logos-sentra-v2-8.png",
-      "format": "png",
-      "sha256": "b9b1b8cad55b1f42db611296ad6d908442b916c79107b5b811fb3a59e4c3f23f",
-      "width": 3072,
-      "height": 3072,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "web/src/assets/app-icon@3x.png": {
-      "sourceAsset": "appIcon3x",
-      "sourceFile": "Logos-sentra-v2-8.png",
-      "format": "png",
-      "sha256": "b9b1b8cad55b1f42db611296ad6d908442b916c79107b5b811fb3a59e4c3f23f",
-      "width": 3072,
-      "height": 3072,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "desktop/public/landing/buzz-wordmark.png": {
-      "sourceAsset": "sentraWordmark",
-      "sourceFile": "logo-TW-wordmark.png",
-      "publicPath": "/landing/buzz-wordmark.png",
-      "format": "png",
-      "sha256": "9b44ba56ecde2204c2f05c8dcde8274c3618b91ae3ae7a739054a7ff8289e0d6",
-      "width": 1024,
-      "height": 1024,
-      "hasAlpha": true,
-      "colorSpace": "RGB"
-    },
-    "desktop/public/buzz.svg": {
-      "sourceAsset": "zionMark",
-      "sourceFile": "Logos-sentra-v2-2.png",
-      "publicPath": "/buzz.svg",
-      "format": "svg",
-      "sha256": "fd0d912d30cb3b817df0b3167b7c77f6929cfa0d0b8f1407c9b1d6d9e7acd124",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "admin-web/public/zion-mark.svg": {
-      "sourceAsset": "zionMark",
-      "sourceFile": "Logos-sentra-v2-2.png",
-      "publicPath": "/zion-mark.svg",
-      "format": "svg",
-      "sha256": "fd0d912d30cb3b817df0b3167b7c77f6929cfa0d0b8f1407c9b1d6d9e7acd124",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "admin-web/public/favicon.svg": {
-      "sourceAsset": "zionMark",
-      "sourceFile": "Logos-sentra-v2-2.png",
-      "publicPath": "/favicon.svg",
-      "format": "svg",
-      "sha256": "fd0d912d30cb3b817df0b3167b7c77f6929cfa0d0b8f1407c9b1d6d9e7acd124",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    }
-  },
-  "sources": {
-    "Logos-sentra-v2-2.png": {
-      "disposition": "shipped",
-      "relativePath": "Logos-sentra-v2-2.png",
-      "format": "png",
-      "sha256": "c52e77b57c3e24284bd0794fa917da612a3d953a8725eece6fc4798d43a62e6a",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "Logos-sentra-v2-3.png": {
-      "disposition": "shipped",
-      "relativePath": "Logos-sentra-v2-3.png",
-      "format": "png",
-      "sha256": "6af0cd4ab5b72e52e4aa2712e0dae003aaaf2ccef774b95e669a3bc75d3b9cd7",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "Logos-sentra-v2-4.png": {
-      "disposition": "shipped",
-      "relativePath": "Logos-sentra-v2-4.png",
-      "format": "png",
-      "sha256": "f6ef000cad2cc1dddbd68bc86ca93336ae5299e8f1f0c591bb6053f46cd1de45",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "Logos-sentra-v2-5.png": {
-      "disposition": "shipped",
-      "relativePath": "Logos-sentra-v2-5.png",
-      "format": "png",
-      "sha256": "f44dfea9e6e9b423729ac76f47a7366ae19df304da6a77204b81599c8ff9850f",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "Logos-sentra-v2-6.png": {
-      "disposition": "shipped",
-      "relativePath": "Logos-sentra-v2-6.png",
-      "format": "png",
-      "sha256": "9836d450544705316dc4b0bc894b89922b6470d9006835558ad0227e28bce43f",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "Logos-sentra-v2-7.png": {
-      "disposition": "shipped",
-      "relativePath": "Logos-sentra-v2-7.png",
-      "format": "png",
-      "sha256": "88acc7498b4532393b837b53c89cbe3cbf0dde7d5c887ae49ef28c66eb0da16d",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "Logos-sentra-v2-8.png": {
-      "disposition": "shipped",
-      "relativePath": "Logos-sentra-v2-8.png",
-      "format": "png",
-      "sha256": "9dd5bcf31e3b8d531d9e2df38edd3b61fc41cf579541b6fda41713c76b6e5b1b",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "Logos-sentra-v2-9.png": {
-      "disposition": "shipped",
-      "relativePath": "Logos-sentra-v2-9.png",
-      "format": "png",
-      "sha256": "bf47cb14de31ceec35e9e55ec1fb583f1e2c5c03f181dd366ae0d6b4830d0e28",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "Logos-sentra-v2-10.png": {
-      "disposition": "shipped",
-      "relativePath": "Logos-sentra-v2-10.png",
-      "format": "png",
-      "sha256": "8b171011068555e7a6e89cce1355480ce46dc180df2a1b484117601fe4ab3433",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "logo-TW-wordmark.png": {
-      "disposition": "shipped",
-      "relativePath": "transparent -logos/logo-TW-wordmark.png",
-      "format": "png",
-      "sha256": "9b44ba56ecde2204c2f05c8dcde8274c3618b91ae3ae7a739054a7ff8289e0d6",
-      "width": 1024,
-      "height": 1024,
-      "hasAlpha": true,
-      "colorSpace": "RGB"
-    },
-    "logo-TW2-wordmark.png": {
-      "disposition": "shipped",
-      "relativePath": "transparent -logos/logo-TW2-wordmark.png",
-      "format": "png",
-      "sha256": "afee3e2b37ba84cfb8e6d0c9b586a93916356bd7a91b0641707bb0e17486ac64",
-      "width": 1024,
-      "height": 1024,
-      "hasAlpha": true,
-      "colorSpace": "RGB"
-    },
-    "logo-TB-wordmark.png": {
-      "disposition": "shipped",
-      "relativePath": "transparent -logos/logo-TB-wordmark.png",
-      "format": "png",
-      "sha256": "111af13d62c2496724450142d051b060caae63c3bd4f04d6e39aa2085400bedb",
-      "width": 1024,
-      "height": 1024,
-      "hasAlpha": true,
-      "colorSpace": "RGB"
-    },
-    "Logos-sentra-v2-1.png": {
-      "disposition": "reference-only",
-      "relativePath": "Logos-sentra-v2-1.png",
-      "format": "png",
-      "sha256": "6ea0657ae83db6980ff107a8fc0c3c4d051769fdd288aa83b307dfbc893d7550",
-      "width": 1254,
-      "height": 1254,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "sentra-agent-ARQ-and Agents.png": {
-      "disposition": "reference-only",
-      "relativePath": "sentra-agent-ARQ-and Agents.png",
-      "format": "png",
-      "sha256": "3ebee76d004961e4b3d0b4822f3dc4af0cb4ed53c8d6e71ec092af8ea22666b1",
-      "width": 1536,
-      "height": 1024,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    },
-    "sentra-logo-branding -jul-2026.png": {
-      "disposition": "reference-only",
-      "relativePath": "sentra-logo-branding -jul-2026.png",
-      "format": "png",
-      "sha256": "372a8039d93f0ed94709903e5771da87eb21120c97e6629acb1e1b05702d2ddd",
-      "width": 1210,
-      "height": 1300,
-      "hasAlpha": false,
-      "colorSpace": "RGB"
-    }
-  },
-  "motion": {
-    "frameSourcePolicy": "dedicated-frame-or-code-native",
-    "variants": [
-      "loader",
-      "onboarding",
-      "liveness",
-      "pairing",
-      "agent-entrance"
-    ],
-    "loader": {
-      "durationMs": 1800,
-      "loop": true,
-      "mode": "code-native",
-      "reducedMotion": "static"
-    },
-    "onboarding": {
-      "durationMs": 900,
-      "settleMs": 2400,
-      "loop": false,
-      "mode": "code-native",
-      "reducedMotion": "settled"
-    },
-    "liveness": {
-      "durationMs": 1400,
-      "loop": true,
-      "mode": "code-native",
-      "reducedMotion": "static"
-    },
-    "pairing": {
-      "durationMs": 1800,
-      "loop": false,
-      "mode": "code-native",
-      "reducedMotion": "settled"
-    },
-    "agent-entrance": {
-      "durationMs": 900,
-      "staggerMs": 320,
-      "loop": false,
-      "mode": "code-native",
-      "reducedMotion": "settled"
-    }
-  }
+  ],
+  "pendingEvidence": [
+    "Dependency findings and inherited suppressions need review before production",
+    "Owner visual acceptance of the Zion installer replacement before packaging",
+    "Fresh candidate server runtime and client/agent acceptance",
+    "Final source checkpoints, signed artifacts and physical-device acceptance"
+  ]
 }

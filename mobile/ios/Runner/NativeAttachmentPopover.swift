@@ -19,10 +19,8 @@ final class NativeAttachmentPopoverViewController:
 
   private let channel: FlutterMethodChannel
   private let expandedWidth: CGFloat
-  private let menuSize = CGSize(width: 176, height: 208)
-  private let expandedHeight: CGFloat = 372
-  private let expandedHorizontalOffset: CGFloat = 10
-  private let expandedVerticalOffset: CGFloat = 40
+  private let maximumMenuHeight: CGFloat
+  private let expandedHeight = NativeAttachmentMenuLayout.maximumHeight
   private let contentHost = UIView()
   private let cameraSession = AVCaptureSession()
   private let cameraOutput = AVCapturePhotoOutput()
@@ -50,14 +48,31 @@ final class NativeAttachmentPopoverViewController:
   private var activeCameraCaptureID: Int64?
   private var isFinishing = false
   private var didNotifyDismissal = false
+  private var keyboardDismissalOffset: CGFloat = 0
+  var menuStackHeightConstraint: NSLayoutConstraint?
 
   var onDismiss: (() -> Void)?
 
-  init(channel: FlutterMethodChannel, expandedWidth: CGFloat) {
+  private var menuSize: CGSize {
+    NativeAttachmentMenuLayout.size(
+      compatibleWith: traitCollection,
+      maximumHeight: maximumMenuHeight
+    )
+  }
+
+  init(
+    channel: FlutterMethodChannel,
+    expandedWidth: CGFloat,
+    maximumMenuHeight: CGFloat = NativeAttachmentMenuLayout.maximumHeight
+  ) {
     self.channel = channel
     self.expandedWidth = expandedWidth
+    self.maximumMenuHeight = maximumMenuHeight
     super.init(nibName: nil, bundle: nil)
-    preferredContentSize = menuSize
+    preferredContentSize = NativeAttachmentMenuLayout.size(
+      compatibleWith: .current,
+      maximumHeight: maximumMenuHeight
+    )
   }
 
   @available(*, unavailable)
@@ -68,17 +83,29 @@ final class NativeAttachmentPopoverViewController:
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .clear
-    view.layer.cornerRadius = 22
+    view.layer.cornerRadius = NativeAttachmentPopoverStyle.cornerRadius
     view.layer.cornerCurve = .continuous
-    view.clipsToBounds = true
+    view.layer.borderColor = UIColor.black.withAlphaComponent(0.04).cgColor
+    view.layer.borderWidth = NativeAttachmentPopoverStyle.borderWidth
+    view.layer.shadowColor = UIColor.black.cgColor
+    view.layer.shadowOpacity = NativeAttachmentPopoverStyle.shadowOpacity
+    view.layer.shadowRadius = NativeAttachmentPopoverStyle.shadowRadius
+    view.layer.shadowOffset = NativeAttachmentPopoverStyle.shadowOffset
+    view.clipsToBounds = false
 
     let glassEffect = UIGlassEffect(style: .regular)
     glassEffect.isInteractive = true
     let glassView = UIVisualEffectView(effect: glassEffect)
     glassView.translatesAutoresizingMaskIntoConstraints = false
+    glassView.layer.cornerRadius = NativeAttachmentPopoverStyle.cornerRadius
+    glassView.layer.cornerCurve = .continuous
+    glassView.clipsToBounds = true
     view.addSubview(glassView)
 
     contentHost.translatesAutoresizingMaskIntoConstraints = false
+    contentHost.layer.cornerRadius = NativeAttachmentPopoverStyle.cornerRadius
+    contentHost.layer.cornerCurve = .continuous
+    contentHost.clipsToBounds = true
     view.addSubview(contentHost)
     NSLayoutConstraint.activate([
       glassView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -97,6 +124,11 @@ final class NativeAttachmentPopoverViewController:
 
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
+    view.layer.shadowPath =
+      UIBezierPath(
+        roundedRect: view.bounds,
+        cornerRadius: NativeAttachmentPopoverStyle.cornerRadius
+      ).cgPath
     cameraPreviewLayer?.frame = cameraPreviewView?.bounds ?? .zero
   }
 
@@ -104,6 +136,20 @@ final class NativeAttachmentPopoverViewController:
     super.viewWillDisappear(animated)
     invalidateCameraCapture()
     stopCamera()
+  }
+
+  override func traitCollectionDidChange(
+    _ previousTraitCollection: UITraitCollection?
+  ) {
+    super.traitCollectionDidChange(previousTraitCollection)
+    guard
+      previousTraitCollection?.preferredContentSizeCategory
+        != traitCollection.preferredContentSizeCategory
+    else {
+      return
+    }
+
+    updateMenuLayout()
   }
 
   func adaptivePresentationStyle(
@@ -118,59 +164,19 @@ final class NativeAttachmentPopoverViewController:
     notifyDismissalIfNeeded()
   }
 
-  private func makeMenuView() -> UIView {
-    let container = UIView()
-    container.translatesAutoresizingMaskIntoConstraints = false
-
-    let stack = UIStackView()
-    stack.axis = .vertical
-    stack.distribution = .fillEqually
-    stack.translatesAutoresizingMaskIntoConstraints = false
-    container.addSubview(stack)
-    NSLayoutConstraint.activate([
-      stack.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-      stack.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-      stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
-      stack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -8),
-    ])
-
-    stack.addArrangedSubview(
-      makeNativeAttachmentMenuButton(
-        title: "Camera",
-        symbol: "camera",
-        action: UIAction { [weak self] _ in self?.showCamera() }
+  private func updateMenuLayout() {
+    menuStackHeightConstraint?.constant =
+      NativeAttachmentMenuLayout.itemsHeight(
+        compatibleWith: traitCollection
       )
-    )
-    stack.addArrangedSubview(
-      makeNativeAttachmentMenuButton(
-        title: "Photos",
-        symbol: "photo.on.rectangle.angled",
-        action: UIAction { [weak self] _ in self?.showPhotos() }
-      )
-    )
-    stack.addArrangedSubview(
-      makeNativeAttachmentMenuButton(
-        title: "Video",
-        symbol: "video",
-        action: UIAction { [weak self] _ in
-          self?.finish(method: "pickVideo")
-        }
-      )
-    )
-    stack.addArrangedSubview(
-      makeNativeAttachmentMenuButton(
-        title: "Files",
-        symbol: "doc",
-        action: UIAction { [weak self] _ in
-          self?.finish(method: "pickFiles")
-        }
-      )
-    )
-    return container
+    if surface == .menu {
+      preferredContentSize = menuSize
+    }
   }
 
-  private func showPhotos() {
+  func showPhotos() {
     guard surface != .photos else { return }
+    prepareForExpandedSurface()
     stopCamera()
 
     var configuration = PHPickerConfiguration(photoLibrary: .shared())
@@ -192,16 +198,14 @@ final class NativeAttachmentPopoverViewController:
 
     let container = UIView()
     container.backgroundColor = .clear
+    container.clipsToBounds = true
     addChild(picker)
     picker.view.translatesAutoresizingMaskIntoConstraints = false
     container.addSubview(picker.view)
     NSLayoutConstraint.activate([
       picker.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
       picker.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-      picker.view.topAnchor.constraint(
-        equalTo: container.topAnchor,
-        constant: -8
-      ),
+      picker.view.topAnchor.constraint(equalTo: container.topAnchor),
       picker.view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
     ])
     picker.didMove(toParent: self)
@@ -211,14 +215,14 @@ final class NativeAttachmentPopoverViewController:
       title: nil,
       symbol: "chevron.left",
       accessibilityLabel: "Back to attachment options",
-      action: UIAction { [weak self] _ in self?.showMenu() }
+      action: { [weak self] in self?.showMenu() }
     )
     let actionButton = makeGlassControl(
       title: "All Photos",
       symbol: nil,
       accessibilityLabel: "All Photos",
       prominent: true,
-      action: UIAction { [weak self] _ in self?.performPhotoAction() }
+      action: { [weak self] in self?.performPhotoAction() }
     )
     photoActionButton = actionButton
     addBottomControls(
@@ -230,8 +234,9 @@ final class NativeAttachmentPopoverViewController:
     transition(to: .photos, content: container)
   }
 
-  private func showCamera() {
+  func showCamera() {
     guard surface != .camera else { return }
+    prepareForExpandedSurface()
     removePhotoPicker()
 
     let container = UIView()
@@ -263,7 +268,7 @@ final class NativeAttachmentPopoverViewController:
       title: nil,
       symbol: "chevron.left",
       accessibilityLabel: "Back to attachment options",
-      action: UIAction { [weak self] _ in self?.showMenu() }
+      action: { [weak self] in self?.showMenu() }
     )
     let captureButton = makeCameraCaptureButton()
     cameraCaptureButton = captureButton
@@ -288,9 +293,26 @@ final class NativeAttachmentPopoverViewController:
     stopCamera()
 
     let menu = makeMenuView()
-    transition(to: .menu, content: menu) { [weak self] in
-      self?.removePhotoPicker()
+    transition(
+      to: .menu,
+      content: menu,
+      completion: { [weak self] in
+        self?.removePhotoPicker()
+      }
+    )
+  }
+
+  private func prepareForExpandedSurface() {
+    if let sourceHost = popoverPresentationController?.sourceView?.superview {
+      keyboardDismissalOffset = max(
+        keyboardDismissalOffset,
+        NativeAttachmentExpandedSurfaceBehavior.keyboardOverlap(
+          containerBounds: sourceHost.bounds,
+          keyboardLayoutFrame: sourceHost.keyboardLayoutGuide.layoutFrame
+        )
+      )
     }
+    NativeAttachmentExpandedSurfaceBehavior.dismissKeyboard(in: view.window)
   }
 
   private func installContent(_ content: UIView) {
@@ -327,87 +349,66 @@ final class NativeAttachmentPopoverViewController:
     ])
     contentHost.layoutIfNeeded()
 
-    let direction: CGFloat = isExpanding ? 34 : -34
-    nextView.alpha = UIAccessibility.isReduceMotionEnabled ? 0 : 0.01
-    nextView.transform =
-      UIAccessibility.isReduceMotionEnabled
-      ? .identity
-      : CGAffineTransform(translationX: direction, y: 0).scaledBy(
-        x: 0.97,
-        y: 0.97
-      )
+    let shouldAnimate = !UIAccessibility.isReduceMotionEnabled
+    // Do not expose embedded surfaces while the popover changes size. In
+    // particular, PHPicker visibly reflows its grid from the compact menu
+    // width to the expanded width if it is allowed to paint during this step.
+    nextView.alpha = 0
     visibleContentView = nextView
     surface = nextSurface
 
-    let duration = UIAccessibility.isReduceMotionEnabled ? 0.16 : 0.36
+    let duration = shouldAnimate ? (isExpanding ? 0.24 : 0.2) : 0
     UIView.animate(
       withDuration: duration,
       delay: 0,
-      usingSpringWithDamping: 0.86,
-      initialSpringVelocity: 0.18,
-      options: [.beginFromCurrentState, .allowUserInteraction]
+      options: [
+        .beginFromCurrentState,
+        .allowUserInteraction,
+        .curveEaseInOut,
+      ]
     ) {
       self.preferredContentSize = targetSize
       if let popover = self.popoverPresentationController,
         let sourceView = popover.sourceView
       {
-        popover.sourceRect = sourceView.bounds.offsetBy(
-          dx: isExpanding ? self.expandedHorizontalOffset : 0,
-          dy: isExpanding ? self.expandedVerticalOffset : 0
+        popover.sourceRect = NativeAttachmentPopoverAnchorLayout.sourceRect(
+          anchorBounds: sourceView.bounds,
+          keyboardDismissalOffset: self.keyboardDismissalOffset,
+          isExpanded: isExpanding
         )
       }
       previousView?.alpha = 0
-      previousView?.transform =
-        UIAccessibility.isReduceMotionEnabled
-        ? .identity
-        : CGAffineTransform(translationX: -direction, y: 0).scaledBy(
-          x: 0.97,
-          y: 0.97
-        )
-      nextView.alpha = 1
-      nextView.transform = .identity
       self.view.layoutIfNeeded()
     } completion: { _ in
       previousView?.removeFromSuperview()
-      previousView?.transform = .identity
-      completion?()
-    }
-  }
+      self.view.layoutIfNeeded()
 
-  private func makeGlassControl(
-    title: String?,
-    symbol: String?,
-    accessibilityLabel: String,
-    prominent: Bool = false,
-    action: UIAction
-  ) -> UIButton {
-    var configuration =
-      prominent
-      ? UIButton.Configuration.prominentGlass()
-      : UIButton.Configuration.glass()
-    configuration.title = title
-    if prominent {
-      configuration.baseBackgroundColor = .black
+      let reveal = {
+        UIView.animate(
+          withDuration: shouldAnimate ? 0.14 : 0,
+          delay: 0,
+          options: [
+            .beginFromCurrentState,
+            .allowUserInteraction,
+            .curveEaseOut,
+          ]
+        ) {
+          nextView.alpha = 1
+        } completion: { _ in
+          completion?()
+        }
+      }
+
+      reveal()
     }
-    if let symbol {
-      configuration.image = UIImage(systemName: symbol)
-    }
-    configuration.imagePadding = 8
-    configuration.baseForegroundColor = .white
-    configuration.contentInsets = NSDirectionalEdgeInsets(
-      top: 11,
-      leading: 15,
-      bottom: 11,
-      trailing: 15
-    )
-    let button = UIButton(configuration: configuration, primaryAction: action)
-    button.accessibilityLabel = accessibilityLabel
-    return button
   }
 
   private func makeCameraCaptureButton() -> UIButton {
     let button = UIButton(
-      primaryAction: UIAction { [weak self] _ in self?.capturePhoto() }
+      primaryAction: UIAction { [weak self] _ in
+        UISelectionFeedbackGenerator().selectionChanged()
+        self?.capturePhoto()
+      }
     )
     button.accessibilityLabel = "Take photo"
     button.translatesAutoresizingMaskIntoConstraints = false
@@ -908,28 +909,37 @@ final class NativeAttachmentPopoverViewController:
     photoPickerViewController = nil
   }
 
-  private func finish(
+  func finish(
     method: String,
     arguments: Any? = nil,
-    temporaryPaths: [String] = []
+    temporaryPaths: [String] = [],
+    notifyBeforeDismissal: Bool = false
   ) {
     guard !isFinishing else {
       Self.removeTemporaryFiles(temporaryPaths)
       return
     }
+    NativeAttachmentExpandedSurfaceBehavior.dismissKeyboard(in: view.window)
     isFinishing = true
     view.isUserInteractionEnabled = false
     selectionGeneration += 1
     selectionTask?.cancel()
     selectionTask = nil
     stopCamera()
+    if notifyBeforeDismissal {
+      channel.invokeMethod(method, arguments: arguments) { _ in
+        Self.removeTemporaryFiles(temporaryPaths)
+      }
+    }
     dismiss(animated: true) { [weak self] in
       guard let self else {
         Self.removeTemporaryFiles(temporaryPaths)
         return
       }
-      self.channel.invokeMethod(method, arguments: arguments) { _ in
-        Self.removeTemporaryFiles(temporaryPaths)
+      if !notifyBeforeDismissal {
+        self.channel.invokeMethod(method, arguments: arguments) { _ in
+          Self.removeTemporaryFiles(temporaryPaths)
+        }
       }
       self.notifyDismissalIfNeeded()
     }

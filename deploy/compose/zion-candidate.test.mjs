@@ -238,26 +238,25 @@ test("preflight rejects old storage, public exposure and bypassed isolation in r
   }
 });
 
-test("optional gateway is separate, uses its own fresh PG17 and never enables relay push", async () => {
+test("optional gateway keeps separate storage and requires explicit relay push opt-in", async () => {
   assert.ok(
     existsSync(`${root}${gateway}`),
     "separate gateway template must exist",
   );
-  const document = config(
-    {
-      ZION_GATEWAY_IMAGE: `example.invalid/zion-push@sha256:${"4".repeat(64)}`,
-      ZION_PUSH_POSTGRES_PASSWORD: "synthetic-push-pg-only",
-      ZION_PUSH_RUNTIME_DATABASE_URL:
-        "postgres://gateway_runtime:synthetic@push-postgres:5432/buzz_push",
-      ZION_PUSH_GRANT_KEYS: "synthetic-grant-placeholder",
-      ZION_PUSH_TOKEN_KEYS: "synthetic-token-placeholder",
-      ZION_PUSH_APP_ID: "EXAMPLE.com.example.zion",
-      ZION_PUSH_APNS_TOPIC: "com.example.zion",
-      ZION_PUSH_APNS_CERT_FILE: "/nonexistent/synthetic-apns.pem",
-      ZION_PUSH_ATTEST_ROOT_FILE: "/nonexistent/synthetic-attest.pem",
-    },
-    [gateway],
-  );
+  const gatewayEnv = {
+    ZION_GATEWAY_IMAGE: `example.invalid/zion-push@sha256:${"4".repeat(64)}`,
+    ZION_PUSH_POSTGRES_PASSWORD: "synthetic-push-pg-only",
+    ZION_PUSH_RUNTIME_DATABASE_URL:
+      "postgres://gateway_runtime:synthetic@push-postgres:5432/buzz_push",
+    ZION_PUSH_GRANT_KEYS: "synthetic-grant-placeholder",
+    ZION_PUSH_TOKEN_KEYS: "synthetic-token-placeholder",
+    ZION_PUSH_APP_ID: "EXAMPLE.com.example.zion",
+    ZION_PUSH_APNS_TOPIC: "com.example.zion",
+    ZION_PUSH_APNS_ENVIRONMENT: "sandbox",
+    ZION_PUSH_APNS_CERT_FILE: "/nonexistent/synthetic-apns.pem",
+    ZION_PUSH_ATTEST_ROOT_FILE: "/nonexistent/synthetic-attest.pem",
+  };
+  const document = config(gatewayEnv, [gateway]);
   assert.equal(
     document.services["push-postgres"].image,
     env.ZION_POSTGRES_IMAGE,
@@ -267,11 +266,32 @@ test("optional gateway is separate, uses its own fresh PG17 and never enables re
     "postgres://gateway_runtime:synthetic@push-postgres:5432/buzz_push",
   );
   assert.equal(document.services["push-gateway"].ports[0].published, "23360");
+  assert.equal(
+    document.services["push-gateway"].environment
+      .BUZZ_PUSH_APP_ATTEST_ENVIRONMENT,
+    "production",
+  );
+  assert.equal(
+    document.services["push-gateway"].environment.BUZZ_PUSH_APNS_ENVIRONMENT,
+    "sandbox",
+  );
   assert.equal(document.services.relay.environment.BUZZ_PUSH_ENABLED, "false");
   assert.equal(document.services["push-postgres"].ports, undefined);
   assert.equal(Object.keys(document.volumes).length, 5);
   validateCandidateShape(document);
   await validate(document);
+  document.services["push-gateway"].environment.BUZZ_PUSH_APNS_ENVIRONMENT =
+    "invalid";
+  await assert.rejects(validate(document));
+  const enabled = config(
+    { ...gatewayEnv, ZION_CANDIDATE_PUSH_ENABLED: "true" },
+    [gateway],
+  );
+  assert.equal(enabled.services.relay.environment.BUZZ_PUSH_ENABLED, "true");
+  await validate(enabled);
+  enabled.services.relay.environment.BUZZ_PUSH_GATEWAY_DELIVERY_URL =
+    "http://other-gateway:8080/v1/deliveries/apns";
+  await assert.rejects(validate(enabled));
 });
 
 test("read-only preflight CLI refuses unsafe config without printing credentials", () => {

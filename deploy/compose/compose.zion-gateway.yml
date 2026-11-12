@@ -32,7 +32,7 @@ services:
       BUZZ_PUSH_APP_ATTEST_APP_ID: ${ZION_PUSH_APP_ID:?supply the exact Apple TEAMID.bundle-id}
       BUZZ_PUSH_APNS_TOPIC: ${ZION_PUSH_APNS_TOPIC:?supply the exact signed app bundle-id}
       BUZZ_PUSH_APP_ATTEST_ENVIRONMENT: production
-      BUZZ_PUSH_APNS_ENVIRONMENT: production
+      BUZZ_PUSH_APNS_ENVIRONMENT: ${ZION_PUSH_APNS_ENVIRONMENT:?match the signed iPhone APNs entitlement (sandbox for development, production for distribution)}
       BUZZ_PUSH_APNS_CERT_PATH: /run/secrets/zion-push-apns
       BUZZ_PUSH_APP_ATTEST_ROOT_CERT_PATH: /run/secrets/zion-push-attest-root
     secrets: [zion-push-apns, zion-push-attest-root]

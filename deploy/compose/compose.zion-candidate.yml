@@ -21,7 +21,8 @@ services:
       BUZZ_REQUIRE_RELAY_MEMBERSHIP: "true"
       BUZZ_ALLOW_NIP_OA_AUTH: "true"
       BUZZ_AUTO_MIGRATE: "true"
-      BUZZ_PUSH_ENABLED: "false"
+      BUZZ_PUSH_ENABLED: ${ZION_CANDIDATE_PUSH_ENABLED:-false}
+      BUZZ_PUSH_GATEWAY_DELIVERY_URL: http://push-gateway:8080/v1/deliveries/apns
       BUZZ_PAIRING_RELAY_URL: ws://127.0.0.1:23350
     ports: !override
       - "127.0.0.1:23300:3000"

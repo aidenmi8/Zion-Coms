@@ -93,11 +93,21 @@ export function validateCandidate(config) {
     assert.match(services[name].image, pg17, "PostgreSQL 17 digest required");
   }
   const relay = services.relay.environment;
-  assert.equal(
-    relay.BUZZ_PUSH_ENABLED,
-    "false",
-    "relay push needs separate approval",
+  assert.ok(
+    ["false", "true"].includes(relay.BUZZ_PUSH_ENABLED),
+    "relay push must be an explicit boolean",
   );
+  if (relay.BUZZ_PUSH_ENABLED === "true") {
+    assert.ok(
+      services["push-gateway"],
+      "relay push requires candidate gateway",
+    );
+    assert.equal(
+      relay.BUZZ_PUSH_GATEWAY_DELIVERY_URL,
+      "http://push-gateway:8080/v1/deliveries/apns",
+      "relay push must target only its isolated gateway",
+    );
+  }
   for (const key of [
     "BUZZ_REQUIRE_AUTH_TOKEN",
     "BUZZ_REQUIRE_RELAY_MEMBERSHIP",
@@ -119,7 +129,17 @@ export function validateCandidate(config) {
   assert.equal(relay.BUZZ_S3_ENDPOINT, "http://minio:9000");
   assert.equal(services.pairing.image, services.relay.image);
   if (services["push-gateway"]) {
-    const pushDb = new URL(services["push-gateway"].environment.DATABASE_URL);
+    const pushEnv = services["push-gateway"].environment;
+    assert.equal(
+      pushEnv.BUZZ_PUSH_APP_ATTEST_ENVIRONMENT,
+      "production",
+      "ordinary gateway image requires production App Attest",
+    );
+    assert.ok(
+      ["sandbox", "production"].includes(pushEnv.BUZZ_PUSH_APNS_ENVIRONMENT),
+      "APNs environment must match the signed iPhone entitlement",
+    );
+    const pushDb = new URL(pushEnv.DATABASE_URL);
     assert.equal(
       pushDb.hostname,
       "push-postgres",

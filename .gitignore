@@ -3,6 +3,10 @@
 /dist/
 /admin-web/dist/
 
+# Python cache
+__pycache__/
+*.pyc
+
 # lefthook-generated hook scripts (machine-specific)
 .hooks/
 
@@ -63,14 +67,8 @@ identity.key
 # Claude Code worktrees
 .claude/worktrees/
 
-# Local Codex worktrees
-.worktrees/
-
 # mesh-llm build cache
 .cache/
 
 # Helm dependency tarballs — regenerable from Chart.lock via `helm dependency build`
 deploy/charts/*/charts/*.tgz
-
-# local pnpm store (build cache)
-.pnpm-store/

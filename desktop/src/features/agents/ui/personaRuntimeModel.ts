@@ -1,3 +1,11 @@
+import { type EffortOptions, isSavableEffort } from "./effortPicker";
+import type {
+  ManagedAgent,
+  RespondToMode,
+  UpdateManagedAgentInput,
+} from "@/shared/api/types";
+import { runtimeSupportsLlmProviderSelection } from "./agentConfigOptions";
+
 /** Runtime provider-capability tri-state used by the submit path. */
 export type ProviderRuntimeCapability = "capable" | "locked" | "unknown";
 
@@ -88,6 +96,41 @@ export function resolveAgentCommandUpdate(input: {
     return pinnedCommand;
   }
   return undefined;
+}
+
+/**
+ * Decide whether Save should persist the effort picker's selection, and with
+ * what value. Effort is embedded in the locked `update_managed_agent` payload
+ * (PR #4625) — this runs only inside the submit path, so Cancel and a failed
+ * Save never reach it, and no write is dispatched independently of the dialog
+ * outcome.
+ *
+ * `inheritTransition` is the pin→inherit case (the empty-command sentinel
+ * `resolveAgentCommandUpdate` returns). The locked `update_managed_agent` save
+ * already clears the record effort column AND its env aliases on that
+ * transition; re-persisting the picker value here would restore the very pin
+ * the transition just cleared — the r8 race. So the transition suppresses the
+ * effort write entirely, regardless of the picked value.
+ *
+ * Otherwise persist only a real change: an unchanged selection is a no-op, so
+ * a name-only edit never rewrites the effort column. A level the model being
+ * saved doesn't offer (`choices`, e.g. after switching to Haiku) is dropped;
+ * while that model is still unknown the pick is kept.
+ */
+export function resolveEffortSubmission(input: {
+  effortLevel: string | null;
+  originalEffortLevel: string | null;
+  inheritTransition: boolean;
+  choices: EffortOptions;
+}): { persist: boolean; level: string | null } {
+  if (
+    input.inheritTransition ||
+    input.effortLevel === input.originalEffortLevel ||
+    !isSavableEffort(input.effortLevel, input.choices)
+  ) {
+    return { persist: false, level: null };
+  }
+  return { persist: true, level: input.effortLevel };
 }
 
 /**
@@ -300,4 +343,105 @@ export function envVarsEqual(
     aKeys.length === Object.keys(b).length &&
     aKeys.every((key) => a[key] === b[key])
   );
+}
+
+type EditAgentSnapshot = Pick<
+  ManagedAgent,
+  | "pubkey"
+  | "name"
+  | "acpCommand"
+  | "agentArgs"
+  | "parallelism"
+  | "systemPrompt"
+  | "model"
+  | "provider"
+  | "envVars"
+  | "respondTo"
+  | "respondToAllowlist"
+>;
+
+/** Build the locked edit payload from the same inherited snapshot Save validates. */
+export function buildEditAgentUpdateInput(draft: {
+  agent: EditAgentSnapshot;
+  name: string;
+  acpCommand: string;
+  agentCommandUpdate: string | undefined;
+  inheritHarness: boolean;
+  agentArgs: string;
+  parallelism: string;
+  systemPrompt: string;
+  linkedPersona: boolean;
+  inheritedSubmission: ReturnType<typeof resolveInheritedRuntimeSubmission>;
+  prospectiveRuntimeId: string;
+  respondTo: RespondToMode;
+  respondToAllowlist: string[];
+}): UpdateManagedAgentInput {
+  const { agent } = draft;
+  const parsedParallelism = Number.parseInt(draft.parallelism, 10);
+  const parsedArgs = draft.agentArgs
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+  // Classify by runtime id, not a possibly unloaded catalog entry. Unknown
+  // runtimes omit provider rather than clearing an existing saved choice.
+  const providerRuntimeCapability = resolveRuntimeProviderCapability(
+    draft.prospectiveRuntimeId,
+    runtimeSupportsLlmProviderSelection(draft.prospectiveRuntimeId),
+  );
+  const submitProvider = draft.inheritedSubmission.provider;
+  const submitEnvVars = draft.inheritedSubmission.envVars;
+
+  return {
+    pubkey: agent.pubkey,
+    name: draft.name.trim() !== agent.name ? draft.name.trim() : undefined,
+    // The stored legacy relay pin is intentionally never submitted.
+    acpCommand:
+      draft.acpCommand.trim() !== agent.acpCommand
+        ? draft.acpCommand.trim()
+        : undefined,
+    agentCommand: draft.agentCommandUpdate,
+    harnessOverride:
+      draft.agentCommandUpdate != null ? !draft.inheritHarness : undefined,
+    agentArgs:
+      parsedArgs.join(",") !== agent.agentArgs.join(",")
+        ? parsedArgs
+        : undefined,
+    parallelism:
+      parsedParallelism > 0 && parsedParallelism !== agent.parallelism
+        ? parsedParallelism
+        : undefined,
+    // Linked instances defer these fields to their definition.
+    systemPrompt: draft.linkedPersona
+      ? undefined
+      : (draft.systemPrompt.trim() || null) !== agent.systemPrompt
+        ? draft.systemPrompt.trim() || null
+        : undefined,
+    model: draft.linkedPersona
+      ? undefined
+      : draft.inheritedSubmission.model !== (agent.model ?? null)
+        ? draft.inheritedSubmission.model
+        : undefined,
+    provider: draft.linkedPersona
+      ? undefined
+      : providerRuntimeCapability === "capable"
+        ? submitProvider !== (agent.provider ?? null)
+          ? submitProvider
+          : undefined
+        : providerRuntimeCapability === "locked"
+          ? (agent.provider ?? null) !== null
+            ? null
+            : undefined
+          : undefined,
+    envVars: envVarsEqual(submitEnvVars, agent.envVars)
+      ? undefined
+      : submitEnvVars,
+    respondTo:
+      draft.respondTo !== agent.respondTo ? draft.respondTo : undefined,
+    // An inactive allowlist remains in local form state but is not sent.
+    respondToAllowlist:
+      draft.respondTo === "allowlist" &&
+      draft.respondToAllowlist.join(",") !== agent.respondToAllowlist.join(",")
+        ? draft.respondToAllowlist
+        : undefined,
+  };
 }

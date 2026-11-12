@@ -1,19 +1,20 @@
+import { BeeField } from "./BeeField";
+import "./invite-page.css";
+import { InviteCommunity } from "./InviteCommunity";
 import { claimInviteInBrowser } from "@/features/invite/invite-api";
-import {
-  BUZZ_RELEASES_URL,
-  type BuzzDownloadPlatform,
-  detectBuzzDownloadPlatform,
-  resolveBuzzDownloadUrlForPlatform,
-} from "@/shared/lib/buzz-download";
+import { detectBuzzDownloadPlatform } from "@/shared/lib/buzz-download";
 import { hasNip07Provider } from "@/shared/lib/nostr-signer";
 import { relayWsUrl } from "@/shared/lib/relay-url";
 import { Button } from "@/shared/ui/button";
-import { ZionBrandMotion } from "@/shared/ui/zion-brand/ZionBrandMotion";
 import * as React from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { InviteJoinPolicyNotice } from "./InviteJoinPolicyNotice";
+
+// Release gate: verify the published Zion RC's actual artifact before public
+// cutover or enabling direct installers. Never label an upstream Buzz artifact Zion.
+const ZION_RELEASES_URL = "https://github.com/aidenmi8/Zion-Coms/releases";
 
 type JoinPolicy = {
   terms_markdown?: string;
@@ -26,6 +27,12 @@ type PolicyDocument = { title: string; markdown: string };
 
 /** Convert relay invite sentinels into user-facing recovery guidance. */
 function inviteClaimErrorMessage(message: string): string {
+  if (message.includes("invite_restricted")) {
+    return "This account, or the account that owns it, is restricted in this community. Contact a community administrator. If the restriction is temporary, try again after it ends.";
+  }
+  if (message.includes("invite_owner_mismatch")) {
+    return "This account does not match its recorded owner. Use the correct account or owner identity to join this community.";
+  }
   if (message.includes("invite_exhausted")) {
     return "This invite has reached its use limit. Ask for a new invite.";
   }
@@ -53,9 +60,6 @@ export function InvitePage({ code }: { code: string }) {
   const [browserJoinError, setBrowserJoinError] = React.useState<string | null>(
     null,
   );
-  const [downloadUrl, setDownloadUrl] = React.useState<string>();
-  const [downloadLookupComplete, setDownloadLookupComplete] =
-    React.useState(false);
   const [needsMacChoice, setNeedsMacChoice] = React.useState(false);
   const [showMacChoice, setShowMacChoice] = React.useState(false);
   const [choosingMacDownload, setChoosingMacDownload] = React.useState(false);
@@ -64,32 +68,14 @@ export function InvitePage({ code }: { code: string }) {
 
   React.useEffect(() => {
     let active = true;
-    detectBuzzDownloadPlatform(navigator).then(async (platform) => {
+    detectBuzzDownloadPlatform(navigator).then((platform) => {
       if (!active) return;
       if (
         platform.operatingSystem === "macos" &&
-        platform.architecture === "unknown"
+        platform.architecture !== "arm64"
       ) {
-        const [arm64Url, x64Url] = await Promise.all([
-          resolveBuzzDownloadUrlForPlatform({
-            operatingSystem: "macos",
-            architecture: "arm64",
-          }),
-          resolveBuzzDownloadUrlForPlatform({
-            operatingSystem: "macos",
-            architecture: "x64",
-          }),
-        ]);
-        if (!active) return;
-        setNeedsMacChoice(Boolean(arm64Url || x64Url));
-        setDownloadUrl(arm64Url ?? x64Url);
-        setDownloadLookupComplete(true);
+        setNeedsMacChoice(true);
         return;
-      }
-      const url = await resolveBuzzDownloadUrlForPlatform(platform);
-      if (active) {
-        setDownloadUrl(url);
-        setDownloadLookupComplete(true);
       }
     });
     return () => {
@@ -128,7 +114,7 @@ export function InvitePage({ code }: { code: string }) {
       const receipt = await acceptPolicy();
       const query = new URLSearchParams({ relay, code });
       if (receipt) query.set("policy_receipt", receipt);
-      window.location.href = `zion://join?${query.toString()}`;
+      window.location.href = `buzz://join?${query.toString()}`;
     } finally {
       setOpening(false);
     }
@@ -173,10 +159,7 @@ export function InvitePage({ code }: { code: string }) {
     setShowMacChoice(false);
     window.setTimeout(() => downloadTriggerRef.current?.focus());
   }, []);
-  const chooseMacDownload = async (
-    event: React.MouseEvent<HTMLAnchorElement>,
-    platform: BuzzDownloadPlatform,
-  ) => {
+  const chooseMacDownload = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     if (choosingMacDownloadRef.current) return;
     choosingMacDownloadRef.current = true;
@@ -185,8 +168,7 @@ export function InvitePage({ code }: { code: string }) {
     if (downloadWindow) downloadWindow.opener = null;
     setShowMacChoice(false);
     try {
-      const url = await resolveBuzzDownloadUrlForPlatform(platform);
-      downloadWindow?.location.replace(url ?? BUZZ_RELEASES_URL);
+      downloadWindow?.location.replace(ZION_RELEASES_URL);
     } finally {
       choosingMacDownloadRef.current = false;
       setChoosingMacDownload(false);
@@ -203,24 +185,14 @@ export function InvitePage({ code }: { code: string }) {
   }, [closeMacChoice, showMacChoice]);
 
   return (
-    <div
-      className="flex flex-1 flex-col items-center justify-center bg-[#0b0812] px-4 py-16 text-center text-[#f3efff]"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle at 50% 0%, rgb(185 154 255 / 0.18), transparent 42%), linear-gradient(180deg, #0b0812 0%, #151020 100%)",
-      }}
-    >
-      <div className="w-full max-w-xl space-y-4">
-        <div className="flex w-full flex-col items-center rounded-3xl border border-[#332842] bg-[#f3efff] px-6 py-10 text-[#0b0812] shadow-[0_1.5rem_4rem_rgb(0_0_0_/_0.3)] sm:px-12 sm:py-12">
-          <ZionBrandMotion
-            ariaLabel="Zion"
-            className="zion-brand-motion--light-surface h-20 w-20"
-            variant="onboarding"
-          />
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-black">
-            You&apos;re invited to
-          </h1>
-          <p className="mt-9 font-mono text-lg text-black/70">{host}</p>
+    <div className="invite-page">
+      <BeeField count={24} sizeScale={0.75} zIndex={-1} />
+      <img className="invite-mark" src="/zion-icon.png" alt="Zion" />
+      <div className="invite-stack">
+        <div className="invite-card">
+          <h1>You're invited</h1>
+          <p className="invite-intro">Join your community on Zion.</p>
+          <InviteCommunity relay={relay} host={host} />
 
           <div
             className={`grid w-full max-w-md overflow-hidden transition-[grid-template-rows,margin,opacity,transform] duration-[220ms] [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${
@@ -243,10 +215,10 @@ export function InvitePage({ code }: { code: string }) {
             </div>
           </div>
 
-          <div className="mt-9 w-full max-w-md space-y-2">
+          <div className="invite-actions space-y-2">
             {browserSigningAvailable ? (
               <Button
-                className="h-10 w-full bg-[#b99aff] text-[#0b0812] hover:bg-[#c8b1ff] focus-visible:ring-[#b99aff] disabled:cursor-not-allowed disabled:bg-[#b99aff]/30 disabled:text-[#0b0812]/60"
+                className="h-10 w-full bg-black text-white hover:bg-black/90 focus-visible:ring-black disabled:cursor-not-allowed disabled:bg-black/30 disabled:text-white/70"
                 disabled={disabled}
                 onClick={joinInBrowser}
               >
@@ -258,22 +230,22 @@ export function InvitePage({ code }: { code: string }) {
                 asChild
                 className={`h-10 w-full ${
                   browserSigningAvailable
-                    ? "border border-[#332842] bg-transparent text-[#0b0812] hover:bg-[#332842]/10"
-                    : "bg-[#b99aff] text-[#0b0812] hover:bg-[#c8b1ff] focus-visible:ring-[#b99aff]"
+                    ? "border border-black bg-white text-black hover:bg-black/5"
+                    : "bg-black text-white hover:bg-black/90 focus-visible:ring-black"
                 }`}
               >
                 <a
-                  href={`zion://join?relay=${encodeURIComponent(relay)}&code=${encodeURIComponent(code)}`}
+                  href={`buzz://join?relay=${encodeURIComponent(relay)}&code=${encodeURIComponent(code)}`}
                 >
                   Accept invite in Zion
                 </a>
               </Button>
             ) : (
               <Button
-                className={`h-10 w-full disabled:cursor-not-allowed disabled:bg-[#b99aff]/30 disabled:text-[#0b0812]/60 ${
+                className={`h-10 w-full disabled:cursor-not-allowed disabled:bg-black/30 disabled:text-white/70 ${
                   browserSigningAvailable
-                    ? "border border-[#332842] bg-transparent text-[#0b0812] hover:bg-[#332842]/10"
-                    : "bg-[#b99aff] text-[#0b0812] hover:bg-[#c8b1ff] focus-visible:ring-[#b99aff]"
+                    ? "border border-black bg-white text-black hover:bg-black/5"
+                    : "bg-black text-white hover:bg-black/90 focus-visible:ring-black"
                 }`}
                 disabled={disabled}
                 onClick={openInvite}
@@ -288,42 +260,24 @@ export function InvitePage({ code }: { code: string }) {
             ) : null}
           </div>
         </div>
-        <p className="flex h-[3.125rem] items-center justify-center rounded-2xl border border-[#332842] bg-[#151020] text-sm text-[#b9aecf]">
-          {downloadUrl ? (
-            <>
-              Don&apos;t have the app?{" "}
-              <a
-                aria-expanded={needsMacChoice ? showMacChoice : undefined}
-                aria-haspopup={needsMacChoice ? "dialog" : undefined}
-                className="ml-1 font-medium text-[#f3efff] underline-offset-4 hover:text-[#b99aff] hover:underline focus-visible:underline"
-                href={downloadUrl}
-                ref={downloadTriggerRef}
-                rel="noreferrer"
-                target="_blank"
-                onClick={(event) => {
-                  if (!needsMacChoice) return;
-                  event.preventDefault();
-                  setShowMacChoice(true);
-                }}
-              >
-                Download it now
-              </a>
-            </>
-          ) : downloadLookupComplete ? (
-            <>
-              No Zion installer is available yet.{" "}
-              <a
-                className="ml-1 font-medium text-[#f3efff] underline-offset-4 hover:text-[#b99aff] hover:underline focus-visible:underline"
-                href={BUZZ_RELEASES_URL}
-                rel="noreferrer"
-                target="_blank"
-              >
-                View Zion-Coms Releases
-              </a>
-            </>
-          ) : (
-            "Checking for a Zion installer…"
-          )}
+        <p className="invite-download">
+          Don&apos;t have the app?{" "}
+          <a
+            aria-expanded={needsMacChoice ? showMacChoice : undefined}
+            aria-haspopup={needsMacChoice ? "dialog" : undefined}
+            className="ml-1 font-medium text-black underline-offset-4 hover:text-black/70 hover:underline focus-visible:underline"
+            href={ZION_RELEASES_URL}
+            ref={downloadTriggerRef}
+            rel="noreferrer"
+            target="_blank"
+            onClick={(event) => {
+              if (!needsMacChoice) return;
+              event.preventDefault();
+              setShowMacChoice(true);
+            }}
+          >
+            Download Zion
+          </a>
         </p>
       </div>
 
@@ -344,7 +298,8 @@ export function InvitePage({ code }: { code: string }) {
                   Which Mac do you have?
                 </h2>
                 <p className="mt-2 text-sm text-black/60">
-                  Choose based on when your Mac was released.
+                  Zion for Mac requires Apple Silicon. Intel Macs are not
+                  supported.
                 </p>
               </div>
               <button
@@ -360,40 +315,19 @@ export function InvitePage({ code }: { code: string }) {
               <a
                 aria-disabled={choosingMacDownload}
                 className="rounded-2xl border border-black p-5 text-black no-underline hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                href={BUZZ_RELEASES_URL}
-                onClick={(event) =>
-                  void chooseMacDownload(event, {
-                    operatingSystem: "macos",
-                    architecture: "arm64",
-                  })
-                }
+                href={ZION_RELEASES_URL}
+                onClick={chooseMacDownload}
               >
-                <strong className="block text-lg">Newer Mac</strong>
+                <strong className="block text-lg">Apple Silicon Mac</strong>
                 <span className="mt-1 block text-sm">
-                  2021 or later, or a late-2020 Mac with an Apple M1 chip
-                </span>
-              </a>
-              <a
-                aria-disabled={choosingMacDownload}
-                className="rounded-2xl border border-black p-5 text-black no-underline hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                href={BUZZ_RELEASES_URL}
-                onClick={(event) =>
-                  void chooseMacDownload(event, {
-                    operatingSystem: "macos",
-                    architecture: "x64",
-                  })
-                }
-              >
-                <strong className="block text-lg">Older Mac</strong>
-                <span className="mt-1 block text-sm">
-                  2019 or earlier, or a 2020 Mac with an Intel processor
+                  Mac with an Apple M-series chip
                 </span>
               </a>
             </div>
             <p className="mt-5 text-sm leading-5">
               <strong>Not sure?</strong> Open the Apple menu and choose{" "}
-              <strong>About This Mac</strong>. “Chip: Apple M…” means Newer Mac.
-              “Processor: Intel” means Older Mac.
+              <strong>About This Mac</strong>. “Chip: Apple M…” means Apple
+              Silicon Mac. “Processor: Intel” means this Mac is not supported.
             </p>
           </div>
         </div>

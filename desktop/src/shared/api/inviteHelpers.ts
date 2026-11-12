@@ -4,8 +4,7 @@ export const INVITE_EXHAUSTED_ERROR = "invite_exhausted";
 /**
  * Parsed invite — either a full (relay + code) or bare-code form.
  *
- * URL inputs (`https://`, `http://`, `zion://join`, legacy `buzz://join`)
- * always carry a
+ * URL inputs (`https://`, `http://`, `buzz://join`) always carry a
  * `relayWsUrl` (already normalised to `ws(s)://`).  A bare code (no scheme,
  * no slashes) omits it — the caller decides which relay to target.
  */
@@ -19,7 +18,7 @@ export type ParsedInvite =
  * Accepted input forms:
  *  - `https://<relay>/invite/<code>` → `{ relayWsUrl: "wss://<relay>", code }`
  *  - `http://<relay>/invite/<code>`  → `{ relayWsUrl: "ws://<relay>", code }`
- *  - `zion://join?relay=<wsUrl>&code=<code>` → `{ relayWsUrl, code }`
+ *  - `buzz://join?relay=<wsUrl>&code=<code>` → `{ relayWsUrl, code }`
  *  - bare code (no `://`, no `/`)    → `{ code }`
  *
  * Returns `null` for empty input or inputs that don't match any form.
@@ -32,9 +31,9 @@ export function parseInviteInput(input: string): ParsedInvite | null {
   try {
     const url = new URL(trimmed);
 
-    // zion://join?relay=...&code=... (legacy buzz:// is still accepted)
+    // buzz://join?relay=...&code=...
     // Non-special schemes put the authority in `host`, not `pathname`.
-    if (url.protocol === "zion:" || url.protocol === "buzz:") {
+    if (url.protocol === "buzz:") {
       if (url.host !== "join") return null;
       const relay = url.searchParams.get("relay");
       const code = url.searchParams.get("code");
@@ -86,6 +85,24 @@ export function relayHttpFromWs(wsUrl: string): string {
 
 export function inviteErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : `${error}`;
+}
+
+/** Explain claim denials without suggesting a new link can bypass restrictions. */
+export function inviteClaimErrorMessage(error: unknown): string {
+  const message = inviteErrorMessage(error);
+  if (message === "invite_restricted") {
+    return "This account, or the account that owns it, is restricted in this community. Contact a community administrator. If the restriction is temporary, try again after it ends.";
+  }
+  if (message === "invite_owner_mismatch") {
+    return "This account does not match its recorded owner. Use the correct account or owner identity to join this community.";
+  }
+  if (isInviteExpiredError(error)) {
+    return "This invite code has expired — ask for a new one.";
+  }
+  if (isInviteExhaustedError(error)) {
+    return "This invite has reached its use limit. Ask for a new invite.";
+  }
+  return message;
 }
 
 export function isInviteExpiredError(error: unknown): boolean {

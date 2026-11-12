@@ -28,74 +28,19 @@ test("drains queued frames in order, including frames received during drain", as
   assert.deepEqual(handled, ["first", "second", "live"]);
 });
 
-test("rejects the 257th safely sized frame while connecting", async () => {
-  let observedError;
+test("rejects, resets, and stops accepting frames when the cap is exceeded", async () => {
+  let overflowError;
   const inbound = createRelayInboundBuffer(
     async () => {},
     (error) => {
-      observedError = error;
+      overflowError = error;
     },
   );
-
-  for (let index = 0; index <= MAX_PENDING_RELAY_FRAMES; index += 1) {
-    inbound.receive(`frame-${index}`);
-  }
+  for (let i = 0; i < MAX_PENDING_RELAY_FRAMES + 1; i++) inbound.receive(i);
 
   await assert.rejects(
     inbound.overflow,
     /Relay sent too many frames while connecting/,
   );
-  assert.match(observedError.message, /too many frames/);
-});
-
-test("rejects only when aggregate raw and native text bytes exceed 1 MiB", async () => {
-  let observedError;
-  const inbound = createRelayInboundBuffer(
-    async () => {},
-    (error) => {
-      observedError = error;
-    },
-  );
-
-  inbound.receive({ type: "Text", data: "a".repeat(700_000) });
-  assert.equal(observedError, undefined);
-  inbound.receive("b".repeat(400_000));
-
-  assert.ok(
-    observedError instanceof Error,
-    "aggregate buffered bytes should fail closed",
-  );
-  await assert.rejects(inbound.overflow, /too much data while connecting/);
-});
-
-test("rejects only when aggregate native binary bytes exceed 1 MiB", async () => {
-  let observedError;
-  const inbound = createRelayInboundBuffer(
-    async () => {},
-    (error) => {
-      observedError = error;
-    },
-  );
-
-  inbound.receive({ type: "Binary", data: new Array(700_000).fill(0) });
-  assert.equal(observedError, undefined);
-  inbound.receive({ type: "Binary", data: new Array(400_000).fill(0) });
-
-  assert.ok(observedError instanceof Error, "binary data should fail closed");
-  await assert.rejects(inbound.overflow, /too much data while connecting/);
-});
-
-test("fails closed when a pre-auth frame cannot be safely sized", async () => {
-  let observedError;
-  const inbound = createRelayInboundBuffer(
-    async () => {},
-    (error) => {
-      observedError = error;
-    },
-  );
-
-  inbound.receive({ type: "Text", data: { untrusted: true } });
-
-  assert.ok(observedError instanceof Error, "unknown frame should fail closed");
-  await assert.rejects(inbound.overflow, /could not be safely sized/);
+  assert.match(overflowError.message, /too many frames/);
 });

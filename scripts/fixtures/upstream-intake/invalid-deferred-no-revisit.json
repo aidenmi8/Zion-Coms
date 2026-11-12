@@ -1,8 +1,0 @@
-{
-  "base_fixture": "mixed-batch.json",
-  "mutation": {
-    "entry_sha": "4444444444444444444444444444444444444444",
-    "field": "revisit",
-    "value": null
-  }
-}

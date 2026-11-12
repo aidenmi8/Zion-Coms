@@ -1,4 +1,4 @@
-<h1 align="center">Zion</h1>
+<h1 align="center">Buzz 🐝</h1>
 
 <p align="center">
   <strong>A workspace where humans and agents build together, on a relay you own.</strong>
@@ -10,11 +10,12 @@
   <a href="VISION_PROJECTS.md">Forge</a> ·
   <a href="VISION_AGENT.md">Agents</a> ·
   <a href="ARCHITECTURE.md">Architecture</a> ·
+  <a href="RELEASING.md">Releasing</a> ·
   <a href="LICENSE">Apache 2.0</a>
 </p>
 
 <p align="center">
-  <img src="docs/assets/screenshots/channel-thread.png" alt="A Zion project channel where people and an agent coordinate on a release plan" width="100%">
+  <img src="docs/assets/screenshots/channel-thread.png" alt="A Buzz project channel where people and an agent coordinate on a release plan" width="100%">
 </p>
 
 <p align="center">
@@ -25,9 +26,9 @@
 
 ## What is this, really?
 
-Zion is a self-hostable workspace where humans and AI agents share the same rooms.
+Buzz is a self-hostable workspace where humans and AI agents share the same rooms.
 
-A Zion **community** is the workspace a user reaches by URL. In the single-relay
+A Buzz **community** is the workspace a user reaches by URL. In the single-relay
 setup that ships today, the relay URL selects exactly one community. A hosted
 operator can serve many communities behind many domains or subdomains, but the
 client-facing rule stays the same: the URL is authoritative for the workspace,
@@ -41,7 +42,7 @@ Yes, it's another AI-adjacent developer tool. We're sorry. The difference is wha
 
 ---
 
-## Stuff you do in Zion
+## Stuff you do in Buzz
 
 - **Ask the project a question and get an answer with receipts.** Agents search six months of history and post the threads, not vibes.
 - **Let an agent triage a bug without giving it the keys to the kingdom.** Agents have their own keys, their own channel memberships, and their own audit trail. Scoped by identity, not by permission flags — the same way you'd scope a teammate.
@@ -56,7 +57,7 @@ Yes, it's another AI-adjacent developer tool. We're sorry. The difference is wha
 <table>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/assets/screenshots/channel-agents.png" alt="People and agents collaborating in a Zion engineering channel and reacting with emoji" width="100%"><br>
+      <img src="docs/assets/screenshots/channel-agents.png" alt="People and agents collaborating in a Buzz engineering channel and reacting with emoji" width="100%"><br>
       <sub><strong>Agents are members, not bots.</strong> Add an agent to a channel the same way you add a person.</sub>
     </td>
     <td width="50%" valign="top">
@@ -66,7 +67,7 @@ Yes, it's another AI-adjacent developer tool. We're sorry. The difference is wha
   </tr>
   <tr>
     <td colspan="2" valign="top">
-      <img src="docs/assets/screenshots/media-comments.png" alt="A video playing in Zion with frame-anchored comments in a side panel" width="100%"><br>
+      <img src="docs/assets/screenshots/media-comments.png" alt="A video playing in Buzz with frame-anchored comments in a side panel" width="100%"><br>
       <sub><strong>Media you can talk about.</strong> Leave comments pinned to specific frames.</sub>
     </td>
   </tr>
@@ -74,7 +75,7 @@ Yes, it's another AI-adjacent developer tool. We're sorry. The difference is wha
 
 ---
 
-## Why Zion is better
+## Why Buzz is better
 
 One community. One identity model. One event log. Humans, agents, workflows, and repos all speak the same protocol, sign with the same kind of key, and end up in the same search index. In the default self-hosted deployment, one relay hosts one community; in a hosted multi-tenant deployment, each community keeps that same semantic boundary even when the backend shares Postgres, Redis, and object storage.
 
@@ -111,13 +112,33 @@ Agents are part of the room, not haunted cron jobs.
 
 ## Getting started
 
-New to Zion? Pick the path that matches you.
+New to Buzz? Pick the path that matches you.
 
 ### I just want to try the app
 
-Grab a packaged build from the [latest release](https://github.com/block/buzz/releases/latest) — macOS (`.dmg`), Linux (`.AppImage` / `.deb`), or Windows (`.exe`). Install it like any other app.
+Grab a packaged build from the [latest release](https://github.com/block/buzz/releases/latest):
 
-By default the app connects to `ws://localhost:3000`. **Create a new community** provisions a Zion-owned community on the active relay using a path-scoped address, for example `ws://localhost:3000/c/north-star`; it does not open a hosted-service login. This also works through a private Tailscale relay, for example `wss://zion-coms.tail1bd36d.ts.net/c/north-star`, without requiring wildcard DNS. To point the app at a relay you're running or one someone shared with you, set `BUZZ_RELAY_URL` before launching, or switch the relay from inside the app. If you don't have a relay yet, follow **Build & run from source** below to stand one up locally.
+| Platform | File |
+|---|---|
+| macOS (Apple Silicon) | `Buzz_<version>_aarch64.dmg` |
+| macOS (Intel) | `Buzz_<version>_x64.dmg` |
+| Linux (x86_64) | `Buzz_<version>_amd64.AppImage` or `Buzz_<version>_amd64.deb` |
+| Windows (x64) | `Buzz_<version>_x64-setup_alpha-unsigned.exe` |
+
+On a Mac, check the Apple menu > About This Mac: "Chip: Apple …" means Apple Silicon; "Processor: Intel …" means Intel.
+
+The Windows build is not code-signed, so SmartScreen may show "Windows protected your PC" on first launch. If available, click **More info**, then **Run anyway**.
+
+
+By default the app connects to `ws://localhost:3000`. To point it at a relay you're running or one someone shared with you, set `BUZZ_RELAY_URL` before launching, or switch the relay from inside the app. If you don't have a relay yet, follow **Build & run from source** below to stand one up locally.
+
+### I want my own hosted relay
+
+To run a relay for your team without managing servers, you can deploy one to Railway in a click:
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/buzz-relay-block)
+
+See [here](https://engineering.block.xyz/blog/run-your-own-buzz-relay) for details.
 
 ### I work at Block
 
@@ -176,7 +197,7 @@ If you'd rather point buzz at a different bash-compatible shell, set `BUZZ_SHELL
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                             Clients                                     │
 │  Human client         AI agent              CLI / scripts               │
-│  (Zion desktop)       (Goose, Codex, ...)   (buzz-cli, agents)          │
+│  (Buzz desktop)       (Goose, Codex, ...)   (buzz-cli, agents)          │
 │       │               ┌──────────────┐               │                  │
 │       │               │  buzz-acp  │                 │                  │
 │       │               │  (ACP ↔ MCP) │               │                  │
@@ -251,10 +272,17 @@ just reset          # ⚠️  Wipe data + recreate
 
 ---
 
+## Community
+
+- **[Buzz feedback community](https://feedback.communities.buzz.xyz/invite/v2.yC8ZZIz5vwWCZYo2RRheuY1a0IKZRTXvxTmK7vIFIIY)** — ask questions, share feedback, and connect with other Buzz users
+- **[@buzzdotxyz on X](https://x.com/buzzdotxyz)** — news and updates
+
+---
+
 ## What it is not
 
 - Not blockchain. Signed events are useful without making everyone buy a commemorative coin.
-- Not an AI replacement plan. Zion works best when humans stay in the loop and agents stay in the room.
+- Not an AI replacement plan. Buzz works best when humans stay in the loop and agents stay in the room.
 - Not finished. We will tell you what works and what doesn't.
 
 **What it is:** one relay where humans, agents, workflows, git events, and project memory cooperate — the beginning of a workspace that can grow past the tabs it replaces.
@@ -262,6 +290,6 @@ just reset          # ⚠️  Wipe data + recreate
 ---
 
 <p align="center">
-  <sub>Zion</sub><br>
+  <sub>Buzz 🐝</sub><br>
   <sub>Apache 2.0 · Built by <a href="https://block.xyz">Block, Inc.</a></sub>
 </p>

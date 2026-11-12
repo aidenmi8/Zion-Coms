@@ -2,6 +2,7 @@ export type Community = {
   id: string;
   name: string;
   relayUrl: string;
+  token?: string;
   /**
    * The pubkey associated with the active identity at the time the community
    * was created. Display-only — auth always uses the persisted `identity.key`

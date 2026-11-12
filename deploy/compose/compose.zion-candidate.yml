@@ -1,0 +1,52 @@
+# Merge ONLY with compose.yml, never compose.dev.yml or the old root dev stack.
+# Render with --env-file /absolute/operator-owned-candidate.env (not repo .env).
+# Pipe `config --format json` through check-zion-candidate.mjs BEFORE any start.
+# Tailscale human verification and a separate start approval remain pending.
+name: zion-clean-rc-20261106
+
+services:
+  relay:
+    image: ${ZION_RELAY_IMAGE:?set ZION_RELAY_IMAGE to a verified repository@sha256 digest}
+    env_file: !reset []
+    environment:
+      RELAY_URL: ws://127.0.0.1:23300
+      BUZZ_MEDIA_BASE_URL: http://127.0.0.1:23300/media
+      BUZZ_MEDIA_SERVER_DOMAIN: 127.0.0.1:23300
+      BUZZ_CORS_ORIGINS: http://127.0.0.1:23300
+      BUZZ_RELAY_PRIVATE_KEY: ${BUZZ_RELAY_PRIVATE_KEY:?supply a new operator-managed relay key}
+      RELAY_OWNER_PUBKEY: ${RELAY_OWNER_PUBKEY:?supply the candidate owner public key}
+      BUZZ_GIT_HOOK_HMAC_SECRET: ${BUZZ_GIT_HOOK_HMAC_SECRET:?supply a new candidate hook secret}
+      # Match the upstream production template, not development auth defaults.
+      BUZZ_REQUIRE_AUTH_TOKEN: "true"
+      BUZZ_REQUIRE_RELAY_MEMBERSHIP: "true"
+      BUZZ_ALLOW_NIP_OA_AUTH: "true"
+      BUZZ_AUTO_MIGRATE: "true"
+      BUZZ_PUSH_ENABLED: ${ZION_CANDIDATE_PUSH_ENABLED:-false}
+      BUZZ_PUSH_GATEWAY_DELIVERY_URL: http://push-gateway:8080/v1/deliveries/apns
+      BUZZ_PAIRING_RELAY_URL: ws://127.0.0.1:23350
+    ports: !override
+      - "127.0.0.1:23300:3000"
+      - "127.0.0.1:23380:8080"
+      - "127.0.0.1:23392:9102"
+
+  postgres:
+    # The preflight additionally enforces postgres:17[-variant]@sha256:... .
+    image: ${ZION_POSTGRES_IMAGE:?set ZION_POSTGRES_IMAGE to a verified PostgreSQL 17 digest}
+
+  redis:
+    image: ${ZION_REDIS_IMAGE:?set ZION_REDIS_IMAGE to a verified Redis digest}
+
+  pairing:
+    image: ${ZION_RELAY_IMAGE:?set ZION_RELAY_IMAGE to a verified repository@sha256 digest}
+    entrypoint: ["/usr/local/bin/buzz-pair-relay"]
+    environment:
+      BUZZ_PAIR_RELAY_BIND_ADDR: 0.0.0.0:5000
+    ports:
+      - "127.0.0.1:23350:5000"
+    restart: unless-stopped
+    networks: [buzz-net]
+
+# Upstream's four named volumes and bridge have no external/name overrides:
+# Compose creates zion-clean-rc-20261106_<key>, never buzz's old global volumes.
+# Redis, PostgreSQL and object storage have NO host ports in compose.yml.
+# Silo + mc retain upstream's immutable pins and private bucket initialization.

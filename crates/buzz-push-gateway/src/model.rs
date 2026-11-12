@@ -3,41 +3,21 @@
 use serde::{Deserialize, Serialize};
 
 pub const MAX_REQUEST_BYTES: usize = 8 * 1024;
+/// Maximum decoded Apple App Attest object accepted by the verifier.
+pub const MAX_APP_ATTESTATION_BYTES: usize = 16 * 1024;
+/// Enrollment carries the maximum App Attest object as standard base64 plus a
+/// bounded APNs endpoint and the closed JSON envelope. Other gateway requests
+/// remain subject to `MAX_REQUEST_BYTES`.
+pub const MAX_ENROLL_REQUEST_BYTES: usize =
+    MAX_APP_ATTESTATION_BYTES.div_ceil(3) * 4 + MAX_ENDPOINT_HEX_BYTES * 2 + 1024;
 pub const MAX_GRANT_BYTES: usize = 4096;
 pub const MAX_ENDPOINT_HEX_BYTES: usize = 512;
-pub const APNS_DEFAULT_PAYLOAD: &[u8] =
-    br#"{"aps":{"alert":{"body":"Zion needs attention"},"sound":"default"}}"#;
-pub const APNS_TIME_SENSITIVE_PAYLOAD: &[u8] =
-    br#"{"aps":{"alert":{"body":"Zion needs attention"},"sound":"default","interruption-level":"time-sensitive"}}"#;
+pub const APNS_RECONNECT_PAYLOAD: &[u8] =
+    br#"{"aps":{"alert":{"body":"Reconnect to your relay now"},"sound":"default","mutable-content":1}}"#;
 pub const WIRE_VERSION: u8 = 1;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum AppProfile {
-    BuzzIosProduction,
-    BuzzIosSandbox,
-}
-impl AppProfile {
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::BuzzIosProduction => "buzz-ios-production",
-            Self::BuzzIosSandbox => "buzz-ios-sandbox",
-        }
-    }
-}
-
-/// Closed relay-to-gateway wake class.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum WakeClass {
-    /// Ordinary generic alert.
-    Default,
-    /// Approval-only generic Time Sensitive alert.
-    TimeSensitive,
-}
-
 /// Relay request. It deliberately has no application-payload field:
-/// the gateway selects one of two compiled-in generic APNs payloads.
+/// the gateway emits one compiled-in APNs reconnect payload for every delivery.
 /// `endpoint_grant` is opaque authenticated ciphertext minted by the gateway
 /// sealing key and persisted with the relay-owned lease.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,7 +27,6 @@ pub struct DeliveryRequest {
     pub endpoint_grant: String,
     pub request_id: uuid::Uuid,
     pub expires_at: i64,
-    pub wake_class: WakeClass,
 }
 
 /// Opaque delivery capability plaintext. It contains no APNs token: the random
@@ -59,7 +38,6 @@ pub struct EndpointGrant {
     pub v: u8,
     pub delegation_id: uuid::Uuid,
     pub relay_pubkey: String,
-    pub app_profile: AppProfile,
     pub endpoint_epoch: i64,
     pub generation: i64,
     pub expires_at: i64,
@@ -89,7 +67,6 @@ pub struct InstallationEnrollRequest {
     pub challenge: String,
     pub key_id: String,
     pub attestation: String,
-    pub app_profile: AppProfile,
     pub endpoint: String,
     pub endpoint_epoch: i64,
     pub expires_at: i64,
@@ -180,34 +157,4 @@ pub enum DeliveryResponse {
 #[derive(Debug, Clone, Serialize)]
 pub struct ErrorBody {
     pub error: &'static str,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn delivery_request_accepts_only_closed_wake_classes() {
-        for (raw, expected) in [
-            (
-                r#"{"v":1,"endpoint_grant":"grant","request_id":"00000000-0000-0000-0000-000000000000","expires_at":10,"wake_class":"default"}"#,
-                WakeClass::Default,
-            ),
-            (
-                r#"{"v":1,"endpoint_grant":"grant","request_id":"00000000-0000-0000-0000-000000000000","expires_at":10,"wake_class":"time_sensitive"}"#,
-                WakeClass::TimeSensitive,
-            ),
-        ] {
-            let request: DeliveryRequest = serde_json::from_str(raw).expect("closed request");
-            assert_eq!(request.wake_class, expected);
-        }
-        assert!(serde_json::from_str::<DeliveryRequest>(
-            r#"{"v":1,"endpoint_grant":"grant","request_id":"00000000-0000-0000-0000-000000000000","expires_at":10,"wake_class":"critical"}"#
-        )
-        .is_err());
-        assert!(serde_json::from_str::<DeliveryRequest>(
-            r#"{"v":1,"endpoint_grant":"grant","request_id":"00000000-0000-0000-0000-000000000000","expires_at":10,"wake_class":"default","payload":{"aps":{}}}"#
-        )
-        .is_err());
-    }
 }

@@ -7,47 +7,6 @@ use std::future::Future;
 use std::pin::Pin;
 
 use buzz_core::tenant::CommunityId;
-use chrono::{DateTime, Utc};
-use serde_json::Value as JsonValue;
-use uuid::Uuid;
-
-/// Fully resolved approval request handed from the workflow executor to its
-/// side-effect sink.
-///
-/// The sink owns token generation and durable persistence so the executor
-/// cannot suspend a run without a corresponding actionable request.
-#[derive(Debug, Clone, PartialEq)]
-pub struct ApprovalRequest {
-    /// Community that owns the workflow and approval.
-    pub community_id: CommunityId,
-    /// Workflow definition identifier.
-    pub workflow_id: Uuid,
-    /// Workflow run identifier.
-    pub run_id: Uuid,
-    /// Step identifier from the workflow definition.
-    pub step_id: String,
-    /// Zero-based step index.
-    pub step_index: i32,
-    /// Exact pubkey or `@display-name` of the intended human approver.
-    pub approver_spec: String,
-    /// Human-readable approval prompt.
-    pub message: String,
-    /// Absolute expiry for the pending approval.
-    pub expires_at: DateTime<Utc>,
-    /// Workflow channel when the workflow is channel-scoped.
-    pub channel_id: Option<Uuid>,
-    /// Hex pubkey of the workflow owner.
-    pub owner_pubkey: String,
-    /// Execution trace completed before this approval gate.
-    pub execution_trace: JsonValue,
-}
-
-/// Durable identity returned after an approval request commits.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ApprovalReceipt {
-    /// Relay-signed kind-46010 request event ID.
-    pub request_event_id: String,
-}
 
 /// Errors from action sink operations.
 #[derive(Debug, thiserror::Error)]
@@ -95,9 +54,15 @@ pub trait ActionSink: Send + Sync {
     ///   carries its owning community so a workflow in community B posts into B
     ///   even though the side effect has no inbound connection to bind.
     /// - `channel_id`: UUID string of the target channel
-    /// - `text`: message body (must not be empty/whitespace-only)
+    /// - `text`: rendered message body (must not be empty/whitespace-only)
+    /// - `authored_text`: the workflow owner's stored, unrendered step template;
+    ///   consumers must use this rather than trigger-controlled rendered output
+    ///   when attaching authority-bearing metadata
     /// - `author_pubkey`: hex-encoded pubkey of the workflow owner (used for
     ///   the `p` attribution tag; the relay keypair signs the event)
+    /// - `reply_to`: when `Some(event_id_hex)`, the message is posted as a
+    ///   threaded reply to that event (NIP-10 root/reply tags + real thread
+    ///   metadata); when `None`, it is a top-level channel message.
     ///
     /// Returns the event ID hex string on success.
     fn send_message(
@@ -105,15 +70,8 @@ pub trait ActionSink: Send + Sync {
         community_id: CommunityId,
         channel_id: &str,
         text: &str,
+        authored_text: &str,
         author_pubkey: &str,
+        reply_to: Option<&str>,
     ) -> Pin<Box<dyn Future<Output = Result<String, ActionSinkError>> + Send + '_>>;
-
-    /// Atomically persist an actionable approval request and suspend its run.
-    ///
-    /// Implementations generate and hash the secret approval token internally,
-    /// persist only its digest, and return the public request event ID.
-    fn request_approval(
-        &self,
-        request: ApprovalRequest,
-    ) -> Pin<Box<dyn Future<Output = Result<ApprovalReceipt, ActionSinkError>> + Send + '_>>;
 }

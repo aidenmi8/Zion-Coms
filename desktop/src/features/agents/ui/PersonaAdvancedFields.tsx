@@ -17,20 +17,32 @@ import {
   AGENT_PARALLELISM_PLACEHOLDER,
   parallelismCapHint,
 } from "../lib/agentParallelism";
-import { BuzzAgentModelTuningFields } from "./buzzAgentModelTuningFields";
 import {
+  BuzzAgentModelTuningFields,
+  NumericTuningFields,
+} from "./buzzAgentModelTuningFields";
+import {
+  CARD_MINT_KEY_ANNOTATIONS,
   PERSONA_FIELD_CONTROL_CLASS,
   PERSONA_FIELD_SHELL_CLASS,
   PERSONA_LABEL_OPTIONAL_CLASS,
 } from "./agentConfigOptions";
-import type { AcpRuntimeCatalogEntry } from "@/shared/api/types";
-
-type RuntimeCatalogStatus = "loading" | "error" | "ready";
+import type {
+  AcpRuntimeCatalogEntry,
+  AcpSessionPolicy,
+} from "@/shared/api/types";
+import { PersonaDropdownField } from "./PersonaDropdownField";
+import {
+  deriveNumericDescriptors,
+  structuredEnvKeys,
+  type RuntimeCatalogStatus,
+} from "../lib/agentConfigCore";
 
 export function PersonaAdvancedFields({
   behaviorDraft,
   disabled,
   envVars,
+  afterRespondTo,
   inheritedEnvVars = {},
   model,
   modelTuningRuntimeId = "",
@@ -42,12 +54,14 @@ export function PersonaAdvancedFields({
   requiredEnvKeys = [],
   fileSatisfiedEnvKeys = [],
   hiddenEnvKeys = [],
-  catalogStatus: _catalogStatus = "ready" as RuntimeCatalogStatus,
+  catalogStatus = "ready" as RuntimeCatalogStatus,
   selectedRuntime,
 }: {
   behaviorDraft: PersonaBehaviorDraft;
   disabled: boolean;
   envVars: EnvVarsValue;
+  /** Optional create-only field rendered after instruction permissions. */
+  afterRespondTo?: React.ReactNode;
   /** Env vars to display as inherited defaults in tuning-field placeholders.
    *  For templates, pass `globalConfig.env_vars` (the fallback layer). */
   inheritedEnvVars?: EnvVarsValue;
@@ -85,14 +99,25 @@ export function PersonaAdvancedFields({
     ? "owner-only"
     : (behaviorDraft.respondTo ?? "owner-only");
 
+  // Numeric tuning descriptors — gate on catalog status so that loading/error
+  // never collapses to "no controls": keys stay visible as generic rows.
+  const numericDescriptors = React.useMemo(
+    () =>
+      catalogStatus === "ready"
+        ? deriveNumericDescriptors(selectedRuntime)
+        : [],
+    [catalogStatus, selectedRuntime],
+  );
+
   const effectiveHiddenKeys = React.useMemo(
     () => [
       ...hiddenEnvKeys,
       ...(isBuzzAgentRuntime(modelTuningRuntimeId)
         ? [BUZZ_AGENT_THINKING_EFFORT]
         : []),
+      ...structuredEnvKeys(numericDescriptors),
     ],
-    [hiddenEnvKeys, modelTuningRuntimeId],
+    [hiddenEnvKeys, modelTuningRuntimeId, numericDescriptors],
   );
 
   // Persona hint: definitions keep a portable requested value across harnesses.
@@ -135,7 +160,43 @@ export function PersonaAdvancedFields({
         variant="persona"
       />
 
+      {afterRespondTo}
+
       <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label
+            className="text-sm font-medium text-foreground"
+            htmlFor="persona-session-policy"
+          >
+            Conversation context
+          </label>
+          <PersonaDropdownField
+            ariaDescribedBy="persona-session-policy-description"
+            disabled={disabled}
+            id="persona-session-policy"
+            onValueChange={(value) =>
+              onBehaviorDraftChange({
+                ...behaviorDraft,
+                sessionPolicy: value as AcpSessionPolicy,
+              })
+            }
+            options={[
+              { label: "Entire channel", value: "channel" },
+              { label: "Each thread", value: "thread" },
+            ]}
+            placeholder="Entire channel"
+            value={behaviorDraft.sessionPolicy}
+          />
+          <p
+            className="text-xs text-muted-foreground"
+            id="persona-session-policy-description"
+          >
+            {behaviorDraft.sessionPolicy === "thread"
+              ? "Keeps a separate conversation for each channel thread. Direct messages remain shared."
+              : "Shares one conversation across every thread in a channel."}
+          </p>
+        </div>
+
         <div className="space-y-1.5">
           <label
             className="text-sm font-medium text-foreground"
@@ -217,10 +278,30 @@ export function PersonaAdvancedFields({
         disabled={disabled}
         fileSatisfiedKeys={fileSatisfiedEnvKeys}
         hiddenKeys={effectiveHiddenKeys}
+        keyAnnotations={CARD_MINT_KEY_ANNOTATIONS}
         onChange={onEnvVarsChange}
         requiredKeys={requiredEnvKeys}
         value={envVars}
       />
+
+      {/* Descriptor-driven numeric tuning knobs — shown when catalog has settled
+          and the runtime exposes numeric env-var fields. */}
+      {numericDescriptors.length > 0 ? (
+        <NumericTuningFields
+          descriptors={numericDescriptors}
+          envVars={envVars}
+          inheritedEnvVars={inheritedEnvVars}
+          onEnvVarChange={(key, value) => {
+            const next = { ...envVars };
+            if (value === "") {
+              delete next[key];
+            } else {
+              next[key] = value;
+            }
+            onEnvVarsChange(next);
+          }}
+        />
+      ) : null}
 
       {/* Effort-tuning knob — only shown for buzz-agent. */}
       {isBuzzAgentRuntime(modelTuningRuntimeId) ? (

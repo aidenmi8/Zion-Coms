@@ -1,13 +1,19 @@
 use crate::managed_agents::{AcpAvailabilityStatus, InstallStepResult};
 
-pub(super) fn run(runtime_id: &str, steps: &mut Vec<InstallStepResult>) {
-    // Observe PATH changes and binaries added after Zion launched.
+use super::install_report::InstallReporter;
+
+pub(super) fn run(
+    runtime_id: &str,
+    steps: &mut Vec<InstallStepResult>,
+    reporter: &InstallReporter,
+) {
+    // Observe PATH changes and binaries added after Buzz launched.
     crate::managed_agents::refresh_login_shell_path();
     crate::managed_agents::clear_resolve_cache();
 
     let availability = crate::managed_agents::discover_acp_runtime_availability(runtime_id);
     if let Some(failure) = failure(runtime_id, availability) {
-        steps.push(failure);
+        reporter.record_step(steps, failure);
     }
 }
 
@@ -28,11 +34,11 @@ fn failure(
         success: false,
         stdout: String::new(),
         stderr: format!(
-            "The installer finished, but Zion still could not use {runtime_id} (observed: {observed})."
+            "The installer finished, but Buzz still could not use {runtime_id} (observed: {observed})."
         ),
         exit_code: None,
         hint: Some(
-            "Zion requires the vendor CLI executable, not only its desktop app. If the CLI was installed while Zion was open, restart Zion and check again."
+            "Buzz requires the vendor CLI executable, not only its desktop app. If the CLI was installed while Buzz was open, restart Buzz and check again."
                 .to_string(),
         ),
     })

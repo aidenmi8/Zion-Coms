@@ -1,10 +1,8 @@
 use super::*;
 
-/// Binary names for the Zion desktop/Tauri process. Legacy Buzz names remain
-/// recognized so managed agents from older builds can still be reaped safely.
+/// Binary names for the Buzz desktop/Tauri process. Used by dead-instance
 /// detection to confirm the owning desktop is still alive.
 const DESKTOP_BINARY_NAMES: &[&str] = &[
-    "Zion",
     "Buzz",
     "buzz-desktop",
     "buzz_desktop",
@@ -13,7 +11,7 @@ const DESKTOP_BINARY_NAMES: &[&str] = &[
     "buzz-desktop.bi",
 ];
 
-/// Check if a process name matches a known Zion or legacy Buzz desktop binary.
+/// Check if a process name matches a known Buzz desktop binary.
 pub(super) fn is_desktop_binary(name: &str) -> bool {
     DESKTOP_BINARY_NAMES.contains(&name)
 }
@@ -107,8 +105,8 @@ fn extract_buzz_marker_value(_pid: u32) -> Option<String> {
     None
 }
 
-/// Check if a Zion desktop process is still alive for the given instance ID.
-/// Scans all user-owned recognized desktop processes and checks
+/// Check if a Buzz desktop process is still alive for the given instance ID.
+/// Scans all user-owned processes named "Buzz" or "buzz-desktop" and checks
 /// whether any has the identifier in its command-line args (KERN_PROCARGS2 buffer
 /// includes both argv and environ — the `--config` JSON from `tauri dev` contains
 /// the identifier string).

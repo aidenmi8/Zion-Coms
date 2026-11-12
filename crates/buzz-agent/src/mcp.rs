@@ -45,6 +45,9 @@ const PASSTHROUGH_ENV: &[&str] = &[
     "LC_ALL",
     "TMPDIR",
     "XDG_CONFIG_HOME",
+    // Explicit Buzz-owned OAuth root for named demo builds. The agent may spawn
+    // auth-capable child tools after clearing its ambient environment.
+    "BUZZ_AGENT_CONFIG_DIR",
     // SSH — required for git clone/push over SSH (git@github.com:...)
     "SSH_AUTH_SOCK",
     "SSH_AGENT_PID",
@@ -52,16 +55,38 @@ const PASSTHROUGH_ENV: &[&str] = &[
     "GIT_ASKPASS",
     "GIT_SSH_COMMAND",
     "GIT_CONFIG_GLOBAL",
-    // Buzz identity — dev-mcp writes NOSTR_PRIVATE_KEY to a keyfile then
-    // removes it from its own env (children never see it). BUZZ_PRIVATE_KEY
-    // and BUZZ_RELAY_URL are kept for the buzz CLI. BUZZ_AUTH_TAG is a
-    // non-secret signed ownership attestation needed by portable owner-scoped
-    // CLI operations; MCP subprocesses are trusted like the agent runtime.
-    "NOSTR_PRIVATE_KEY",
+    // Proxy — on a host whose only route out is a CONNECT proxy, dropping
+    // these does not degrade the tools, it blinds them: apt, curl, pip and git
+    // all connect directly instead, and the egress firewall resets the socket.
+    // The agent then reports "Connection reset by peer" and concludes the
+    // environment has no network, which is indistinguishable in the transcript
+    // from a task that is genuinely offline.
+    //
+    // Both cases are needed. curl and git read the lowercase spellings, most
+    // Go and Python tooling reads the uppercase ones, and libcurl deliberately
+    // ignores uppercase HTTP_PROXY (CGI ambiguity), so keeping only one form
+    // silently breaks half the toolchain.
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "NO_PROXY",
+    "ALL_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "no_proxy",
+    "all_proxy",
+    // TLS trust — a proxy that terminates TLS presents its own CA, and an
+    // image whose trust store does not carry it fails every https fetch with a
+    // verification error. Same class of failure as the proxy vars: the parent
+    // was configured correctly and the child could not see it.
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+    // Git config/keyfile paths arrive explicitly in session/new mcpServers[].env.
     "BUZZ_PRIVATE_KEY",
     "BUZZ_RELAY_URL",
     "BUZZ_AUTH_TAG",
-    // Agent display name — dev-mcp uses it as the git author name. On the
+    // Harness-chosen `buzz` CLI read format (token-lean event reads).
+    "BUZZ_OUTPUT_FORMAT",
+    // Agent display name for tools. On the
     // Desktop path this arrives via the wire `mcpServers[].env` declaration
     // (which wins here anyway); the allowlist entry covers ACP clients that
     // spawn buzz-agent without declaring it.
@@ -569,15 +594,7 @@ impl McpRegistry {
         budget: ResultBudget,
         cancel: &mut watch::Receiver<bool>,
     ) -> Result<ToolResult, AgentError> {
-        let arg_obj = match arguments {
-            Value::Object(m) => Some(m.clone()),
-            Value::Null => None,
-            _ => {
-                return Err(AgentError::Mcp(format!(
-                    "tool {qname} arguments must be a JSON object"
-                )))
-            }
-        };
+        let arg_obj = validate_arg_shape(qname, arguments)?;
         let mut params = CallToolRequestParams::default();
         params.name = bare.to_owned().into();
         params.arguments = arg_obj;
@@ -787,6 +804,29 @@ async fn spawn_one(
     Ok((client, pgid, names, tools))
 }
 
+/// Validate that tool-call arguments are a shape the MCP transport can carry:
+/// a JSON object (`Some(map)`) or absent (`None`). Any other JSON type is a
+/// malformed call that the transport would reject.
+///
+/// Hoisted out of `do_call` so the permission gate can run it *before* asking
+/// the user: a malformed non-object argument is rejected locally without
+/// prompting for approval of a call that could never execute. `do_call` runs
+/// it again as the single authoritative shape check — the duplicate is a cheap
+/// idempotent match, and keeping it here means no code path can reach the
+/// transport with an unvalidated shape.
+pub fn validate_arg_shape(
+    qname: &str,
+    arguments: &Value,
+) -> Result<Option<Map<String, Value>>, AgentError> {
+    match arguments {
+        Value::Object(m) => Ok(Some(m.clone())),
+        Value::Null => Ok(None),
+        _ => Err(AgentError::Mcp(format!(
+            "tool {qname} arguments must be a JSON object"
+        ))),
+    }
+}
+
 /// Send `notifications/cancelled` to the MCP server, fire-and-forget.
 /// Per MCP spec, cancellation notifications are best-effort; we never
 /// block the agent on slow server stdio.
@@ -916,11 +956,11 @@ pub(crate) fn truncate_middle(s: &str, max: usize) -> String {
 /// with a marker; text is middle-elided so the head (what ran) and tail
 /// (how it ended) both survive. Every elision leaves an inline marker.
 fn tool_result_content(
-    blocks: &[rmcp::model::Content],
+    blocks: &[rmcp::model::ContentBlock],
     max_bytes: usize,
     max_text_bytes: usize,
 ) -> Vec<ToolResultContent> {
-    use rmcp::model::RawContent;
+    use rmcp::model::ContentBlock;
     let mut out = Vec::new();
     let mut text = String::new();
     let mut used = 0usize; // total bytes emitted (text + images)
@@ -954,9 +994,9 @@ fn tool_result_content(
     };
 
     for c in blocks {
-        match &c.raw {
-            RawContent::Text(t) => append(&mut text, &t.text),
-            RawContent::Image(i) => {
+        match c {
+            ContentBlock::Text(t) => append(&mut text, &t.text),
+            ContentBlock::Image(i) => {
                 flush_text(&mut out, &mut text, &mut used, &mut text_used);
                 let image_bytes = i.data.len().saturating_add(i.mime_type.len());
                 if used.saturating_add(image_bytes) <= max_bytes {
@@ -976,7 +1016,7 @@ fn tool_result_content(
                     );
                 }
             }
-            RawContent::Audio(a) => append(
+            ContentBlock::Audio(a) => append(
                 &mut text,
                 &format!(
                     "[audio elided: {}, {} bytes]",
@@ -984,10 +1024,11 @@ fn tool_result_content(
                     a.data.len()
                 ),
             ),
-            RawContent::ResourceLink(r) => {
+            ContentBlock::ResourceLink(r) => {
                 append(&mut text, &format!("[resource: {}]", short(&r.uri)));
             }
-            RawContent::Resource(_) => append(&mut text, "[resource elided]"),
+            ContentBlock::Resource(_) => append(&mut text, "[resource elided]"),
+            _ => append(&mut text, "[unsupported content elided]"),
         }
     }
     flush_text(&mut out, &mut text, &mut used, &mut text_used);
@@ -1015,7 +1056,42 @@ mod content_tests {
     fn passthrough_includes_buzz_owner_attestation() {
         assert!(PASSTHROUGH_ENV.contains(&"BUZZ_AUTH_TAG"));
     }
-    use rmcp::model::Content;
+
+    #[test]
+    fn passthrough_carries_proxy_configuration_to_tools() {
+        // On a proxy-only host this is the difference between an agent that can
+        // install a package and one that reports the network is down. Both
+        // spellings: libcurl ignores uppercase HTTP_PROXY, and Go/Python
+        // tooling largely ignores the lowercase set.
+        for var in [
+            "HTTP_PROXY",
+            "HTTPS_PROXY",
+            "NO_PROXY",
+            "ALL_PROXY",
+            "http_proxy",
+            "https_proxy",
+            "no_proxy",
+            "all_proxy",
+        ] {
+            assert!(
+                PASSTHROUGH_ENV.contains(&var),
+                "{var} must survive env_clear() or every MCP tool loses the proxy"
+            );
+        }
+    }
+
+    #[test]
+    fn passthrough_carries_tls_trust_to_tools() {
+        // A TLS-terminating proxy presents its own CA; without these the child
+        // rejects every https fetch even though the proxy itself is reachable.
+        for var in ["SSL_CERT_FILE", "SSL_CERT_DIR"] {
+            assert!(
+                PASSTHROUGH_ENV.contains(&var),
+                "{var} must survive env_clear() or https fails inside tools"
+            );
+        }
+    }
+    use rmcp::model::ContentBlock as Content;
 
     #[cfg(windows)]
     #[test]

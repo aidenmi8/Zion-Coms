@@ -1,107 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:nostr/nostr.dart' as nostr;
+import 'package:buzz/features/channels/channel.dart';
 import 'package:buzz/features/channels/channel_management_provider.dart';
 import 'package:buzz/features/channels/send_message_provider.dart';
 import 'package:buzz/shared/relay/relay.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:nostr/nostr.dart' as nostr;
-
-const _me = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-const _recipient =
-    'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
-const _mentioned =
-    'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc';
-const _channelId = '11111111-1111-4111-8111-111111111111';
-
-class _FakeRelay implements SignedEventRelay {
-  List<List<String>>? tags;
-
-  @override
-  String? get pubkey => _me;
-
-  @override
-  Future<NostrEvent> submit({
-    required int kind,
-    required String content,
-    required List<List<String>> tags,
-    int? createdAt,
-    void Function(NostrEvent event)? onSigned,
-  }) async {
-    this.tags = tags;
-    final event = NostrEvent(
-      id: 'accepted',
-      pubkey: _me,
-      createdAt: createdAt ?? 0,
-      kind: kind,
-      tags: tags,
-      content: content,
-      sig: '',
-    );
-    onSigned?.call(event);
-    return event;
-  }
-}
-
-ChannelMember _member(String pubkey) => ChannelMember(
-  pubkey: pubkey,
-  role: 'member',
-  joinedAt: DateTime.utc(2026, 7, 26),
-);
 
 void main() {
-  test(
-    'DM messages tag every other participant and deduplicate mentions',
-    () async {
-      final relay = _FakeRelay();
-      final sender = SendMessage(
-        signedEventRelay: relay,
-        fetchMembers: (_) async => [
-          _member(_me),
-          _member(_recipient),
-          _member(_recipient.toUpperCase()),
-        ],
-        readUserCache: () => const {},
-        isDirectMessage: (_) => true,
-        addLocalMessage: (_, _) {},
-        completeLocalMessage: (_, _) {},
-        removeLocalMessage: (_, _) {},
-      );
-
-      await sender(
-        channelId: 'dm-channel',
-        content: 'Hello @Builder',
-        mentionPubkeys: const [_recipient, _mentioned],
-      );
-
-      expect(relay.tags?.first, ['h', 'dm-channel']);
-      expect(relay.tags?.where((tag) => tag.first == 'p').toList(), [
-        ['p', _recipient],
-        ['p', _mentioned],
-      ]);
-    },
-  );
-
-  test('ordinary channels keep only explicit mention tags', () async {
-    final relay = _FakeRelay();
-    final sender = SendMessage(
-      signedEventRelay: relay,
-      fetchMembers: (_) async => [_member(_recipient)],
-      readUserCache: () => const {},
-      isDirectMessage: (_) => false,
-      addLocalMessage: (_, _) {},
-      completeLocalMessage: (_, _) {},
-      removeLocalMessage: (_, _) {},
-    );
-
-    await sender(
-      channelId: 'general',
-      content: 'Hello',
-      mentionPubkeys: const [],
-    );
-
-    expect(relay.tags?.where((tag) => tag.first == 'p'), isEmpty);
-  });
-
   test(
     'adds the signed message locally before relay acknowledgement',
     () async {
@@ -109,6 +16,7 @@ void main() {
       final localMessages = <NostrEvent>[];
       final removedIds = <String>[];
       final completedIds = <String>[];
+      final animatedIds = <String>[];
       final send = SendMessage(
         signedEventRelay: SignedEventRelay(
           session: session,
@@ -116,8 +24,8 @@ void main() {
         ),
         fetchMembers: (_) async => const [],
         readUserCache: () => const {},
-        isDirectMessage: (_) => false,
         addLocalMessage: (_, event) => localMessages.add(event),
+        markLocalMessageForAnimation: (_, eventId) => animatedIds.add(eventId),
         completeLocalMessage: (_, eventId) => completedIds.add(eventId),
         removeLocalMessage: (_, eventId) => removedIds.add(eventId),
       );
@@ -129,6 +37,7 @@ void main() {
       expect(localMessages.single.id, session.event.id);
       expect(localMessages.single.content, 'hello');
       expect(localMessages.single.channelId, _channelId);
+      expect(animatedIds, [localMessages.single.id]);
       expect(removedIds, isEmpty);
 
       session.accept();
@@ -150,7 +59,6 @@ void main() {
       ),
       fetchMembers: (_) async => const [],
       readUserCache: () => const {},
-      isDirectMessage: (_) => false,
       addLocalMessage: (_, event) => localMessages.add(event),
       completeLocalMessage: (_, eventId) => completedIds.add(eventId),
       removeLocalMessage: (_, eventId) => removedIds.add(eventId),
@@ -164,7 +72,192 @@ void main() {
     expect(completedIds, isEmpty);
     expect(removedIds, [localMessages.single.id]);
   });
+
+  test('final signed event addresses the current DM agent member', () async {
+    final session = _PendingPublishRelaySession();
+    final signingKey = nostr.Keys.generate().nsec;
+    final sender = nostr.Keys(
+      nostr.Nip19.decode(payload: signingKey).data,
+    ).public;
+    final staleAgent = 'a' * 64;
+    final activeAgent = 'c' * 64;
+    final human = 'b' * 64;
+    final send = SendMessage(
+      signedEventRelay: SignedEventRelay(session: session, nsec: signingKey),
+      fetchMembers: (_) async => [
+        _member(sender),
+        _member(activeAgent),
+        _member(human),
+      ],
+      readUserCache: () => const {},
+      addLocalMessage: (_, _) {},
+      completeLocalMessage: (_, _) {},
+      removeLocalMessage: (_, _) {},
+    );
+
+    final result = send(
+      channelId: _channelId,
+      content: 'hello without a visible mention',
+      // Metadata still names the replaced agent. Delivery must follow the
+      // authoritative current membership snapshot instead.
+      channel: _dmChannel([sender, staleAgent, human]),
+      mentionPubkeys: const [],
+    );
+    await session.published;
+
+    expect(session.event.content, 'hello without a visible mention');
+    expect(session.event.tags.where((tag) => tag.first == 'p').toList(), [
+      ['p', activeAgent],
+      ['p', human],
+    ]);
+
+    session.accept();
+    await result;
+  });
+
+  test('final signed event addresses a human DM recipient', () async {
+    final session = _PendingPublishRelaySession();
+    final signingKey = nostr.Keys.generate().nsec;
+    final sender = nostr.Keys(
+      nostr.Nip19.decode(payload: signingKey).data,
+    ).public;
+    final human = 'b' * 64;
+    final send = SendMessage(
+      signedEventRelay: SignedEventRelay(session: session, nsec: signingKey),
+      fetchMembers: (_) async => [_member(sender), _member(human)],
+      readUserCache: () => const {},
+      addLocalMessage: (_, _) {},
+      completeLocalMessage: (_, _) {},
+      removeLocalMessage: (_, _) {},
+    );
+
+    final result = send(
+      channelId: _channelId,
+      content: 'hello human',
+      channel: _dmChannel([sender, human]),
+      mentionPubkeys: const [],
+    );
+    await session.published;
+
+    expect(session.event.tags.where((tag) => tag.first == 'p').toList(), [
+      ['p', human],
+    ]);
+
+    session.accept();
+    await result;
+  });
+
+  test(
+    'falls back to metadata DM recipients when membership is empty',
+    () async {
+      final session = _PendingPublishRelaySession();
+      final signingKey = nostr.Keys.generate().nsec;
+      final sender = nostr.Keys(
+        nostr.Nip19.decode(payload: signingKey).data,
+      ).public;
+      final recipient = 'b' * 64;
+      final send = SendMessage(
+        signedEventRelay: SignedEventRelay(session: session, nsec: signingKey),
+        fetchMembers: (_) async => const [],
+        readUserCache: () => const {},
+        addLocalMessage: (_, _) {},
+        completeLocalMessage: (_, _) {},
+        removeLocalMessage: (_, _) {},
+      );
+
+      final result = send(
+        channelId: _channelId,
+        content: 'hello from an unavailable roster',
+        channel: _dmChannel([sender, recipient]),
+        mentionPubkeys: const [],
+      );
+      await session.published;
+
+      expect(session.event.tags.where((tag) => tag.first == 'p').toList(), [
+        ['p', recipient],
+      ]);
+
+      session.accept();
+      await result;
+    },
+  );
+
+  test('falls back to metadata DM recipients when membership fails', () async {
+    final session = _PendingPublishRelaySession();
+    final signingKey = nostr.Keys.generate().nsec;
+    final sender = nostr.Keys(
+      nostr.Nip19.decode(payload: signingKey).data,
+    ).public;
+    final recipientOne = 'b' * 64;
+    final recipientTwo = 'c' * 64;
+    final send = SendMessage(
+      signedEventRelay: SignedEventRelay(session: session, nsec: signingKey),
+      fetchMembers: (_) async => throw StateError('membership unavailable'),
+      readUserCache: () => const {},
+      addLocalMessage: (_, _) {},
+      completeLocalMessage: (_, _) {},
+      removeLocalMessage: (_, _) {},
+    );
+
+    final result = send(
+      channelId: _channelId,
+      content: 'hello group',
+      channel: _dmChannel([sender, recipientOne, recipientTwo]),
+      mentionPubkeys: [recipientOne.toUpperCase()],
+    );
+    await session.published;
+
+    expect(session.event.tags.where((tag) => tag.first == 'p').toList(), [
+      ['p', recipientOne],
+      ['p', recipientTwo],
+    ]);
+
+    session.accept();
+    await result;
+  });
+
+  test('cancels delivery after the active community changes', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container
+        .read(relayConfigProvider.notifier)
+        .update(baseUrl: 'https://first.example');
+    final send = container.read(sendMessageProvider);
+
+    container
+        .read(relayConfigProvider.notifier)
+        .update(baseUrl: 'https://second.example');
+
+    await expectLater(
+      send(channelId: _channelId, content: 'old community draft'),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          contains('active community changed'),
+        ),
+      ),
+    );
+  });
 }
+
+const _channelId = '11111111-1111-4111-8111-111111111111';
+
+Channel _dmChannel(List<String> participantPubkeys) => Channel(
+  id: _channelId,
+  name: 'DM',
+  channelType: 'dm',
+  visibility: 'private',
+  description: '',
+  createdBy: participantPubkeys.first,
+  createdAt: DateTime(2025),
+  memberCount: participantPubkeys.length,
+  participantPubkeys: participantPubkeys,
+  isMember: true,
+);
+
+ChannelMember _member(String pubkey, {String role = 'member'}) =>
+    ChannelMember(pubkey: pubkey, role: role, joinedAt: DateTime(2025));
 
 class _PendingPublishRelaySession extends RelaySessionNotifier {
   final Completer<NostrEvent> _result = Completer<NostrEvent>();

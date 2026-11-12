@@ -32,26 +32,37 @@ keypair.
   and S3 secrets stable across restarts.
 - `RELAY_OWNER_PUBKEY` is intentionally not prefixed with `BUZZ_`; it must be a
   64-character hex Nostr pubkey when closed relay mode is enabled.
-- **Device pairing needs a `/pair` route in your reverse proxy.** The stack runs a
-  `pair-relay` sidecar on `127.0.0.1:5000` (override the port with
-  `BUZZ_PAIR_RELAY_PORT`). A membership-gated relay advertises NIP-43, and the
-  desktop client then resolves its pairing endpoint to `<relay>/pair`; if nothing
-  serves that path, QR pairing fails with
-  `WebSocket connection failed: HTTP error: 404 Not Found` before the QR renders.
-  Route it in Caddy, or with Tailscale:
-  `sudo tailscale serve --bg --set-path /pair http://127.0.0.1:5000`.
-  Alternatively, set `BUZZ_PAIRING_RELAY_URL` to a full `wss://…` URL and the relay
-  advertises it in its NIP-11 document, so clients skip the `/pair` convention
-  entirely. The pairing handshake is end-to-end encrypted (NIP-44 v2 + SAS), so the
-  sidecar only relays ciphertext and stores nothing.
 - `BUZZ_AUTO_MIGRATE` is opt-in. Set `BUZZ_AUTO_MIGRATE=true` or run
   `buzz-admin migrate` before starting the relay when bootstrapping a fresh
   database. Auto-migration requires an image that includes embedded SQLx
   migrations.
 - The stack uses Postgres, Redis, MinIO, and a git data volume because
   those are real Buzz dependencies today. Minimal mode can simplify this later.
+- Mobile push remains off by default. To use the public gateway, keep the
+  template's explicit `BUZZ_PUSH_GATEWAY_DELIVERY_URL` and set
+  `BUZZ_PUSH_ENABLED=true`. To use another gateway, replace the exact HTTPS
+  `/v1/deliveries/apns` URL before enabling push.
+- The bundled Compose stack fixes the relay endpoint to `http://minio:9000` and
+  `BUZZ_S3_ADDRESSING_STYLE=path`: Docker DNS resolves `minio`, not
+  `<bucket>.minio`. It is not configurable for an external S3 provider through
+  `.env`; use the Helm chart or a custom Compose configuration for providers
+  such as new Railway Storage Buckets that require `virtual` addressing.
 
 Run `./run.sh backup-hint` for the backup checklist.
+
+Bundled object storage uses [Silo](https://silo.pgsty.com/download/), a maintained
+MinIO fork, with matching `pgsty/silo` and `pgsty/mc` release images pinned by
+multi-platform digest. Both images allow anonymous pulls and support Linux
+amd64 and arm64; the upstream Quay MinIO images no longer allow anonymous pulls.
+The existing `minio` names and `MINIO_*` settings remain compatible. Keep the
+Helm and Compose pins aligned when upgrading, and run Buzz's
+[object-store conformance probe](../../docs/git-on-object-storage.md#conformance-admitting-a-backend-for-a3)
+against the new release before deploying it.
+
+For an existing MinIO data volume, follow Silo's
+[migration guide](https://silo.pgsty.com/compatibility/migration/) and take a
+backup before upgrading. Replacing the container image upgrades the storage
+server as well as changing its registry.
 
 ## Validation
 

@@ -22,8 +22,8 @@ export function KeyringLockedScreen() {
   }, []);
 
   const handleImport = React.useCallback(
-    async (nsec: string) => {
-      const identity = await importIdentity(nsec);
+    async (nsec: string, password?: string) => {
+      const identity = await importIdentity(nsec, password);
       // Update the identity query cache so useIdentityQuery observers see
       // locked: false. The bootedLocked latch in hooks.ts will then route
       // to RelaunchRequiredScreen via bootedLocked && !identityLocked.
@@ -46,7 +46,7 @@ export function KeyringLockedScreen() {
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
           Your identity is safe in the OS keyring, but it's unreachable this
           session. Unlock your keyring or sign into your desktop session, then
-          relaunch Zion.
+          relaunch Buzz.
         </p>
 
         {showImport ? (
@@ -65,7 +65,7 @@ export function KeyringLockedScreen() {
               }}
               type="button"
             >
-              Relaunch Zion
+              Relaunch Buzz
             </Button>
             <Button
               className="h-10 w-full"

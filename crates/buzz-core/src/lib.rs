@@ -7,8 +7,6 @@
 
 /// NIP-AM: Agent Turn Metric — payload type and encrypt/decrypt helpers.
 pub mod agent_turn_metric;
-/// Canonical Zion identity and compatibility aliases.
-pub mod branding;
 /// Channel and membership enums shared across crates.
 pub mod channel;
 /// NIP-AE Agent Engrams — slug grammar, conversation key, d-tag derivation,
@@ -28,16 +26,22 @@ pub mod invite;
 pub mod kind;
 /// Network utilities — SSRF-safe IP classification.
 pub mod network;
+/// NIP-10 thread-marker parsing — shared `root`/`reply` marker resolver.
+pub mod nip10;
 /// Agent observer frame helpers.
 pub mod observer;
 /// NIP-AB device pairing — crypto primitives, message types, and errors.
 pub mod pairing;
 /// Presence status types shared across crates.
 pub mod presence;
+/// NIP-PMA owner-encrypted private managed-agent wire codec.
+pub mod private_managed_agent;
 /// Canonical relay runtime identities.
 pub mod relay;
 /// Tenant identity — the server-resolved community key carried on scoped paths.
 pub mod tenant;
+/// NIP-CW thread-mode normalized newest-first window contract.
+pub mod thread_window;
 /// Schnorr signature and event ID verification.
 pub mod verification;
 
@@ -47,47 +51,6 @@ pub use nostr::{Event, EventId, Filter, Keys, Kind, PublicKey};
 pub use presence::PresenceStatus;
 pub use tenant::{normalize_host, CommunityId, TenantContext};
 pub use verification::verify_event;
-
-#[cfg(test)]
-mod branding_contract_tests {
-    use super::branding;
-    use std::sync::Mutex;
-
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
-
-    #[test]
-    fn public_brand_constants_are_canonical_zion_values() {
-        assert_eq!(branding::PRODUCT_NAME, "Zion");
-        assert_eq!(branding::RELAY_NAME, "Zion Relay");
-        assert_eq!(branding::CANONICAL_URL_SCHEME, "zion");
-        assert_eq!(branding::LEGACY_URL_SCHEME, "buzz");
-        assert_eq!(
-            branding::RELEASE_REPOSITORY_URL,
-            "https://github.com/aidenmi8/Zion-Coms"
-        );
-    }
-
-    #[test]
-    fn canonical_environment_value_wins_before_legacy_fallback() {
-        let _guard = ENV_LOCK.lock().unwrap_or_else(|poison| poison.into_inner());
-        std::env::set_var("ZION_RELAY_URL", "wss://canonical.example");
-        std::env::set_var("BUZZ_RELAY_URL", "wss://legacy.example");
-        let value = branding::env_alias("ZION_RELAY_URL", "BUZZ_RELAY_URL");
-        std::env::remove_var("ZION_RELAY_URL");
-        std::env::remove_var("BUZZ_RELAY_URL");
-        assert_eq!(value.as_deref(), Some("wss://canonical.example"));
-    }
-
-    #[test]
-    fn legacy_environment_value_remains_a_fallback() {
-        let _guard = ENV_LOCK.lock().unwrap_or_else(|poison| poison.into_inner());
-        std::env::remove_var("ZION_AGENT_MODEL");
-        std::env::set_var("BUZZ_AGENT_MODEL", "legacy-model");
-        let value = branding::env_alias("ZION_AGENT_MODEL", "BUZZ_AGENT_MODEL");
-        std::env::remove_var("BUZZ_AGENT_MODEL");
-        assert_eq!(value.as_deref(), Some("legacy-model"));
-    }
-}
 
 #[cfg(any(test, feature = "test-utils"))]
 /// Test helper utilities for creating events and stored events.
@@ -118,3 +81,11 @@ pub mod test_helpers {
         StoredEvent::with_received_at(make_event(kind), Utc::now(), channel_id, true)
     }
 }
+
+/// NIP-AR channel artifact envelope and limits.
+pub mod artifact;
+/// NIP-AR sync filter parsing and limits.
+pub mod artifact_sync;
+
+/// Local media reference extraction.
+pub mod media;

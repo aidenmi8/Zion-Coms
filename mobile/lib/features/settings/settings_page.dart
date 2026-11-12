@@ -1,150 +1,192 @@
+import 'package:buzz/shared/widgets/feedback_snackbar.dart';
+import 'dart:async';
+
+import 'package:buzz/shared/crypto/event_signing.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:buzz/shared/theme/buzz_icons.dart';
 import 'package:nostr/nostr.dart' as nostr;
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../../app/push_companion_provider.dart';
 import '../../shared/auth/auth.dart';
-import '../../shared/brand/zion_release.dart';
-import '../../shared/branding/sentra_branding.dart';
+import '../../shared/identity_transfer/nsec_export_sheet.dart';
 import '../../shared/clipboard_utils.dart';
+import '../../shared/push/push_relay_capability_provider.dart';
+import '../../shared/push/push_bootstrap.dart';
 import '../../shared/relay/relay.dart';
+import '../../shared/utils/string_utils.dart';
+import '../pairing/pairing_provider.dart';
 import '../../shared/theme/theme.dart';
-import '../../shared/watch/push_lease_coordinator.dart';
 import '../../shared/widgets/app_list.dart';
 import '../../shared/widgets/app_list_card.dart';
 import '../../shared/widgets/frosted_app_bar.dart';
 import '../../shared/widgets/frosted_scaffold.dart';
-import 'accent_picker_page.dart';
-import 'theme_picker_page.dart';
+import '../../shared/widgets/ios_glass_navigation_button.dart';
+import '../../shared/widgets/immediate_page_route.dart';
 
-part 'settings_page/appearance_section.dart';
+part 'settings_page/profile_section.dart';
+part 'settings_page/status_section.dart';
 part 'settings_page/connection_section.dart';
+part 'settings_page/notifications_section.dart';
+
+Widget _emptyProfileEditPage(BuildContext context) => const SizedBox.shrink();
 
 class SettingsPage extends HookConsumerWidget {
-  const SettingsPage({super.key, required this.profileHeader});
+  /// Creates the settings page.
+  const SettingsPage({
+    super.key,
+    required this.profileHeader,
+    required this.identityRecoveryPageBuilder,
+    this.profileEditPageBuilder = _emptyProfileEditPage,
+    this.onSetStatus,
+    this.onEditDisplayName,
+    this.onEditProfileDescription,
+  });
 
+  /// Header widget displayed at the top of settings.
   final Widget profileHeader;
+
+  /// Builds the identity-recovery page pushed from the recovery settings row.
+  final WidgetBuilder identityRecoveryPageBuilder;
+
+  /// Builds the current-user profile editor opened from the Photo row.
+  final WidgetBuilder profileEditPageBuilder;
+
+  /// Opens the current-user status editor.
+  final void Function(BuildContext context)? onSetStatus;
+
+  /// Opens the display-name editor from the settings section.
+  final Future<void> Function(BuildContext context)? onEditDisplayName;
+
+  /// Opens the profile-description editor from the settings section.
+  final Future<void> Function(BuildContext context)? onEditProfileDescription;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final packageInfoFuture = useMemoized(() => PackageInfo.fromPlatform());
     final packageInfo = useFuture(packageInfoFuture);
-
-    return FrostedScaffold(
-      appBar: const FrostedAppBar(title: Text('Settings')),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.only(
-                top: frostedAppBarHeight(context),
-                bottom: Grid.xs,
-              ),
-              children: [
-                profileHeader,
-                const _AppearanceSection(),
-                const _ConnectionSection(),
-                const _RemoveCommunitySection(),
-                const AppListCard(
-                  label: 'Notifications & Watch',
-                  children: [_PushCompanionRow()],
-                ),
-              ],
-            ),
-          ),
-          if (packageInfo.hasData)
-            _VersionFooter(version: packageInfo.data!.version),
-        ],
-      ),
+    final topSectionHeight = frostedAppBarHeight(
+      context,
+      bottomHeight: Grid.xxs,
     );
-  }
-}
 
-class _PushCompanionRow extends ConsumerWidget {
-  const _PushCompanionRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(pushCompanionControllerProvider);
-    final status = switch (state.status) {
-      PushCompanionStatus.off => 'Off',
-      PushCompanionStatus.enabling => 'Enabling',
-      PushCompanionStatus.active => 'Active',
-      PushCompanionStatus.needsAttention => 'Needs Attention',
-      PushCompanionStatus.unsupported => 'Unsupported',
-    };
-    final subtitle = switch (state.status) {
-      PushCompanionStatus.off =>
-        'Receive agent messages and approval requests on Apple Watch.',
-      PushCompanionStatus.enabling =>
-        'Requesting notification access and securing this iPhone.',
-      PushCompanionStatus.active =>
-        'Alerts are active. Apple Watch uses this iPhone’s focused queue.',
-      PushCompanionStatus.needsAttention =>
-        state.message ?? 'Allow notifications in iOS Settings → Zion.',
-      PushCompanionStatus.unsupported =>
-        'Requires a supported iPhone with App Attest.',
-    };
-    final canEnable =
-        state.status == PushCompanionStatus.off ||
-        state.status == PushCompanionStatus.needsAttention;
-
-    return AppListRow(
-      icon: LucideIcons.watch,
-      title: 'Apple Watch companion',
-      subtitle: subtitle,
-      subtitleMaxLines: 3,
-      trailing: Text(
-        status,
-        style: context.textTheme.bodySmall?.copyWith(
-          color: state.status == PushCompanionStatus.needsAttention
-              ? context.colors.error
-              : context.colors.onSurfaceVariant,
-          fontWeight: FontWeight.w600,
+    // Keep feedback local even while Home is mounted during the transition.
+    return ScaffoldMessenger(
+      child: FrostedScaffold(
+        useUtilitySurfaceTheme: true,
+        appBar: FrostedAppBar(
+          nativeTitle: 'Settings',
+          nativeLeading: IosNavigationAction(
+            label: 'Close settings',
+            symbol: 'xmark',
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          automaticallyImplyLeading: false,
+          horizontalInset: Grid.gutter,
+          leading: Theme.of(context).platform == TargetPlatform.iOS
+              ? IosGlassNavigationButton(
+                  key: const ValueKey('settings-ios-glass-close'),
+                  icon: IosGlassNavigationIcon.close,
+                  semanticLabel: 'Close settings',
+                  onPressed: () {
+                    unawaited(HapticFeedback.lightImpact());
+                    Navigator.of(context).pop();
+                  },
+                  foregroundColor: navigationPrimaryForeground(context),
+                )
+              : SizedBox(
+                  width: Grid.xl,
+                  height: Grid.xl,
+                  child: IconButton(
+                    tooltip: 'Close settings',
+                    onPressed: () {
+                      unawaited(HapticFeedback.lightImpact());
+                      Navigator.of(context).pop();
+                    },
+                    color: navigationPrimaryForeground(context),
+                    icon: const Icon(BuzzIcons.x),
+                  ),
+                ),
+          bottomHeight: Grid.xxs,
+          bottom: const SizedBox.expand(),
+        ),
+        body: ListView(
+          padding: EdgeInsets.only(
+            top: topSectionHeight,
+            bottom: MediaQuery.paddingOf(context).bottom + Grid.xs,
+          ),
+          children: [
+            profileHeader,
+            _StatusSection(onSetStatus: onSetStatus),
+            _ProfileSection(
+              profileEditPageBuilder: profileEditPageBuilder,
+              onEditDisplayName: onEditDisplayName,
+              onEditProfileDescription: onEditProfileDescription,
+            ),
+            const _NotificationsSection(),
+            _ConnectionSection(
+              identityRecoveryPageBuilder: identityRecoveryPageBuilder,
+            ),
+            if (packageInfo.hasData)
+              _VersionFooter(
+                version: packageInfo.data!.version,
+                buildNumber: packageInfo.data!.buildNumber,
+              ),
+          ],
         ),
       ),
-      onTap: canEnable
-          ? () async {
-              await ref.read(pushCompanionControllerProvider.notifier).enable();
-            }
-          : null,
     );
   }
 }
 
 class _VersionFooter extends StatelessWidget {
-  const _VersionFooter({required this.version});
+  const _VersionFooter({required this.version, required this.buildNumber});
 
   final String version;
+  final String buildNumber;
 
   @override
   Widget build(BuildContext context) {
+    final label = buildNumber.isEmpty
+        ? 'v$version'
+        : 'v$version ($buildNumber)';
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: Grid.xs, top: Grid.xxs),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Semantics(
-              label: 'Sentra',
-              image: true,
-              child: Image.asset(
-                sentraWordmarkAssetFor(context.colors.brightness),
-                height: 36,
+      child: Center(
+        child: Semantics(
+          button: true,
+          onTapHint: 'Copy version',
+          child: InkWell(
+            borderRadius: BorderRadius.circular(Grid.xs),
+            onTap: () =>
+                copyToClipboard(context, label, message: 'Version copied'),
+            // Keep the text where it was and grow the tap target downward
+            // to the platform minimum.
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: kMinInteractiveDimension,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  Grid.xs,
+                  Grid.xxs,
+                  Grid.xs,
+                  Grid.xs,
+                ),
+                child: Text(
+                  label,
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.colors.onSurfaceVariant.withValues(
+                      alpha: 0.6,
+                    ),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: Grid.xxs),
-            Text(
-              formatZionReleaseLabel(version, currentZionReleaseChannel),
-              style: context.textTheme.bodySmall?.copyWith(
-                color: context.colors.onSurfaceVariant.withValues(alpha: 0.6),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -158,7 +200,7 @@ class _RowChevron extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Icon(
-      LucideIcons.chevronRight,
+      BuzzIcons.chevronRight,
       size: 18,
       color: context.colors.onSurfaceVariant,
     );

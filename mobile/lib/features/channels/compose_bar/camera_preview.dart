@@ -1,10 +1,15 @@
 part of '../compose_bar.dart';
 
 class _InlineCameraPreview extends HookConsumerWidget {
+  final bool initializeCamera;
   final Future<void> Function(XFile image) onCapture;
   final VoidCallback onClose;
 
-  const _InlineCameraPreview({required this.onCapture, required this.onClose});
+  const _InlineCameraPreview({
+    required this.initializeCamera,
+    required this.onCapture,
+    required this.onClose,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -15,6 +20,8 @@ class _InlineCameraPreview extends HookConsumerWidget {
     final error = useState<String?>(null);
 
     useEffect(() {
+      if (!initializeCamera) return null;
+
       var disposed = false;
       var generation = 0;
 
@@ -76,7 +83,9 @@ class _InlineCameraPreview extends HookConsumerWidget {
         onInactive: () => unawaited(disposeCurrent()),
         onResume: () => unawaited(initialize()),
       );
-      unawaited(initialize());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!disposed) unawaited(initialize());
+      });
 
       return () {
         disposed = true;
@@ -86,7 +95,7 @@ class _InlineCameraPreview extends HookConsumerWidget {
         controllerRef.value = null;
         unawaited(current?.dispose() ?? Future<void>.value());
       };
-    }, const []);
+    }, [initializeCamera]);
 
     Future<void> capture() async {
       final activeController = controller.value;
@@ -198,15 +207,16 @@ class _CameraPlaceholder extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(Grid.sm),
           child: isInitializing
-              ? const CircularProgressIndicator(
+              ? const BuzzLoadingIndicator(
+                  size: 44,
                   color: Colors.white,
-                  strokeWidth: 3,
+                  semanticLabel: 'Starting camera',
                 )
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
-                      LucideIcons.cameraOff,
+                      BuzzIcons.cameraOff,
                       color: Colors.white,
                       size: 28,
                     ),
@@ -242,7 +252,7 @@ class _CameraCaptureButton extends StatelessWidget {
       button: true,
       label: 'Take photo',
       child: GestureDetector(
-        onTap: isPressed ? null : onTap,
+        onTap: isPressed ? null : () => _runComposerAction(onTap),
         child: AnimatedScale(
           scale: isPressed ? 0.92 : 1,
           duration: duration,
@@ -277,10 +287,20 @@ class _CameraCloseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      return IosGlassNavigationButton(
+        icon: IosGlassNavigationIcon.back,
+        semanticLabel: 'Back to attachment options',
+        onPressed: () => _runComposerAction(onTap),
+        width: emphasized ? _cameraBackSize : 40,
+        height: emphasized ? _cameraBackSize : 40,
+        foregroundColor: Colors.white,
+      );
+    }
     return SizedBox.square(
       dimension: emphasized ? _cameraBackSize : 36,
       child: IconButton(
-        onPressed: onTap,
+        onPressed: () => _runComposerAction(onTap),
         tooltip: 'Back to attachment options',
         padding: EdgeInsets.zero,
         style: IconButton.styleFrom(
@@ -289,7 +309,7 @@ class _CameraCloseButton extends StatelessWidget {
           ),
           foregroundColor: Colors.white,
         ),
-        icon: Icon(LucideIcons.arrowLeft, size: emphasized ? 24 : 18),
+        icon: Icon(BuzzIcons.arrowLeft, size: 24),
       ),
     );
   }
